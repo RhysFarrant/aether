@@ -7,7 +7,7 @@ export default function App() {
 			<div className="max-w-md w-full text-center space-y-4">
 				{/* Project Title */}
 				<h1 className="text-4xl font-extrabold tracking-tight">
-					Arcane Archives
+					Aether
 				</h1>
 
 				{/* Subtitle */}

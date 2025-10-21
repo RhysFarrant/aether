@@ -1,73 +1,57 @@
-# React + TypeScript + Vite
+# 🌌 Aether — Project Overview
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+**Name:** Aether  
+**Type:** Web application (React + Tailwind, packaged to desktop later with Tauri)  
+**Goal:** Build a clean, modern, SRD-compliant **Dungeons & Dragons 5e character creator and manager**, with emphasis on usability, offline support, and eventual expansion into reference tools.  
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 🎯 Vision
+Aether is designed to be the **go-to tool for managing D&D 5e characters**: fast to set up, intuitive to use, and legally compliant by sticking to SRD content. It should feel like a polished productivity app (Notion, Obsidian, etc.) but tailored to tabletop gaming.  
 
-## React Compiler
+---
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 📐 Scope (MVP)
+- Create characters (basic SRD races, classes, backgrounds).  
+- View character sheet (stats, HP, abilities, equipment placeholders).  
+- Local save/load of characters.  
+- Simple, elegant UI powered by Tailwind.  
 
-## Expanding the ESLint configuration
+**Out of Scope (for MVP):**
+- Spell management.  
+- Campaign or party management.  
+- Firebase/cloud sync.  
+- PDF export.  
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+---
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## 🗂 Milestones
+1. **Phase 1 – Core Setup**  
+   - React + Tailwind scaffold  
+   - Character data model  
+   - Placeholder UI → basic character sheet  
+   - Local persistence  
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+2. **Phase 2 – Character Builder**  
+   - Step-by-step guided creation  
+   - Validation (ability scores, equipment choices)  
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+3. **Phase 3 – SRD Reference**  
+   - Browse classes, races, and backgrounds  
+   - Extendable reference for spells & items  
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+4. **Phase 4 – Character Management**  
+   - Leveling and progression  
+   - Editable character sheets  
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+5. **Phase 5 – Sync & Export**  
+   - Firebase sync  
+   - Import/export JSON  
+   - Optional PDF export  
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+---
+
+## ✅ Success Criteria
+- A user can create a character (manually, SRD-compliant).  
+- That character can be viewed on a usable character sheet.  
+- Data persists across browser sessions (local storage).  
