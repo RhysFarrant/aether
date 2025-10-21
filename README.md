@@ -26,28 +26,57 @@ Aether is designed to be the **go-to tool for managing D&D 5e characters**: fast
 ---
 
 ## 🗂 Milestones
-1. **Phase 1 – Core Setup**  
-   - React + Tailwind scaffold  
-   - Character data model  
-   - Placeholder UI → basic character sheet  
-   - Local persistence  
 
-2. **Phase 2 – Character Builder**  
-   - Step-by-step guided creation  
-   - Validation (ability scores, equipment choices)  
+### **Phase 1 – Foundation** ✅
+   - React + Tailwind scaffold
+   - Routing structure (React Router)
+   - Component architecture & folder structure
+   - Character data model (TypeScript interfaces)
+   - SRD data structure planning
+   - Local persistence setup
 
-3. **Phase 3 – SRD Reference**  
-   - Browse classes, races, and backgrounds  
-   - Extendable reference for spells & items  
+### **Phase 1.5 – SRD Data Integration**
+   - Load and structure SRD data (races, classes, backgrounds)
+   - Consider [5e-srd-api](https://www.dnd5eapi.co/) or embedded JSON
+   - Create data access layer/hooks
 
-4. **Phase 4 – Character Management**  
-   - Leveling and progression  
-   - Editable character sheets  
+### **Phase 2A – Character Display**
+   - Build character sheet component (read-only)
+   - Render a hardcoded/sample character
+   - Display stats, HP, abilities, equipment
+   - Character list view (empty state → saved characters)
 
-5. **Phase 5 – Sync & Export**  
-   - Firebase sync  
-   - Import/export JSON  
-   - Optional PDF export  
+### **Phase 2B – Character Builder**
+   - Step-by-step guided creation wizard
+   - Race/class/background selection
+   - Ability score assignment
+   - Validation (ability scores, equipment choices)
+   - Equipment selection
+
+### **Phase 3 – Character Management**
+   - Leveling and progression
+   - Editable character sheets
+   - Long rest/short rest mechanics (HP/spell slot recovery)
+   - Inventory management (add/remove items, weight tracking)
+   - Character notes field
+
+### **Phase 4 – Advanced Features**
+   - Spell management system
+   - Custom traits and features
+   - Combat tracker integration
+   - Condition tracking
+
+### **Phase 5 – Sync & Export**
+   - Firebase sync
+   - Import/export JSON
+   - Optional PDF export
+
+### **Phase 6 – Polish & Package**
+   - Tauri desktop packaging
+   - Dark/light theme toggle
+   - Accessibility audit (keyboard navigation, screen readers)
+   - Performance optimization
+   - User onboarding/tutorial  
 
 ---
 
