@@ -1,0 +1,143 @@
+[
+  {
+    "id": "subclass_champion_srd",
+    "name": "Champion",
+    "parentClassId": "class_fighter_srd",
+    "subclassLevel": 3,
+    "description": "The archetypal Champion focuses on the development of raw physical power honed to deadly perfection. Those who model themselves on this archetype combine rigorous training with physical excellence to deal devastating blows.",
+    "features": [
+      {
+        "name": "Improved Critical",
+        "level": 3,
+        "description": "Beginning when you choose this archetype at 3rd level, your weapon attacks score a critical hit on a roll of 19 or 20."
+      },
+      {
+        "name": "Remarkable Athlete",
+        "level": 7,
+        "description": "Starting at 7th level, you can add half your proficiency bonus (rounded up) to any Strength, Dexterity, or Constitution check you make that doesn't already use your proficiency bonus. In addition, when you make a running long jump, the distance you can cover increases by a number of feet equal to your Strength modifier."
+      },
+      {
+        "name": "Additional Fighting Style",
+        "level": 10,
+        "description": "At 10th level, you can choose a second option from the Fighting Style class feature."
+      },
+      {
+        "name": "Superior Critical",
+        "level": 15,
+        "description": "Starting at 15th level, your weapon attacks score a critical hit on a roll of 18-20."
+      },
+      {
+        "name": "Survivor",
+        "level": 18,
+        "description": "At 18th level, you attain the pinnacle of resilience in battle. At the start of each of your turns, you regain hit points equal to 5 + your Constitution modifier if you have no more than half of your hit points left. You don't gain this benefit if you have 0 hit points."
+      }
+    ]
+  },
+  {
+    "id": "subclass_evocation_srd",
+    "name": "School of Evocation",
+    "parentClassId": "class_wizard_srd",
+    "subclassLevel": 2,
+    "description": "You focus your study on magic that creates powerful elemental effects such as bitter cold, searing flame, rolling thunder, crackling lightning, and burning acid. Some evokers find employment in military forces, serving as artillery to blast enemy armies from afar. Others use their spectacular power to protect the weak, while some seek their own gain as bandits, adventurers, or aspiring tyrants.",
+    "features": [
+      {
+        "name": "Evocation Savant",
+        "level": 2,
+        "description": "Beginning when you select this school at 2nd level, the gold and time you must spend to copy an evocation spell into your spellbook is halved."
+      },
+      {
+        "name": "Sculpt Spells",
+        "level": 2,
+        "description": "Beginning at 2nd level, you can create pockets of relative safety within the effects of your evocation spells. When you cast an evocation spell that affects other creatures that you can see, you can choose a number of them equal to 1 + the spell's level. The chosen creatures automatically succeed on their saving throws against the spell, and they take no damage if they would normally take half damage on a successful save."
+      },
+      {
+        "name": "Potent Cantrip",
+        "level": 6,
+        "description": "Starting at 6th level, your damaging cantrips affect even creatures that avoid the brunt of the effect. When a creature succeeds on a saving throw against your cantrip, the creature takes half the cantrip's damage (if any) but suffers no additional effect from the cantrip."
+      },
+      {
+        "name": "Empowered Evocation",
+        "level": 10,
+        "description": "Beginning at 10th level, you can add your Intelligence modifier to one damage roll of any wizard evocation spell you cast."
+      },
+      {
+        "name": "Overchannel",
+        "level": 14,
+        "description": "Starting at 14th level, you can increase the power of your simpler spells. When you cast a wizard spell of 1st through 5th level that deals damage, you can deal maximum damage with that spell. The first time you do so, you suffer no adverse effect. If you use this feature again before you finish a long rest, you take 2d12 necrotic damage for each level of the spell, immediately after you cast it. Each time you use this feature again before finishing a long rest, the necrotic damage per spell level increases by 1d12."
+      }
+    ]
+  },
+  {
+    "id": "subclass_thief_srd",
+    "name": "Thief",
+    "parentClassId": "class_rogue_srd",
+    "subclassLevel": 3,
+    "description": "You hone your skills in the larcenous arts. Burglars, bandits, cutpurses, and other criminals typically follow this archetype, but so do rogues who prefer to think of themselves as professional treasure seekers, explorers, delvers, and investigators. In addition to improving your agility and stealth, you learn skills useful for delving into ancient ruins, reading unfamiliar languages, and using magic items you normally couldn't employ.",
+    "features": [
+      {
+        "name": "Fast Hands",
+        "level": 3,
+        "description": "Starting at 3rd level, you can use the bonus action granted by your Cunning Action to make a Dexterity (Sleight of Hand) check, use your thieves' tools to disarm a trap or open a lock, or take the Use an Object action."
+      },
+      {
+        "name": "Second-Story Work",
+        "level": 3,
+        "description": "When you choose this archetype at 3rd level, you gain the ability to climb faster than normal; climbing no longer costs you extra movement. In addition, when you make a running jump, the distance you cover increases by a number of feet equal to your Dexterity modifier."
+      },
+      {
+        "name": "Supreme Sneak",
+        "level": 9,
+        "description": "Starting at 9th level, you have advantage on a Dexterity (Stealth) check if you move no more than half your speed on the same turn."
+      },
+      {
+        "name": "Use Magic Device",
+        "level": 13,
+        "description": "By 13th level, you have learned enough about the workings of magic that you can improvise the use of items even when they are not intended for you. You ignore all class, race, and level requirements on the use of magic items."
+      },
+      {
+        "name": "Thief's Reflexes",
+        "level": 17,
+        "description": "When you reach 17th level, you have become adept at laying ambushes and quickly escaping danger. You can take two turns during the first round of any combat. You take your first turn at your normal initiative and your second turn at your initiative minus 10. You can't use this feature when you are surprised."
+      }
+    ]
+  },
+  {
+    "id": "subclass_lifedomain_srd",
+    "name": "Life Domain",
+    "parentClassId": "class_cleric_srd",
+    "subclassLevel": 1,
+    "description": "The Life domain focuses on the vibrant positive energy—one of the fundamental forces of the universe—that sustains all life. The gods of life promote vitality and health through healing the sick and wounded, caring for those in need, and driving away the forces of death and undeath. Almost any non-evil deity can claim influence over this domain, particularly agricultural deities, sun gods, gods of healing or endurance, and gods of home and community.",
+    "features": [
+      {
+        "name": "Bonus Proficiency",
+        "level": 1,
+        "description": "When you choose this domain at 1st level, you gain proficiency with heavy armor."
+      },
+      {
+        "name": "Disciple of Life",
+        "level": 1,
+        "description": "Also starting at 1st level, your healing spells are more effective. Whenever you use a spell of 1st level or higher to restore hit points to a creature, the creature regains additional hit points equal to 2 + the spell's level."
+      },
+      {
+        "name": "Channel Divinity: Preserve Life",
+        "level": 2,
+        "description": "Starting at 2nd level, you can use your Channel Divinity to heal the badly injured. As an action, you present your holy symbol and evoke healing energy that can restore a number of hit points equal to five times your cleric level. Choose any creatures within 30 feet of you, and divide those hit points among them. This feature can restore a creature to no more than half of its hit point maximum. You can't use this feature on an undead or a construct."
+      },
+      {
+        "name": "Blessed Healer",
+        "level": 6,
+        "description": "Beginning at 6th level, the healing spells you cast on others heal you as well. When you cast a spell of 1st level or higher that restores hit points to a creature other than you, you regain hit points equal to 2 + the spell's level."
+      },
+      {
+        "name": "Divine Strike",
+        "level": 8,
+        "description": "At 8th level, you gain the ability to infuse your weapon strikes with divine energy. Once on each of your turns when you hit a creature with a weapon attack, you can cause the attack to deal an extra 1d8 radiant damage to the target. When you reach 14th level, the extra damage increases to 2d8."
+      },
+      {
+        "name": "Supreme Healing",
+        "level": 17,
+        "description": "Starting at 17th level, when you would normally roll one or more dice to restore hit points with a spell, you instead use the highest number possible for each die. For example, instead of restoring 2d6 hit points to a creature, you restore 12."
+      }
+    ]
+  }
+]

@@ -1,0 +1,60 @@
+[
+  {
+    "id": "subspecies_highelf_srd",
+    "name": "High Elf",
+    "parentSpeciesId": "species_elf_srd",
+    "abilityIncreases": {
+      "intelligence": 1
+    },
+    "traits": [
+      {
+        "name": "Elf Weapon Training",
+        "description": "You have proficiency with the longsword, shortsword, shortbow, and longbow."
+      },
+      {
+        "name": "Cantrip",
+        "description": "You know one cantrip of your choice from the wizard spell list. Intelligence is your spellcasting ability for it."
+      },
+      {
+        "name": "Extra Language",
+        "description": "You can speak, read, and write one extra language of your choice."
+      }
+    ],
+    "proficiencies": ["Longsword", "Shortsword", "Shortbow", "Longbow"],
+    "languageOptions": {
+      "choose": 1,
+      "description": "You can speak, read, and write one extra language of your choice."
+    },
+    "description": "As a high elf, you have a keen mind and a mastery of at least the basics of magic. In many of the worlds of D&D, there are two kinds of high elves. One type (which includes the gray elves and valley elves of Greyhawk, the Silvanesti of Dragonlance, and the sun elves of the Forgotten Realms) is haughty and reclusive, believing themselves to be superior to non-elves and even other elves. The other type (including the high elves of Greyhawk, the Qualinesti of Dragonlance, and the moon elves of the Forgotten Realms) are more common and more friendly, and often encountered among humans and other races."
+  },
+  {
+    "id": "subspecies_hilldwarf_srd",
+    "name": "Hill Dwarf",
+    "parentSpeciesId": "species_dwarf_srd",
+    "abilityIncreases": {
+      "wisdom": 1
+    },
+    "traits": [
+      {
+        "name": "Dwarven Toughness",
+        "description": "Your hit point maximum increases by 1, and it increases by 1 every time you gain a level."
+      }
+    ],
+    "description": "As a hill dwarf, you have keen senses, deep intuition, and remarkable resilience. The gold dwarves of Faerûn in their mighty southern kingdom are hill dwarves, as are the exiled Neidar and the debased Klar of Krynn in the Dragonlance setting."
+  },
+  {
+    "id": "subspecies_lightfoot_srd",
+    "name": "Lightfoot Halfling",
+    "parentSpeciesId": "species_halfling_srd",
+    "abilityIncreases": {
+      "charisma": 1
+    },
+    "traits": [
+      {
+        "name": "Naturally Stealthy",
+        "description": "You can attempt to hide even when you are obscured only by a creature that is at least one size larger than you."
+      }
+    ],
+    "description": "As a lightfoot halfling, you can easily hide from notice, even using other people as cover. You're inclined to be affable and get along well with others. In the Forgotten Realms, lightfoot halflings have spread the farthest and thus are the most common variety. Lightfoot halflings are more prone to wanderlust than other halflings, and often dwell alongside other races or take up a nomadic life."
+  }
+]

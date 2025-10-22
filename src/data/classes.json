@@ -1,0 +1,362 @@
+[
+  {
+    "id": "class_fighter_srd",
+    "name": "Fighter",
+    "hitDie": 10,
+    "primaryAbility": ["Strength", "Dexterity"],
+    "savingThrows": ["Strength", "Constitution"],
+    "proficiencies": {
+      "armor": ["All armor", "Shields"],
+      "weapons": ["Simple weapons", "Martial weapons"],
+      "tools": [],
+      "savingThrows": ["Strength", "Constitution"]
+    },
+    "skillChoices": {
+      "choose": 2,
+      "from": ["Acrobatics", "Animal Handling", "Athletics", "History", "Insight", "Intimidation", "Perception", "Survival"]
+    },
+    "startingEquipment": [],
+    "equipmentChoices": [
+      {
+        "description": "Choose armor",
+        "options": [
+          ["Chain mail"],
+          ["Leather armor", "Longbow", "20 arrows"]
+        ]
+      },
+      {
+        "description": "Choose weapons",
+        "options": [
+          ["Martial weapon", "Shield"],
+          ["Martial weapon", "Martial weapon"]
+        ]
+      },
+      {
+        "description": "Choose ranged option",
+        "options": [
+          ["Light crossbow", "20 bolts"],
+          ["Handaxe", "Handaxe"]
+        ]
+      },
+      {
+        "description": "Choose pack",
+        "options": [
+          ["Dungeoneer's pack"],
+          ["Explorer's pack"]
+        ]
+      }
+    ],
+    "subclasses": ["subclass_champion_srd"],
+    "multiclassing": {
+      "prerequisites": [
+        {
+          "ability": "Strength",
+          "minimumScore": 13
+        },
+        {
+          "ability": "Dexterity",
+          "minimumScore": 13
+        }
+      ],
+      "proficienciesGained": ["Light armor", "Medium armor", "Shields", "Simple weapons", "Martial weapons"]
+    },
+    "features": [
+      {
+        "name": "Fighting Style",
+        "level": 1,
+        "description": "You adopt a particular style of fighting as your specialty. Choose one of the following options: Archery, Defense, Dueling, Great Weapon Fighting, Protection, or Two-Weapon Fighting. You can't take a Fighting Style option more than once, even if you later get to choose again."
+      },
+      {
+        "name": "Second Wind",
+        "level": 1,
+        "description": "You have a limited well of stamina that you can draw on to protect yourself from harm. On your turn, you can use a bonus action to regain hit points equal to 1d10 + your fighter level. Once you use this feature, you must finish a short or long rest before you can use it again."
+      },
+      {
+        "name": "Action Surge",
+        "level": 2,
+        "description": "Starting at 2nd level, you can push yourself beyond your normal limits for a moment. On your turn, you can take one additional action. Once you use this feature, you must finish a short or long rest before you can use it again. Starting at 17th level, you can use it twice before a rest, but only once on the same turn."
+      },
+      {
+        "name": "Martial Archetype",
+        "level": 3,
+        "description": "At 3rd level, you choose an archetype that you strive to emulate in your combat styles and techniques. The archetype you choose grants you features at 3rd level and again at 7th, 10th, 15th, and 18th level."
+      },
+      {
+        "name": "Ability Score Improvement",
+        "level": 4,
+        "description": "When you reach 4th level, and again at 6th, 8th, 12th, 14th, 16th, and 19th level, you can increase one ability score of your choice by 2, or you can increase two ability scores of your choice by 1. As normal, you can't increase an ability score above 20 using this feature."
+      },
+      {
+        "name": "Extra Attack",
+        "level": 5,
+        "description": "Beginning at 5th level, you can attack twice, instead of once, whenever you take the Attack action on your turn. The number of attacks increases to three when you reach 11th level in this class and to four when you reach 20th level in this class."
+      }
+    ]
+  },
+  {
+    "id": "class_wizard_srd",
+    "name": "Wizard",
+    "hitDie": 6,
+    "primaryAbility": ["Intelligence"],
+    "savingThrows": ["Intelligence", "Wisdom"],
+    "proficiencies": {
+      "armor": [],
+      "weapons": ["Daggers", "Darts", "Slings", "Quarterstaffs", "Light crossbows"],
+      "tools": [],
+      "savingThrows": ["Intelligence", "Wisdom"]
+    },
+    "skillChoices": {
+      "choose": 2,
+      "from": ["Arcana", "History", "Insight", "Investigation", "Medicine", "Religion"]
+    },
+    "startingEquipment": ["Spellbook"],
+    "equipmentChoices": [
+      {
+        "description": "Choose weapon",
+        "options": [
+          ["Quarterstaff"],
+          ["Dagger"]
+        ]
+      },
+      {
+        "description": "Choose arcane focus",
+        "options": [
+          ["Component pouch"],
+          ["Arcane focus"]
+        ]
+      },
+      {
+        "description": "Choose pack",
+        "options": [
+          ["Scholar's pack"],
+          ["Explorer's pack"]
+        ]
+      }
+    ],
+    "subclasses": ["subclass_evocation_srd"],
+    "spellcasting": {
+      "ability": "Intelligence",
+      "cantripsKnown": 3,
+      "spellsKnown": 6,
+      "preparedSpells": "Intelligence modifier + wizard level (minimum 1)",
+      "ritualCasting": true
+    },
+    "multiclassing": {
+      "prerequisites": [
+        {
+          "ability": "Intelligence",
+          "minimumScore": 13
+        }
+      ],
+      "proficienciesGained": []
+    },
+    "features": [
+      {
+        "name": "Spellcasting",
+        "level": 1,
+        "description": "As a student of arcane magic, you have a spellbook containing spells that show the first glimmerings of your true power. At 1st level, you know three cantrips of your choice from the wizard spell list. You learn additional wizard cantrips of your choice at higher levels."
+      },
+      {
+        "name": "Arcane Recovery",
+        "level": 1,
+        "description": "You have learned to regain some of your magical energy by studying your spellbook. Once per day when you finish a short rest, you can choose expended spell slots to recover. The spell slots can have a combined level that is equal to or less than half your wizard level (rounded up), and none of the slots can be 6th level or higher."
+      },
+      {
+        "name": "Arcane Tradition",
+        "level": 2,
+        "description": "When you reach 2nd level, you choose an arcane tradition, shaping your practice of magic through one of eight schools. Your choice grants you features at 2nd level and again at 6th, 10th, and 14th level."
+      },
+      {
+        "name": "Ability Score Improvement",
+        "level": 4,
+        "description": "When you reach 4th level, and again at 8th, 12th, 16th, and 19th level, you can increase one ability score of your choice by 2, or you can increase two ability scores of your choice by 1. As normal, you can't increase an ability score above 20 using this feature."
+      }
+    ]
+  },
+  {
+    "id": "class_rogue_srd",
+    "name": "Rogue",
+    "hitDie": 8,
+    "primaryAbility": ["Dexterity"],
+    "savingThrows": ["Dexterity", "Intelligence"],
+    "proficiencies": {
+      "armor": ["Light armor"],
+      "weapons": ["Simple weapons", "Hand crossbows", "Longswords", "Rapiers", "Shortswords"],
+      "tools": ["Thieves' tools"],
+      "savingThrows": ["Dexterity", "Intelligence"]
+    },
+    "skillChoices": {
+      "choose": 4,
+      "from": ["Acrobatics", "Athletics", "Deception", "Insight", "Intimidation", "Investigation", "Perception", "Performance", "Persuasion", "Sleight of Hand", "Stealth"]
+    },
+    "startingEquipment": ["Leather armor", "Dagger", "Dagger", "Thieves' tools"],
+    "equipmentChoices": [
+      {
+        "description": "Choose primary weapon",
+        "options": [
+          ["Rapier"],
+          ["Shortsword"]
+        ]
+      },
+      {
+        "description": "Choose secondary weapon",
+        "options": [
+          ["Shortbow", "20 arrows"],
+          ["Shortsword"]
+        ]
+      },
+      {
+        "description": "Choose pack",
+        "options": [
+          ["Burglar's pack"],
+          ["Dungeoneer's pack"],
+          ["Explorer's pack"]
+        ]
+      }
+    ],
+    "subclasses": ["subclass_thief_srd"],
+    "multiclassing": {
+      "prerequisites": [
+        {
+          "ability": "Dexterity",
+          "minimumScore": 13
+        }
+      ],
+      "proficienciesGained": ["Light armor", "Thieves' tools", "One skill from class skill list"]
+    },
+    "features": [
+      {
+        "name": "Expertise",
+        "level": 1,
+        "description": "At 1st level, choose two of your skill proficiencies, or one of your skill proficiencies and your proficiency with thieves' tools. Your proficiency bonus is doubled for any ability check you make that uses either of the chosen proficiencies. At 6th level, you can choose two more of your proficiencies to gain this benefit."
+      },
+      {
+        "name": "Sneak Attack",
+        "level": 1,
+        "description": "Beginning at 1st level, you know how to strike subtly and exploit a foe's distraction. Once per turn, you can deal an extra 1d6 damage to one creature you hit with an attack if you have advantage on the attack roll. The attack must use a finesse or a ranged weapon. You don't need advantage on the attack roll if another enemy of the target is within 5 feet of it, that enemy isn't incapacitated, and you don't have disadvantage on the attack roll. The amount of the extra damage increases as you gain levels in this class."
+      },
+      {
+        "name": "Thieves' Cant",
+        "level": 1,
+        "description": "During your rogue training you learned thieves' cant, a secret mix of dialect, jargon, and code that allows you to hide messages in seemingly normal conversation. Only another creature that knows thieves' cant understands such messages. It takes four times longer to convey such a message than it does to speak the same idea plainly."
+      },
+      {
+        "name": "Cunning Action",
+        "level": 2,
+        "description": "Starting at 2nd level, your quick thinking and agility allow you to move and act quickly. You can take a bonus action on each of your turns in combat. This action can be used only to take the Dash, Disengage, or Hide action."
+      },
+      {
+        "name": "Roguish Archetype",
+        "level": 3,
+        "description": "At 3rd level, you choose an archetype that you emulate in the exercise of your rogue abilities. Your archetype choice grants you features at 3rd level and then again at 9th, 13th, and 17th level."
+      },
+      {
+        "name": "Ability Score Improvement",
+        "level": 4,
+        "description": "When you reach 4th level, and again at 8th, 10th, 12th, 16th, and 19th level, you can increase one ability score of your choice by 2, or you can increase two ability scores of your choice by 1. As normal, you can't increase an ability score above 20 using this feature."
+      },
+      {
+        "name": "Uncanny Dodge",
+        "level": 5,
+        "description": "Starting at 5th level, when an attacker that you can see hits you with an attack, you can use your reaction to halve the attack's damage against you."
+      }
+    ]
+  },
+  {
+    "id": "class_cleric_srd",
+    "name": "Cleric",
+    "hitDie": 8,
+    "primaryAbility": ["Wisdom"],
+    "savingThrows": ["Wisdom", "Charisma"],
+    "proficiencies": {
+      "armor": ["Light armor", "Medium armor", "Shields"],
+      "weapons": ["Simple weapons"],
+      "tools": [],
+      "savingThrows": ["Wisdom", "Charisma"]
+    },
+    "skillChoices": {
+      "choose": 2,
+      "from": ["History", "Insight", "Medicine", "Persuasion", "Religion"]
+    },
+    "startingEquipment": ["Shield", "Holy symbol"],
+    "equipmentChoices": [
+      {
+        "description": "Choose weapon",
+        "options": [
+          ["Mace"],
+          ["Warhammer"]
+        ]
+      },
+      {
+        "description": "Choose armor",
+        "options": [
+          ["Scale mail"],
+          ["Leather armor"],
+          ["Chain mail"]
+        ]
+      },
+      {
+        "description": "Choose ranged weapon",
+        "options": [
+          ["Light crossbow", "20 bolts"],
+          ["Simple weapon"]
+        ]
+      },
+      {
+        "description": "Choose pack",
+        "options": [
+          ["Priest's pack"],
+          ["Explorer's pack"]
+        ]
+      }
+    ],
+    "subclasses": ["subclass_lifedomain_srd"],
+    "spellcasting": {
+      "ability": "Wisdom",
+      "cantripsKnown": 3,
+      "preparedSpells": "Wisdom modifier + cleric level (minimum 1)",
+      "ritualCasting": true
+    },
+    "multiclassing": {
+      "prerequisites": [
+        {
+          "ability": "Wisdom",
+          "minimumScore": 13
+        }
+      ],
+      "proficienciesGained": ["Light armor", "Medium armor", "Shields"]
+    },
+    "features": [
+      {
+        "name": "Spellcasting",
+        "level": 1,
+        "description": "As a conduit for divine power, you can cast cleric spells. At 1st level, you know three cantrips of your choice from the cleric spell list. You prepare the list of cleric spells that are available for you to cast, choosing from the cleric spell list. The number of spells you can prepare equals your Wisdom modifier + your cleric level (minimum of one spell)."
+      },
+      {
+        "name": "Divine Domain",
+        "level": 1,
+        "description": "Choose one domain related to your deity. Your choice grants you domain spells and other features when you choose it at 1st level. It also grants you additional ways to use Channel Divinity when you gain that feature at 2nd level, and additional benefits at 6th, 8th, and 17th levels."
+      },
+      {
+        "name": "Channel Divinity",
+        "level": 2,
+        "description": "At 2nd level, you gain the ability to channel divine energy directly from your deity, using that energy to fuel magical effects. You start with two such effects: Turn Undead and an effect determined by your domain. Some domains grant you additional effects as you advance in levels. When you use your Channel Divinity, you choose which effect to create. You must then finish a short or long rest to use your Channel Divinity again."
+      },
+      {
+        "name": "Channel Divinity: Turn Undead",
+        "level": 2,
+        "description": "As an action, you present your holy symbol and speak a prayer censuring the undead. Each undead that can see or hear you within 30 feet of you must make a Wisdom saving throw. If the creature fails its saving throw, it is turned for 1 minute or until it takes any damage. A turned creature must spend its turns trying to move as far away from you as it can, and it can't willingly move to a space within 30 feet of you. It also can't take reactions. For its action, it can use only the Dash action or try to escape from an effect that prevents it from moving. If there's nowhere to move, the creature can use the Dodge action."
+      },
+      {
+        "name": "Ability Score Improvement",
+        "level": 4,
+        "description": "When you reach 4th level, and again at 8th, 12th, 16th, and 19th level, you can increase one ability score of your choice by 2, or you can increase two ability scores of your choice by 1. As normal, you can't increase an ability score above 20 using this feature."
+      },
+      {
+        "name": "Destroy Undead",
+        "level": 5,
+        "description": "Starting at 5th level, when an undead fails its saving throw against your Turn Undead feature, the creature is instantly destroyed if its challenge rating is at or below a certain threshold, starting at CR 1/2 at 5th level."
+      }
+    ]
+  }
+]

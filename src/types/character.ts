@@ -1,5 +1,6 @@
 import type { AbilityScores } from "./abilities";
 import type { Species } from "./species";
+import type { Subspecies } from "./subspecies";
 import type { CharacterClass } from "./class";
 import type { Origin } from "./origin";
 
@@ -8,6 +9,7 @@ export interface Character {
   name: string;
   level: number;
   species: Species;
+  subspecies?: Subspecies;
   class: CharacterClass;
   origin: Origin;
 

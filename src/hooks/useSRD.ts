@@ -6,13 +6,19 @@
 import { useMemo } from "react";
 import {
 	getSpecies,
+	getSubspecies,
 	getClasses,
+	getSubclasses,
 	getOrigins,
 	getSpeciesById,
+	getSubspeciesById,
+	getSubspeciesByParent,
 	getClassById,
+	getSubclassById,
+	getSubclassesByParent,
 	getOriginById,
 } from "../data";
-import type { Species, CharacterClass, Origin } from "../types";
+import type { Species, Subspecies, CharacterClass, Subclass, Origin } from "../types";
 
 /**
  * Hook to get all species
@@ -33,6 +39,33 @@ export function useSpeciesById(id: string | undefined): Species | undefined {
 }
 
 /**
+ * Hook to get all subspecies
+ */
+export function useSubspecies(): Subspecies[] {
+	return useMemo(() => getSubspecies(), []);
+}
+
+/**
+ * Hook to get a specific subspecies by ID
+ */
+export function useSubspeciesById(id: string | undefined): Subspecies | undefined {
+	return useMemo(() => {
+		if (!id) return undefined;
+		return getSubspeciesById(id);
+	}, [id]);
+}
+
+/**
+ * Hook to get all subspecies for a given species
+ */
+export function useSubspeciesByParent(parentSpeciesId: string | undefined): Subspecies[] {
+	return useMemo(() => {
+		if (!parentSpeciesId) return [];
+		return getSubspeciesByParent(parentSpeciesId);
+	}, [parentSpeciesId]);
+}
+
+/**
  * Hook to get all classes
  */
 export function useClasses(): CharacterClass[] {
@@ -47,6 +80,33 @@ export function useClass(id: string | undefined): CharacterClass | undefined {
 		if (!id) return undefined;
 		return getClassById(id);
 	}, [id]);
+}
+
+/**
+ * Hook to get all subclasses
+ */
+export function useSubclasses(): Subclass[] {
+	return useMemo(() => getSubclasses(), []);
+}
+
+/**
+ * Hook to get a specific subclass by ID
+ */
+export function useSubclassById(id: string | undefined): Subclass | undefined {
+	return useMemo(() => {
+		if (!id) return undefined;
+		return getSubclassById(id);
+	}, [id]);
+}
+
+/**
+ * Hook to get all subclasses for a given class
+ */
+export function useSubclassesByParent(parentClassId: string | undefined): Subclass[] {
+	return useMemo(() => {
+		if (!parentClassId) return [];
+		return getSubclassesByParent(parentClassId);
+	}, [parentClassId]);
 }
 
 /**
@@ -72,15 +132,19 @@ export function useOriginById(id: string | undefined): Origin | undefined {
  */
 export function useAllSRD() {
 	const species = useSpecies();
+	const subspecies = useSubspecies();
 	const classes = useClasses();
+	const subclasses = useSubclasses();
 	const origins = useOrigins();
 
 	return useMemo(
 		() => ({
 			species,
+			subspecies,
 			classes,
+			subclasses,
 			origins,
 		}),
-		[species, classes, origins]
+		[species, subspecies, classes, subclasses, origins]
 	);
 }
