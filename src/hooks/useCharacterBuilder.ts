@@ -52,7 +52,7 @@ export function useCharacterBuilder() {
 }
 
 /**
- * Define wizard steps (following D&D 5e PHB order)
+ * Define wizard steps (reordered for better flow)
  */
 export const wizardSteps: WizardStep[] = [
 	{
@@ -69,15 +69,15 @@ export const wizardSteps: WizardStep[] = [
 	},
 	{
 		number: 3,
-		title: "Ability Scores",
-		description: "Determine ability scores",
-		isComplete: (state) => state.abilityScores !== null,
-	},
-	{
-		number: 4,
 		title: "Origin",
 		description: "Choose your background",
 		isComplete: (state) => state.originId !== null,
+	},
+	{
+		number: 4,
+		title: "Ability Scores",
+		description: "Determine ability scores",
+		isComplete: (state) => state.abilityScores !== null,
 	},
 	{
 		number: 5,
