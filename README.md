@@ -12,7 +12,7 @@ Aether is designed to be the **go-to tool for managing D&D 5e characters**: fast
 ---
 
 ## 📐 Scope (MVP)
-- Create characters (basic SRD races, classes, backgrounds).  
+- Create characters (basic SRD species, classes, origins).  
 - View character sheet (stats, HP, abilities, equipment placeholders).  
 - Local save/load of characters.  
 - Simple, elegant UI powered by Tailwind.  
@@ -36,7 +36,7 @@ Aether is designed to be the **go-to tool for managing D&D 5e characters**: fast
    - Local persistence setup
 
 ### **Phase 1.5 – SRD Data Integration**
-   - Load and structure SRD data (races, classes, backgrounds)
+   - Load and structure SRD data (species, classes, origins)
    - Consider [5e-srd-api](https://www.dnd5eapi.co/) or embedded JSON
    - Create data access layer/hooks
 
@@ -48,7 +48,7 @@ Aether is designed to be the **go-to tool for managing D&D 5e characters**: fast
 
 ### **Phase 2B – Character Builder**
    - Step-by-step guided creation wizard
-   - Race/class/background selection
+   - Species/class/origin selection
    - Ability score assignment
    - Validation (ability scores, equipment choices)
    - Equipment selection

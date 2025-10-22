@@ -115,11 +115,11 @@ export function generateCharacterId(characterName: string): string {
 }
 
 /**
- * Generate a readable ID for SRD content (classes, races, etc.)
+ * Generate a readable ID for SRD content (classes, species, etc.)
  * Format: {type}_{name}_srd
- * Example: class_barbarian_srd, race_elf_srd
+ * Example: class_barbarian_srd, species_elf_srd
  *
- * @param type - The type of content (class, race, background, etc.)
+ * @param type - The type of content (class, species, origin, etc.)
  * @param name - The name of the content
  */
 export function generateSrdId(type: string, name: string): string {
@@ -133,9 +133,9 @@ export function generateSrdId(type: string, name: string): string {
 /**
  * Generate a readable ID for custom/homebrew content
  * Format: {type}_{name}_{uniqueId}
- * Example: class_bloodhunter_x4k2m, race_dragonborn_a9p3q
+ * Example: class_bloodhunter_x4k2m, species_dragonborn_a9p3q
  *
- * @param type - The type of content (class, race, background, etc.)
+ * @param type - The type of content (class, species, origin, etc.)
  * @param name - The name of the custom content
  */
 export function generateCustomId(type: string, name: string): string {

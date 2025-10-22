@@ -1,15 +1,15 @@
 import type { AbilityScores } from "./abilities";
-import type { Race } from "./race";
+import type { Species } from "./species";
 import type { CharacterClass } from "./class";
-import type { Background } from "./background";
+import type { Origin } from "./origin";
 
 export interface Character {
   id: string;
   name: string;
   level: number;
-  race: Race;
+  species: Species;
   class: CharacterClass;
-  background: Background;
+  origin: Origin;
 
   baseAbilityScores: AbilityScores;
   abilityScores: AbilityScores;
@@ -46,7 +46,7 @@ export interface CharacterSummary {
   id: string;
   name: string;
   level: number;
-  race: string; // Just the name
+  species: string; // Just the name
   class: string; // Just the name
   currentHitPoints: number;
   maxHitPoints: number;

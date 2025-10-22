@@ -26,9 +26,9 @@ export default function CreateCharacterPage() {
 							Character Builder
 						</h2>
 						<p className="text-parchment-300 max-w-md mx-auto text-lg">
-							The character creation wizard will be implemented in Phase
-							2B. This will guide you through selecting race, class,
-							background, and ability scores.
+							The character creation wizard will be implemented in
+							Phase 2B. This will guide you through selecting
+							species, class, background, and ability scores.
 						</p>
 					</div>
 
@@ -41,7 +41,7 @@ export default function CreateCharacterPage() {
 						/>
 						<StepPreview
 							number={2}
-							title="Race & Class"
+							title="Species & Class"
 							description="Choose your heritage"
 						/>
 						<StepPreview
