@@ -35,16 +35,19 @@ Aether is designed to be the **go-to tool for managing D&D 5e characters**: fast
    - SRD data structure planning
    - Local persistence setup
 
-### **Phase 1.5 – SRD Data Integration**
+### **Phase 1.5 – SRD Data Integration** ✅
    - Load and structure SRD data (species, classes, origins)
    - Consider [5e-srd-api](https://www.dnd5eapi.co/) or embedded JSON
    - Create data access layer/hooks
+   - Enhanced all SRD types with proficiencies, features, and descriptions
+   - Added subspecies and subclass systems
 
-### **Phase 2A – Character Display**
+### **Phase 2A – Character Display** ✅
    - Build character sheet component (read-only)
    - Render a hardcoded/sample character
    - Display stats, HP, abilities, equipment
    - Character list view (empty state → saved characters)
+   - Character card components with navigation
 
 ### **Phase 2B – Character Builder**
    - Step-by-step guided creation wizard
@@ -52,6 +55,15 @@ Aether is designed to be the **go-to tool for managing D&D 5e characters**: fast
    - Ability score assignment
    - Validation (ability scores, equipment choices)
    - Equipment selection
+
+### **Phase 2C – UI Polish & Refinement**
+   - Refine character sheet layout and styling
+   - Improve visual hierarchy and spacing
+   - Add animations and transitions
+   - Enhance mobile responsiveness
+   - Polish character card designs
+   - Refine color scheme and typography
+   - Add loading states and empty states improvements
 
 ### **Phase 3 – Character Management**
    - Leveling and progression

@@ -20,9 +20,9 @@ export default function HomePage() {
 
 				{/* Description */}
 				<p className="text-parchment-300 max-w-lg mx-auto text-lg leading-relaxed">
-					Create, manage, and track your Dungeons & Dragons 5th Edition
-					characters with a clean, modern interface. SRD-compliant and built
-					for tabletop gaming.
+					Create, manage, and track your Dungeons & Dragons 5th
+					Edition characters with a clean, modern interface.
+					SRD-compliant and built for tabletop gaming.
 				</p>
 
 				{/* Action Buttons - Matching screenshot style */}
@@ -47,7 +47,7 @@ export default function HomePage() {
 						Development Status
 					</p>
 					<p className="text-lg font-medium text-parchment-200">
-						✅ Phase 1: Foundation in progress
+						✅ Phase 2B: Character Builder
 					</p>
 				</div>
 			</div>
