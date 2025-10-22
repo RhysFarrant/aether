@@ -2,51 +2,51 @@ import { Link } from "react-router-dom";
 
 /**
  * HomePage - Landing page for Aether
- * This is what users see when they first open the app
+ * Mystical green D&D-inspired theme
  */
 export default function HomePage() {
 	return (
-		<div className="min-h-screen flex items-center justify-center text-slate-100">
-			<div className="max-w-2xl w-full text-center space-y-6 px-4">
+		<div className="min-h-screen bg-background-primary flex items-center justify-center">
+			<div className="max-w-2xl w-full text-center space-y-8 px-4">
 				{/* Project Title */}
-				<h1 className="text-5xl font-extrabold tracking-tight">
-					🌌 Aether
+				<h1 className="text-6xl font-bold tracking-tight text-accent-400">
+					⚔️ Aether
 				</h1>
 
 				{/* Subtitle */}
-				<p className="text-xl text-slate-400">
+				<p className="text-2xl text-parchment-200 font-medium">
 					D&D 5e Character Creator & Manager
 				</p>
 
 				{/* Description */}
-				<p className="text-slate-500 max-w-lg mx-auto">
-					Create, manage, and track your Dungeons & Dragons 5th
-					Edition characters with a clean, modern interface.
-					SRD-compliant and built for tabletop gaming.
+				<p className="text-parchment-300 max-w-lg mx-auto text-lg leading-relaxed">
+					Create, manage, and track your Dungeons & Dragons 5th Edition
+					characters with a clean, modern interface. SRD-compliant and built
+					for tabletop gaming.
 				</p>
 
-				{/* Action Buttons with Navigation */}
-				<div className="flex gap-4 justify-center mt-8">
+				{/* Action Buttons - Matching screenshot style */}
+				<div className="flex gap-4 justify-center mt-10">
 					<Link
 						to="/characters"
-						className="inline-block px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-semibold transition-colors"
+						className="px-8 py-3.5 bg-accent-400 hover:bg-accent-500 text-background-primary rounded-md font-semibold transition-colors"
 					>
 						View Characters
 					</Link>
 					<Link
 						to="/create"
-						className="inline-block px-6 py-3 bg-slate-700 hover:bg-slate-600 rounded-lg font-semibold border border-slate-600 transition-colors"
+						className="px-8 py-3.5 bg-background-tertiary hover:bg-accent-400/10 text-accent-400 rounded-md font-semibold border border-accent-400/30 hover:border-accent-400 transition-colors"
 					>
 						Create New Character
 					</Link>
 				</div>
 
-				{/* Status Card */}
-				<div className="mt-12 rounded-2xl bg-slate-900/60 border border-slate-800 p-6 shadow-lg">
-					<p className="text-sm text-slate-400 mb-2">
+				{/* Status Card - Clean design like screenshot */}
+				<div className="mt-16 rounded-lg bg-background-secondary/60 border border-accent-400/20 p-6 max-w-md mx-auto">
+					<p className="text-xs text-accent-400 mb-2 uppercase tracking-widest font-bold">
 						Development Status
 					</p>
-					<p className="text-lg font-medium">
+					<p className="text-lg font-medium text-parchment-200">
 						✅ Phase 1: Foundation in progress
 					</p>
 				</div>

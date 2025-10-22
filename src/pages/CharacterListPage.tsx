@@ -2,27 +2,26 @@ import { Link } from "react-router-dom";
 
 /**
  * CharacterListPage - Display all saved characters
+ * Mystical green D&D-inspired theme
  */
 export default function CharacterListPage() {
 	// TODO: Get characters from Context/state management
-
-	// Hardcoded example - will replace this with real data later
 	const hasCharacters = false;
 
 	return (
-		<div className="min-h-screen bg-slate-950 text-slate-100 p-6">
-			{/* Page Header */}
+		<div className="min-h-screen bg-background-primary p-6">
 			<div className="max-w-6xl mx-auto">
+				{/* Page Header */}
 				<div className="flex items-center justify-between mb-8">
 					<div>
-						<h1 className="text-3xl font-bold">My Characters</h1>
-						<p className="text-slate-400 mt-1">
+						<h1 className="text-4xl font-bold text-accent-400">My Characters</h1>
+						<p className="text-parchment-300 mt-2">
 							Manage your D&D 5e character roster
 						</p>
 					</div>
 					<Link
 						to="/create"
-						className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg font-medium transition-colors"
+						className="px-6 py-3 bg-accent-400 hover:bg-accent-500 text-background-primary rounded-md font-semibold transition-colors"
 					>
 						+ Create Character
 					</Link>
@@ -30,17 +29,17 @@ export default function CharacterListPage() {
 
 				{/* Character Grid - Empty State */}
 				{!hasCharacters ? (
-					<div className="flex flex-col items-center justify-center py-20">
-						<div className="text-6xl mb-4">🎲</div>
-						<h2 className="text-2xl font-semibold mb-2">
+					<div className="flex flex-col items-center justify-center py-24">
+						<div className="text-7xl mb-6">🎲</div>
+						<h2 className="text-3xl font-bold text-parchment-200 mb-3">
 							No characters yet
 						</h2>
-						<p className="text-slate-400 mb-6">
+						<p className="text-parchment-300 mb-8 text-lg">
 							Create your first character to get started
 						</p>
 						<Link
 							to="/create"
-							className="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-medium transition-colors"
+							className="px-8 py-3.5 bg-accent-400 hover:bg-accent-500 text-background-primary rounded-md font-semibold transition-colors"
 						>
 							Create Your First Character
 						</Link>
@@ -49,9 +48,9 @@ export default function CharacterListPage() {
 					// TODO: Character grid will go here when we have data
 					<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
 						{/* Character cards will be mapped here */}
-						<p className="text-slate-400">
-							Characters will appear here...
-						</p>
+						<div className="bg-background-secondary border border-accent-400/20 rounded-lg p-6">
+							<p className="text-parchment-300">Characters will appear here...</p>
+						</div>
 					</div>
 				)}
 			</div>

@@ -2,35 +2,38 @@ import { Link } from "react-router-dom";
 
 /**
  * CreateCharacterPage - Character creation wizard
+ * Mystical green D&D-inspired theme
  */
 export default function CreateCharacterPage() {
 	return (
-		<div className="min-h-screen bg-slate-950 text-slate-100 p-6">
+		<div className="min-h-screen bg-background-primary p-6">
 			<div className="max-w-4xl mx-auto">
 				{/* Page Header */}
 				<div className="mb-8">
-					<h1 className="text-3xl font-bold">Create New Character</h1>
-					<p className="text-slate-400 mt-1">
+					<h1 className="text-4xl font-bold text-accent-400">
+						Create New Character
+					</h1>
+					<p className="text-parchment-300 mt-2">
 						Build your D&D 5e character step-by-step
 					</p>
 				</div>
 
 				{/* Placeholder Card */}
-				<div className="bg-slate-900/60 border border-slate-800 rounded-xl p-8">
+				<div className="bg-background-secondary/80 border border-accent-400/20 rounded-lg p-8">
 					<div className="text-center space-y-4">
-						<div className="text-5xl">⚔️</div>
-						<h2 className="text-xl font-semibold">
+						<div className="text-6xl">⚔️</div>
+						<h2 className="text-2xl font-bold text-parchment-200">
 							Character Builder
 						</h2>
-						<p className="text-slate-400 max-w-md mx-auto">
-							The character creation wizard will be implemented in
-							Phase 2B. This will guide you through selecting
-							race, class, background, and ability scores.
+						<p className="text-parchment-300 max-w-md mx-auto text-lg">
+							The character creation wizard will be implemented in Phase
+							2B. This will guide you through selecting race, class,
+							background, and ability scores.
 						</p>
 					</div>
 
 					{/* Preview of Future Steps */}
-					<div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+					<div className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-4">
 						<StepPreview
 							number={1}
 							title="Basic Info"
@@ -53,7 +56,7 @@ export default function CreateCharacterPage() {
 				<div className="mt-6">
 					<Link
 						to="/characters"
-						className="inline-block px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg border border-slate-700 transition-colors"
+						className="inline-block px-5 py-2.5 bg-background-tertiary hover:bg-accent-400/10 text-accent-400 rounded-md font-semibold border border-accent-400/30 hover:border-accent-400 transition-colors"
 					>
 						← Back to Characters
 					</Link>
@@ -65,6 +68,7 @@ export default function CreateCharacterPage() {
 
 /**
  * Small component for showing creation steps
+ * Styled with gold theme
  */
 interface StepPreviewProps {
 	number: number;
@@ -74,14 +78,14 @@ interface StepPreviewProps {
 
 function StepPreview({ number, title, description }: StepPreviewProps) {
 	return (
-		<div className="bg-slate-800/50 border border-slate-700 rounded-lg p-4">
+		<div className="bg-background-tertiary/60 border border-accent-400/20 rounded-lg p-5 hover:border-accent-400/40 transition-all">
 			<div className="flex items-center gap-3 mb-2">
-				<div className="w-8 h-8 bg-blue-600/20 text-blue-400 rounded-full flex items-center justify-center font-semibold">
+				<div className="w-9 h-9 bg-accent-400/20 text-accent-400 rounded-full flex items-center justify-center font-bold border border-accent-400/30">
 					{number}
 				</div>
-				<h3 className="font-semibold">{title}</h3>
+				<h3 className="font-bold text-parchment-200">{title}</h3>
 			</div>
-			<p className="text-sm text-slate-400">{description}</p>
+			<p className="text-sm text-parchment-300">{description}</p>
 		</div>
 	);
 }
