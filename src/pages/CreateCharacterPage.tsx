@@ -3,6 +3,7 @@ import { useCharacterBuilder, wizardSteps } from "../hooks/useCharacterBuilder";
 import Step1Class from "../components/CharacterBuilder/Step1Class";
 import Step2Species from "../components/CharacterBuilder/Step2Species";
 import Step3Origin from "../components/CharacterBuilder/Step3Origin";
+import Step4AbilityScores from "../components/CharacterBuilder/Step4AbilityScores";
 
 /**
  * CreateCharacterPage - Character creation wizard
@@ -38,6 +39,14 @@ export default function CreateCharacterPage() {
 					/>
 				);
 			case 4:
+				return (
+					<Step4AbilityScores
+						state={state}
+						onUpdate={updateState}
+						onNext={nextStep}
+						onPrevious={previousStep}
+					/>
+				);
 			case 5:
 			case 6:
 			case 7:
