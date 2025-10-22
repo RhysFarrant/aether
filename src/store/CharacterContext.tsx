@@ -8,11 +8,14 @@ import {
 import type { Character } from "../types";
 import {
 	getCharacters,
-	getCharacterById,
 	addCharacter as saveCharacter,
 	updateCharacter as saveUpdateCharacter,
 	deleteCharacter as removeCharacter,
 } from "../utils/storage";
+import {
+	createSampleCharacter,
+	createSampleFighter,
+} from "../data/sampleCharacter";
 
 /**
  * Shape of the Character Context
@@ -59,7 +62,18 @@ export function CharacterProvider({ children }: CharacterProviderProps) {
 	// Load characters from localStorage when component mounts
 	useEffect(() => {
 		const loadedCharacters = getCharacters();
-		setCharacters(loadedCharacters);
+
+		// DEV ONLY: If no characters exist, load sample characters for testing
+		if (loadedCharacters.length === 0 && import.meta.env.DEV) {
+			const sampleWizard = createSampleCharacter();
+			const sampleFighter = createSampleFighter();
+			saveCharacter(sampleWizard);
+			saveCharacter(sampleFighter);
+			setCharacters([sampleWizard, sampleFighter]);
+		} else {
+			setCharacters(loadedCharacters);
+		}
+
 		setIsLoading(false);
 	}, []); // Empty array = run once on mount
 
@@ -136,4 +150,16 @@ export function useCharacters() {
 	}
 
 	return context;
+}
+
+/**
+ * Custom Hook: useCharacterById
+ * Get a single character by ID
+ *
+ * Usage:
+ * const character = useCharacterById(id);
+ */
+export function useCharacterById(id: string | undefined): Character | null {
+	const { getCharacter } = useCharacters();
+	return id ? getCharacter(id) : null;
 }

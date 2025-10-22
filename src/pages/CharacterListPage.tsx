@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { useCharacters } from "../store";
+import CharacterCard from "../components/CharacterCard";
 
 /**
  * CharacterListPage - Display all saved characters
@@ -55,12 +56,10 @@ export default function CharacterListPage() {
 						</Link>
 					</div>
 				) : (
-					// TODO: Character grid will go here when we have data
-					<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-						{/* Character cards will be mapped here */}
-						<div className="bg-background-secondary border border-accent-400/20 rounded-lg p-6">
-							<p className="text-parchment-300">Characters will appear here...</p>
-						</div>
+					<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+						{characters.map((character) => (
+							<CharacterCard key={character.id} character={character} />
+						))}
 					</div>
 				)}
 			</div>

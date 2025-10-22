@@ -1,4 +1,8 @@
 /**
  * Barrel export for store/context
  */
-export { CharacterProvider, useCharacters } from "./CharacterContext";
+export {
+	CharacterProvider,
+	useCharacters,
+	useCharacterById,
+} from "./CharacterContext";

@@ -3,7 +3,12 @@
  */
 import { createBrowserRouter } from "react-router-dom";
 import App from "./App";
-import { HomePage, CharacterListPage, CreateCharacterPage } from "./pages";
+import {
+	HomePage,
+	CharacterListPage,
+	CreateCharacterPage,
+	CharacterSheetPage,
+} from "./pages";
 
 /**
  * Route definitions
@@ -25,11 +30,10 @@ export const router = createBrowserRouter([
 				path: "create",
 				element: <CreateCharacterPage />,
 			},
-			// TODO: Add character detail page later
-			// {
-			//   path: "characters/:id",
-			//   element: <CharacterDetailPage />,
-			// },
+			{
+				path: "characters/:id",
+				element: <CharacterSheetPage />,
+			},
 		],
 	},
 ]);
