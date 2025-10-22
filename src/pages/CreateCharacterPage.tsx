@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { useCharacterBuilder, wizardSteps } from "../hooks/useCharacterBuilder";
 import Step1Class from "../components/CharacterBuilder/Step1Class";
+import Step2Species from "../components/CharacterBuilder/Step2Species";
 
 /**
  * CreateCharacterPage - Character creation wizard
@@ -19,17 +20,12 @@ export default function CreateCharacterPage() {
 				);
 			case 2:
 				return (
-					<div className="text-center py-12">
-						<p className="text-parchment-300 text-lg">
-							Step 2: Species Selection - Coming soon!
-						</p>
-						<button
-							onClick={previousStep}
-							className="mt-6 px-6 py-2 bg-accent-400/20 text-accent-400 rounded-md"
-						>
-							← Back
-						</button>
-					</div>
+					<Step2Species
+						state={state}
+						onUpdate={updateState}
+						onNext={nextStep}
+						onPrevious={previousStep}
+					/>
 				);
 			case 3:
 				return (
