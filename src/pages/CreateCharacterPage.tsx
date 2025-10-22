@@ -4,6 +4,8 @@ import Step1Class from "../components/CharacterBuilder/Step1Class";
 import Step2Species from "../components/CharacterBuilder/Step2Species";
 import Step3Origin from "../components/CharacterBuilder/Step3Origin";
 import Step4AbilityScores from "../components/CharacterBuilder/Step4AbilityScores";
+import Step5Skills from "../components/CharacterBuilder/Step5Skills";
+import Step6Equipment from "../components/CharacterBuilder/Step6Equipment";
 
 /**
  * CreateCharacterPage - Character creation wizard
@@ -48,7 +50,23 @@ export default function CreateCharacterPage() {
 					/>
 				);
 			case 5:
+				return (
+					<Step5Skills
+						state={state}
+						onUpdate={updateState}
+						onNext={nextStep}
+						onPrevious={previousStep}
+					/>
+				);
 			case 6:
+				return (
+					<Step6Equipment
+						state={state}
+						onUpdate={updateState}
+						onNext={nextStep}
+						onPrevious={previousStep}
+					/>
+				);
 			case 7:
 				return (
 					<div className="text-center py-12">

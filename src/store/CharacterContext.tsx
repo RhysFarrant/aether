@@ -139,6 +139,7 @@ export function CharacterProvider({ children }: CharacterProviderProps) {
  * Usage:
  * const { characters, addCharacter } = useCharacters();
  */
+// eslint-disable-next-line react-refresh/only-export-components
 export function useCharacters() {
 	const context = useContext(CharacterContext);
 
@@ -159,6 +160,7 @@ export function useCharacters() {
  * Usage:
  * const character = useCharacterById(id);
  */
+// eslint-disable-next-line react-refresh/only-export-components
 export function useCharacterById(id: string | undefined): Character | null {
 	const { getCharacter } = useCharacters();
 	return id ? getCharacter(id) : null;
