@@ -47,7 +47,7 @@ export default function HomePage() {
 						Development Status
 					</p>
 					<p className="text-lg font-medium text-parchment-200">
-						✅ Phase 2B: Character Builder
+						✅ Phase 2C: UI Polish & Refinement
 					</p>
 				</div>
 			</div>
