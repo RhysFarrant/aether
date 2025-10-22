@@ -20,6 +20,21 @@ export default function CharacterCard({ character }: CharacterCardProps) {
 		maxHitPoints,
 	} = character;
 
+	// Safety check for malformed data (old character format)
+	if (!species || !charClass) {
+		return (
+			<div className="block bg-background-secondary border border-red-500/20 rounded-lg p-6">
+				<h3 className="text-xl font-bold text-red-400 mb-2">Invalid Character Data</h3>
+				<p className="text-parchment-300 text-sm mb-3">
+					This character has invalid data and cannot be displayed.
+				</p>
+				<p className="text-parchment-400 text-xs">
+					Character ID: {id}
+				</p>
+			</div>
+		);
+	}
+
 	const speciesDisplay = subspecies ? subspecies.name : species.name;
 
 	return (
