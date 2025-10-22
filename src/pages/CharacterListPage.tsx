@@ -1,12 +1,22 @@
 import { Link } from "react-router-dom";
+import { useCharacters } from "../store";
 
 /**
  * CharacterListPage - Display all saved characters
  * Mystical green D&D-inspired theme
  */
 export default function CharacterListPage() {
-	// TODO: Get characters from Context/state management
-	const hasCharacters = false;
+	// Get characters from Context!
+	const { characters, isLoading } = useCharacters();
+	const hasCharacters = characters.length > 0;
+
+	if (isLoading) {
+		return (
+			<div className="min-h-screen bg-background-primary flex items-center justify-center">
+				<p className="text-parchment-300 text-xl">Loading characters...</p>
+			</div>
+		);
+	}
 
 	return (
 		<div className="min-h-screen bg-background-primary p-6">
