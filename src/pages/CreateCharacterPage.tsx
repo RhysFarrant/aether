@@ -6,13 +6,15 @@ import Step3Origin from "../components/CharacterBuilder/Step3Origin";
 import Step4AbilityScores from "../components/CharacterBuilder/Step4AbilityScores";
 import Step5Skills from "../components/CharacterBuilder/Step5Skills";
 import Step6Equipment from "../components/CharacterBuilder/Step6Equipment";
+import Step7Details from "../components/CharacterBuilder/Step7Details";
+import Step8Review from "../components/CharacterBuilder/Step8Review";
 
 /**
  * CreateCharacterPage - Character creation wizard
  * Mystical green D&D-inspired theme
  */
 export default function CreateCharacterPage() {
-	const { state, updateState, nextStep, previousStep, goToStep } =
+	const { state, updateState, nextStep, previousStep, goToStep, reset } =
 		useCharacterBuilder();
 
 	// Render the current step component
@@ -69,17 +71,20 @@ export default function CreateCharacterPage() {
 				);
 			case 7:
 				return (
-					<div className="text-center py-12">
-						<p className="text-parchment-300 text-lg">
-							Step {state.currentStep} - Coming soon!
-						</p>
-						<button
-							onClick={previousStep}
-							className="mt-6 px-6 py-2 bg-accent-400/20 text-accent-400 rounded-md"
-						>
-							← Back
-						</button>
-					</div>
+					<Step7Details
+						state={state}
+						onUpdate={updateState}
+						onNext={nextStep}
+						onPrevious={previousStep}
+					/>
+				);
+			case 8:
+				return (
+					<Step8Review
+						state={state}
+						onPrevious={previousStep}
+						onReset={reset}
+					/>
 				);
 			default:
 				return (

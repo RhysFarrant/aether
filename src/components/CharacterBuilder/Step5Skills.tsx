@@ -63,6 +63,9 @@ export default function Step5Skills({
 
 	const handleContinue = () => {
 		if (classSkillsRemaining === 0) {
+			// Combine origin skills and class skills before continuing
+			const allSkills = [...new Set([...originSkills, ...selectedSkills])];
+			onUpdateRef.current({ selectedSkills: allSkills });
 			onNext();
 		}
 	};
