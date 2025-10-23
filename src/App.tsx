@@ -4,7 +4,7 @@ import { Outlet } from "react-router-dom";
 
 export default function App() {
 	return (
-		<div className="h-screen bg-background-primary overflow-hidden">
+		<div className="min-h-screen bg-background-primary">
 			<Outlet />
 		</div>
 	);
