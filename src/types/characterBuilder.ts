@@ -39,6 +39,7 @@ export interface CharacterBuilderState {
 
 	// Meta
 	currentStep: number;
+	furthestStep: number; // Track the furthest step the user has reached
 	level: number; // Default to 1 for character creation
 }
 
@@ -62,6 +63,7 @@ export const initialBuilderState: CharacterBuilderState = {
 	weaponSubSelections: {},
 	alignment: "true-neutral",
 	currentStep: 1,
+	furthestStep: 1,
 	level: 1,
 };
 

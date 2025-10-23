@@ -168,18 +168,18 @@ export default function CreateCharacterPage() {
 							{wizardSteps.map((step) => {
 								const isComplete = isStepComplete(step.number);
 								const isCurrent = step.number === state.currentStep;
-								const isPast = step.number < state.currentStep;
+								const isVisited = step.number <= (state.furthestStep ?? state.currentStep);
 
 								return (
 									<button
 										key={step.number}
 										onClick={() => goToStep(step.number)}
-										disabled={step.number > state.currentStep}
+										disabled={!isVisited}
 										className={`px-4 py-2 rounded-t transition-colors text-sm flex items-center gap-2 ${
 											isCurrent
 												? "bg-accent-400 text-background-primary font-semibold"
-												: isPast
-												? "bg-background-tertiary/50 text-parchment-200 hover:bg-background-tertiary"
+												: isVisited
+												? "bg-background-tertiary/50 text-parchment-200 hover:bg-background-tertiary cursor-pointer"
 												: "bg-transparent text-parchment-400 cursor-not-allowed"
 										}`}
 										title={step.description}

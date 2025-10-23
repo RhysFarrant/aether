@@ -9,9 +9,14 @@ import { initialBuilderState } from "../types/characterBuilder";
  * Hook for managing character builder state
  */
 export function useCharacterBuilder() {
-	const [state, setState] = useState<CharacterBuilderState>(
-		initialBuilderState
-	);
+	const [state, setState] = useState<CharacterBuilderState>(() => {
+		// Ensure furthestStep is initialized (for backward compatibility)
+		const initial = { ...initialBuilderState };
+		if (initial.furthestStep === undefined) {
+			initial.furthestStep = initial.currentStep;
+		}
+		return initial;
+	});
 
 	// Update any field in the builder state
 	const updateState = (updates: Partial<CharacterBuilderState>) => {
@@ -20,12 +25,20 @@ export function useCharacterBuilder() {
 
 	// Navigate to specific step
 	const goToStep = (step: number) => {
-		setState((prev) => ({ ...prev, currentStep: step }));
+		setState((prev) => ({
+			...prev,
+			currentStep: step,
+			furthestStep: Math.max(prev.furthestStep ?? prev.currentStep, step),
+		}));
 	};
 
 	// Go to next step
 	const nextStep = () => {
-		setState((prev) => ({ ...prev, currentStep: prev.currentStep + 1 }));
+		setState((prev) => ({
+			...prev,
+			currentStep: prev.currentStep + 1,
+			furthestStep: Math.max(prev.furthestStep ?? prev.currentStep, prev.currentStep + 1),
+		}));
 	};
 
 	// Go to previous step
