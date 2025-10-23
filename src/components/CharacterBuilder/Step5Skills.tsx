@@ -73,17 +73,7 @@ export default function Step5Skills({
 	const isComplete = classSkillsRemaining === 0;
 
 	return (
-		<div className="space-y-6">
-			<div>
-				<h2 className="text-3xl font-bold text-accent-400 mb-2">
-					Select Skill Proficiencies
-				</h2>
-				<p className="text-parchment-300">
-					Choose {classSkillCount} skills from your class, plus you gain skills
-					from your origin.
-				</p>
-			</div>
-
+		<div className="space-y-2">
 			{/* Origin Skills (automatic) */}
 			{originSkills.length > 0 && (
 				<div className="bg-background-tertiary/60 border border-accent-400/20 rounded-lg p-4">
@@ -189,42 +179,6 @@ export default function Step5Skills({
 					</div>
 				</div>
 			)}
-
-			{/* Helpful Info */}
-			<div className="bg-background-tertiary/60 border border-accent-400/20 rounded-lg p-4">
-				<div className="text-sm text-parchment-200">
-					<div className="font-semibold mb-2">💡 About Skills:</div>
-					<ul className="space-y-1 text-xs text-parchment-300">
-						<li>• Skill proficiencies add your proficiency bonus to checks</li>
-						<li>
-							• Each skill is based on a specific ability score (e.g., Athletics
-							uses Strength)
-						</li>
-						<li>
-							• Your total bonus = Ability Modifier + Proficiency Bonus (if
-							proficient)
-						</li>
-						<li>• Skills from your origin are automatically granted</li>
-					</ul>
-				</div>
-			</div>
-
-			{/* Navigation Buttons */}
-			<div className="flex justify-between">
-				<button
-					onClick={onPrevious}
-					className="px-8 py-3 bg-accent-400/20 hover:bg-accent-400/30 text-accent-400 font-semibold rounded-md transition-colors"
-				>
-					← Back
-				</button>
-				<button
-					onClick={handleContinue}
-					disabled={!isComplete}
-					className="px-8 py-3 bg-accent-400 hover:bg-accent-500 disabled:bg-accent-400/30 disabled:cursor-not-allowed text-background-primary font-semibold rounded-md transition-colors"
-				>
-					Continue →
-				</button>
-			</div>
 		</div>
 	);
 }

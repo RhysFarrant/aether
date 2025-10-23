@@ -23,7 +23,11 @@ export default function CreateCharacterPage() {
 		switch (state.currentStep) {
 			case 1:
 				return (
-					<Step1Class state={state} onUpdate={updateState} onNext={nextStep} />
+					<Step1Class
+						state={state}
+						onUpdate={updateState}
+						onNext={nextStep}
+					/>
 				);
 			case 2:
 				return (
@@ -99,14 +103,14 @@ export default function CreateCharacterPage() {
 	};
 
 	return (
-		<div className="h-screen max-h-screen bg-background-primary grid grid-cols-[288px_1fr] overflow-hidden">
+		<div className="h-screen max-h-screen bg-background-primary grid grid-cols-[288px_1fr]">
 			{/* Persistent Sidebar */}
 			<CharacterSidebar state={state} />
 
 			{/* Main Content Area */}
-			<div className="flex flex-col h-full">
+			<div className="flex flex-col h-screen max-h-screen overflow-hidden">
 				{/* Top Navigation Bar */}
-				<div className="bg-background-secondary border-b border-accent-400/20 px-6 py-3 shrink-0">
+				<div className="bg-background-secondary border-b border-accent-400/20 px-6 py-3 flex-shrink-0">
 					<div className="flex items-center justify-between">
 						<div className="flex items-center gap-2">
 							{/* Tab Navigation */}
@@ -137,15 +141,15 @@ export default function CreateCharacterPage() {
 					</div>
 				</div>
 
-				{/* Step Content */}
-				<div className="flex-1 overflow-y-auto bg-background-primary min-h-0">
-					<div className="p-8">
+				{/* Step Content - Scrollable Container */}
+				<div className="flex-1 overflow-y-auto bg-background-primary">
+					<div className="p-8 pb-6">
 						{renderStep()}
 					</div>
 				</div>
 
 				{/* Bottom Navigation */}
-				<div className="bg-background-secondary border-t border-accent-400/20 px-6 py-3 shrink-0">
+				<div className="bg-background-secondary border-t border-accent-400/20 px-6 py-3 flex-shrink-0">
 					<div className="flex items-center justify-between max-w-5xl mx-auto">
 						<button
 							onClick={previousStep}

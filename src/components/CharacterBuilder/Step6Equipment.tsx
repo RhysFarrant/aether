@@ -61,16 +61,7 @@ export default function Step6Equipment({
 	const isComplete = choicesMade === totalChoices;
 
 	return (
-		<div className="space-y-6">
-			<div>
-				<h2 className="text-3xl font-bold text-accent-400 mb-2">
-					Choose Your Equipment
-				</h2>
-				<p className="text-parchment-300">
-					Select your starting equipment from your class and origin.
-				</p>
-			</div>
-
+		<div className="space-y-2">
 			{/* Origin Equipment (automatic) */}
 			{originEquipment.length > 0 && (
 				<div className="bg-background-tertiary/60 border border-accent-400/20 rounded-lg p-4">
@@ -228,44 +219,6 @@ export default function Step6Equipment({
 					</div>
 				</div>
 			)}
-
-			{/* Helpful Info */}
-			<div className="bg-background-tertiary/60 border border-accent-400/20 rounded-lg p-4">
-				<div className="text-sm text-parchment-200">
-					<div className="font-semibold mb-2">💡 About Equipment:</div>
-					<ul className="space-y-1 text-xs text-parchment-300">
-						<li>• Equipment from your origin is automatically granted</li>
-						<li>
-							• You must choose from the equipment options provided by your
-							class
-						</li>
-						<li>
-							• Some equipment (like martial weapons) will need to be specified
-							later
-						</li>
-						<li>
-							• You can purchase additional equipment with your starting gold
-						</li>
-					</ul>
-				</div>
-			</div>
-
-			{/* Navigation Buttons */}
-			<div className="flex justify-between">
-				<button
-					onClick={onPrevious}
-					className="px-8 py-3 bg-accent-400/20 hover:bg-accent-400/30 text-accent-400 font-semibold rounded-md transition-colors"
-				>
-					← Back
-				</button>
-				<button
-					onClick={handleContinue}
-					disabled={!isComplete}
-					className="px-8 py-3 bg-accent-400 hover:bg-accent-500 disabled:bg-accent-400/30 disabled:cursor-not-allowed text-background-primary font-semibold rounded-md transition-colors"
-				>
-					Continue →
-				</button>
-			</div>
 		</div>
 	);
 }

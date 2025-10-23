@@ -50,6 +50,9 @@ export default function Step1Class({
 	const handleSelectClass = () => {
 		if (expandedClassId) {
 			onUpdate({ classId: expandedClassId });
+			setTimeout(() => {
+				onNext();
+			}, 500);
 		}
 	};
 

@@ -52,6 +52,9 @@ export default function Step3Origin({
 	const handleSelectOrigin = () => {
 		if (expandedOriginId) {
 			onUpdate({ originId: expandedOriginId });
+			setTimeout(() => {
+				onNext();
+			}, 500);
 		}
 	};
 

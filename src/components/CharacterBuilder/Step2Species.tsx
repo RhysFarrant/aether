@@ -66,6 +66,9 @@ export default function Step2Species({
 				speciesId: expandedSpeciesId,
 				subspeciesId: selectedSubspeciesId || null,
 			});
+			setTimeout(() => {
+				onNext();
+			}, 500);
 		}
 	};
 

@@ -104,16 +104,7 @@ export default function Step8Review({
 	};
 
 	return (
-		<div className="space-y-6">
-			<div>
-				<h2 className="text-3xl font-bold text-accent-400 mb-2">
-					Review Your Character
-				</h2>
-				<p className="text-parchment-300">
-					Review your choices before creating your character.
-				</p>
-			</div>
-
+		<div className="space-y-2">
 			{/* Character Name */}
 			<div className="bg-background-tertiary/60 border border-accent-400/20 rounded-lg p-4">
 				<h3 className="text-2xl font-bold text-accent-400 mb-1">{state.name}</h3>
@@ -225,15 +216,8 @@ export default function Step8Review({
 				</p>
 			</div>
 
-			{/* Navigation Buttons */}
-			<div className="flex justify-between items-center">
-				<button
-					onClick={onPrevious}
-					disabled={isCreating}
-					className="px-8 py-3 bg-accent-400/20 hover:bg-accent-400/30 disabled:opacity-50 disabled:cursor-not-allowed text-accent-400 font-semibold rounded-md transition-colors"
-				>
-					← Back
-				</button>
+			{/* Action Buttons */}
+			<div className="flex justify-end items-center">
 				<div className="flex gap-3">
 					<button
 						onClick={onReset}
