@@ -5,6 +5,7 @@ import Step2Species from "../components/CharacterBuilder/Step2Species";
 import Step3Origin from "../components/CharacterBuilder/Step3Origin";
 import Step4AbilityScores from "../components/CharacterBuilder/Step4AbilityScores";
 import Step5Skills from "../components/CharacterBuilder/Step5Skills";
+import Step5aSpells from "../components/CharacterBuilder/Step5aSpells";
 import Step6Equipment from "../components/CharacterBuilder/Step6Equipment";
 import Step7Details from "../components/CharacterBuilder/Step7Details";
 import Step8Review from "../components/CharacterBuilder/Step8Review";
@@ -67,7 +68,7 @@ export default function CreateCharacterPage() {
 				);
 			case 6:
 				return (
-					<Step6Equipment
+					<Step5aSpells
 						state={state}
 						onUpdate={updateState}
 						onNext={nextStep}
@@ -76,7 +77,7 @@ export default function CreateCharacterPage() {
 				);
 			case 7:
 				return (
-					<Step7Details
+					<Step6Equipment
 						state={state}
 						onUpdate={updateState}
 						onNext={nextStep}
@@ -84,6 +85,15 @@ export default function CreateCharacterPage() {
 					/>
 				);
 			case 8:
+				return (
+					<Step7Details
+						state={state}
+						onUpdate={updateState}
+						onNext={nextStep}
+						onPrevious={previousStep}
+					/>
+				);
+			case 9:
 				return (
 					<Step8Review
 						state={state}

@@ -91,6 +91,16 @@ export const wizardSteps: WizardStep[] = [
 	},
 	{
 		number: 6,
+		title: "Spells",
+		description: "Choose starting spells",
+		isComplete: (state) => {
+			// For non-spellcasters, always complete
+			// For spellcasters, check if spells are selected
+			return state.selectedCantrips.length > 0 || state.selectedSpells.length > 0;
+		},
+	},
+	{
+		number: 7,
 		title: "Equipment",
 		description: "Choose starting gear",
 		isComplete: () => {
@@ -99,13 +109,13 @@ export const wizardSteps: WizardStep[] = [
 		},
 	},
 	{
-		number: 7,
+		number: 8,
 		title: "Details",
 		description: "Name and describe",
 		isComplete: (state) => state.name.length > 0,
 	},
 	{
-		number: 8,
+		number: 9,
 		title: "Review",
 		description: "Finalize your character",
 		isComplete: () => true,

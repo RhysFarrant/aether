@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { Character } from "../types/character";
 
 interface CharacterSheetProps {
@@ -47,6 +48,9 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 	const intMod = getAbilityModifier(abilityScores.intelligence);
 	const wisMod = getAbilityModifier(abilityScores.wisdom);
 	const chaMod = getAbilityModifier(abilityScores.charisma);
+
+	// Tab state for Features & Traits section
+	const [activeTab, setActiveTab] = useState<"features" | "spells">("features");
 
 	return (
 		<div className="max-w-7xl mx-auto space-y-6">
@@ -259,12 +263,33 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 				<div className="space-y-6">
 					{/* Features & Traits */}
 					<div className="bg-background-secondary border border-accent-400/30 rounded-lg p-6">
-						<h2 className="text-2xl font-bold text-accent-400 mb-4">
-							Features & Traits
-						</h2>
+						<div className="flex items-center gap-4 mb-4">
+							<button
+								onClick={() => setActiveTab("features")}
+								className={`px-4 py-2 rounded-t transition-colors text-lg font-bold ${
+									activeTab === "features"
+										? "bg-accent-400 text-background-primary"
+										: "text-parchment-300 hover:text-accent-400"
+								}`}
+							>
+								Features & Traits
+							</button>
+							<button
+								onClick={() => setActiveTab("spells")}
+								className={`px-4 py-2 rounded-t transition-colors text-lg font-bold ${
+									activeTab === "spells"
+										? "bg-accent-400 text-background-primary"
+										: "text-parchment-300 hover:text-accent-400"
+								}`}
+							>
+								Spells
+							</button>
+						</div>
 
-						{/* Species Traits */}
-						{species.traits && species.traits.length > 0 && (
+						{activeTab === "features" && (
+							<div>
+								{/* Species Traits */}
+								{species.traits && species.traits.length > 0 && (
 							<div className="mb-4">
 								<h3 className="text-lg font-semibold text-parchment-100 mb-2">
 									{species.name} Traits
@@ -342,6 +367,62 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 										{origin.feature.description}
 									</div>
 								</div>
+							</div>
+						)}
+							</div>
+						)}
+
+						{activeTab === "spells" && (
+							<div>
+								{/* Cantrips */}
+								{character.cantrips && character.cantrips.length > 0 && (
+									<div className="mb-4">
+										<h3 className="text-lg font-semibold text-parchment-100 mb-2">
+											Cantrips
+										</h3>
+										<div className="grid grid-cols-1 gap-2">
+											{character.cantrips.map((cantrip) => (
+												<div
+													key={cantrip}
+													className="bg-background-tertiary/60 border border-accent-400/20 rounded-lg p-3"
+												>
+													<div className="font-semibold text-parchment-200">
+														{cantrip}
+													</div>
+												</div>
+											))}
+										</div>
+									</div>
+								)}
+
+								{/* Level 1 Spells */}
+								{character.spells && character.spells.length > 0 && (
+									<div className="mb-4">
+										<h3 className="text-lg font-semibold text-parchment-100 mb-2">
+											Level 1 Spells
+										</h3>
+										<div className="grid grid-cols-1 gap-2">
+											{character.spells.map((spell) => (
+												<div
+													key={spell}
+													className="bg-background-tertiary/60 border border-accent-400/20 rounded-lg p-3"
+												>
+													<div className="font-semibold text-parchment-200">
+														{spell}
+													</div>
+												</div>
+											))}
+										</div>
+									</div>
+								)}
+
+								{/* No spells message */}
+								{(!character.cantrips || character.cantrips.length === 0) &&
+									(!character.spells || character.spells.length === 0) && (
+										<div className="text-center py-8 text-parchment-400">
+											This character has no spells.
+										</div>
+									)}
 							</div>
 						)}
 					</div>

@@ -25,6 +25,10 @@ export interface CharacterBuilderState {
 	// Step 6: Skills
 	selectedSkills: string[];
 
+	// Step 6a: Spells (for spellcasters only)
+	selectedCantrips: string[];
+	selectedSpells: string[];
+
 	// Step 7: Equipment
 	selectedEquipment: string[];
 	equipmentChoices: Record<number, number>; // choice index -> selected option index
@@ -47,6 +51,8 @@ export const initialBuilderState: CharacterBuilderState = {
 	abilityScores: null,
 	abilityScoreMethod: "standard",
 	selectedSkills: [],
+	selectedCantrips: [],
+	selectedSpells: [],
 	selectedEquipment: [],
 	equipmentChoices: {},
 	currentStep: 1,

@@ -28,6 +28,10 @@ export interface Character {
 
   skillProficiencies: string[];
 
+  /** Spells known (for spellcasters) */
+  cantrips?: string[];
+  spells?: string[];
+
   personality?: {
     traits?: string;
     ideals?: string;

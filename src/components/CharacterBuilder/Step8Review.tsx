@@ -88,6 +88,8 @@ export default function Step8Review({
 			proficiencyBonus: proficiencyBonus,
 			skillProficiencies: state.selectedSkills,
 			equipment: equipment,
+			cantrips: state.selectedCantrips.length > 0 ? state.selectedCantrips : undefined,
+			spells: state.selectedSpells.length > 0 ? state.selectedSpells : undefined,
 			createdAt: new Date(),
 			updatedAt: new Date(),
 		};
