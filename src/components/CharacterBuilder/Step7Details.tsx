@@ -20,7 +20,7 @@ export default function Step7Details({
 }: Step7DetailsProps) {
 	const [name, setName] = useState<string>(state.name || "");
 	const [debouncedName, setDebouncedName] = useState<string>(state.name || "");
-	const [alignment, setAlignment] = useState<string>(state.alignment || "");
+	const [alignment, setAlignment] = useState<string>(state.alignment || "true-neutral");
 
 	// Use ref to avoid re-render issues with onUpdate
 	const onUpdateRef = useRef(onUpdate);

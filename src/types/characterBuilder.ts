@@ -58,7 +58,7 @@ export const initialBuilderState: CharacterBuilderState = {
 	selectedSpells: [],
 	selectedEquipment: [],
 	equipmentChoices: {},
-	alignment: "",
+	alignment: "true-neutral",
 	currentStep: 1,
 	level: 1,
 };
