@@ -90,6 +90,7 @@ export default function Step8Review({
 			equipment: equipment,
 			cantrips: state.selectedCantrips.length > 0 ? state.selectedCantrips : undefined,
 			spells: state.selectedSpells.length > 0 ? state.selectedSpells : undefined,
+			alignment: state.alignment || undefined,
 			createdAt: new Date(),
 			updatedAt: new Date(),
 		};

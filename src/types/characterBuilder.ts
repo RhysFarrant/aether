@@ -33,6 +33,9 @@ export interface CharacterBuilderState {
 	selectedEquipment: string[];
 	equipmentChoices: Record<number, number>; // choice index -> selected option index
 
+	// Step 8: Details
+	alignment: string;
+
 	// Meta
 	currentStep: number;
 	level: number; // Default to 1 for character creation
@@ -55,6 +58,7 @@ export const initialBuilderState: CharacterBuilderState = {
 	selectedSpells: [],
 	selectedEquipment: [],
 	equipmentChoices: {},
+	alignment: "",
 	currentStep: 1,
 	level: 1,
 };

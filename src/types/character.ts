@@ -32,6 +32,8 @@ export interface Character {
   cantrips?: string[];
   spells?: string[];
 
+  alignment?: string;
+
   personality?: {
     traits?: string;
     ideals?: string;

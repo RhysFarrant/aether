@@ -20,6 +20,7 @@ export default function Step7Details({
 }: Step7DetailsProps) {
 	const [name, setName] = useState<string>(state.name || "");
 	const [debouncedName, setDebouncedName] = useState<string>(state.name || "");
+	const [alignment, setAlignment] = useState<string>(state.alignment || "");
 
 	// Use ref to avoid re-render issues with onUpdate
 	const onUpdateRef = useRef(onUpdate);
@@ -28,9 +29,9 @@ export default function Step7Details({
 	}, [onUpdate]);
 
 	useEffect(() => {
-		// Update parent state whenever name changes
-		onUpdateRef.current({ name });
-	}, [name]);
+		// Update parent state whenever name or alignment changes
+		onUpdateRef.current({ name, alignment });
+	}, [name, alignment]);
 
 	// Debounce the name for the comment display
 	useEffect(() => {
@@ -127,6 +128,18 @@ export default function Step7Details({
 
 	const nameComment = getNameComment(debouncedName);
 
+	const alignments = [
+		{ value: "lawful-good", label: "Lawful Good", description: "Acts with honor and compassion" },
+		{ value: "neutral-good", label: "Neutral Good", description: "Does good without bias" },
+		{ value: "chaotic-good", label: "Chaotic Good", description: "Acts with freedom and kindness" },
+		{ value: "lawful-neutral", label: "Lawful Neutral", description: "Follows rules and traditions" },
+		{ value: "true-neutral", label: "True Neutral", description: "Maintains balance and neutrality" },
+		{ value: "chaotic-neutral", label: "Chaotic Neutral", description: "Values freedom above all" },
+		{ value: "lawful-evil", label: "Lawful Evil", description: "Uses laws for personal gain" },
+		{ value: "neutral-evil", label: "Neutral Evil", description: "Acts selfishly without morals" },
+		{ value: "chaotic-evil", label: "Chaotic Evil", description: "Destroys for pleasure and greed" },
+	];
+
 	return (
 		<div className="space-y-2">
 			{/* Character Name */}
@@ -157,6 +170,38 @@ export default function Step7Details({
 						</p>
 					</div>
 				)}
+			</div>
+
+			{/* Alignment */}
+			<div className="bg-background-tertiary/60 border border-accent-400/20 rounded-lg p-6">
+				<label className="block mb-4">
+					<span className="text-lg font-semibold text-parchment-100">
+						Alignment
+					</span>
+					<span className="text-sm text-parchment-400 ml-2">(Optional)</span>
+				</label>
+				<div className="grid grid-cols-3 gap-3">
+					{alignments.map((align) => (
+						<button
+							key={align.value}
+							onClick={() => setAlignment(align.value)}
+							className={`p-4 rounded-lg border-2 transition-all ${
+								alignment === align.value
+									? "border-accent-400 bg-accent-400/20"
+									: "border-accent-400/20 bg-background-primary hover:border-accent-400/40"
+							}`}
+						>
+							<div className="text-center">
+								<p className="text-parchment-100 font-semibold mb-1">
+									{align.label}
+								</p>
+								<p className="text-xs text-parchment-400">
+									{align.description}
+								</p>
+							</div>
+						</button>
+					))}
+				</div>
 			</div>
 		</div>
 	);
