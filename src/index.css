@@ -33,6 +33,10 @@
 	--shadow-inner-dark: inset 0 2px 4px rgba(0, 0, 0, 0.4);
 }
 
+* {
+	box-sizing: border-box;
+}
+
 :root {
 	font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
 	line-height: 1.5;
@@ -43,11 +47,12 @@
 	-moz-osx-font-smoothing: grayscale;
 }
 
-html, body, #root {
+html,
+body,
+#root {
 	margin: 0;
 	padding: 0;
 	min-width: 320px;
-	min-height: 100vh;
 	width: 100%;
 	height: 100%;
 }
@@ -58,6 +63,116 @@ body {
 
 /* Subtle background pattern */
 .bg-subtle-pattern {
-	background-image: radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.02) 1px, transparent 0);
+	background-image: radial-gradient(
+		circle at 1px 1px,
+		rgba(255, 255, 255, 0.02) 1px,
+		transparent 0
+	);
 	background-size: 40px 40px;
+}
+
+/* Animation Keyframes */
+@keyframes fadeIn {
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
+}
+
+@keyframes slideInFromLeft {
+	from {
+		opacity: 0;
+		transform: translateX(-20px);
+	}
+	to {
+		opacity: 1;
+		transform: translateX(0);
+	}
+}
+
+@keyframes slideInFromTop {
+	from {
+		opacity: 0;
+		transform: translateY(-20px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+@keyframes slideInFromBottom {
+	from {
+		opacity: 0;
+		transform: translateY(20px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+@keyframes scaleIn {
+	from {
+		opacity: 0;
+		transform: scale(0.95);
+	}
+	to {
+		opacity: 1;
+		transform: scale(1);
+	}
+}
+
+/* Animation Classes */
+.animate-fadeIn {
+	animation: fadeIn 0.3s ease-out;
+}
+
+.animate-slideInFromLeft {
+	animation: slideInFromLeft 0.4s ease-out backwards;
+}
+
+.animate-slideInFromTop {
+	animation: slideInFromTop 0.4s ease-out;
+}
+
+.animate-slideInFromBottom {
+	animation: slideInFromBottom 0.4s ease-out;
+}
+
+.animate-scaleIn {
+	animation: scaleIn 0.3s ease-out;
+}
+
+/* Collapsible List Transitions */
+.collapsible-item {
+	transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.collapsible-item-collapsed {
+	max-height: 0;
+	opacity: 0;
+	margin: 0;
+	padding-top: 0;
+	padding-bottom: 0;
+	overflow: hidden;
+	transform: scaleY(0);
+	transform-origin: top;
+}
+
+.collapsible-item-expanded {
+	animation: slideToTop 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes slideToTop {
+	from {
+		transform: translateY(var(--slide-distance, 0px));
+		opacity: 0.5;
+	}
+	to {
+		transform: translateY(0);
+		opacity: 1;
+	}
 }

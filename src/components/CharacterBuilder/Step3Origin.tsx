@@ -1,3 +1,4 @@
+import { useState, useRef } from "react";
 import type { CharacterBuilderState } from "../../types/characterBuilder";
 import { useOrigins } from "../../hooks/useSRD";
 
@@ -9,7 +10,9 @@ interface Step3OriginProps {
 }
 
 /**
- * Step 3: Origin (Background) selection
+ * Step 3: Origin (Background) selection with collapsible detail view
+ * BG3-inspired interaction: click to expand, click again to collapse
+ * Items smoothly slide to position when selected/deselected
  */
 export default function Step3Origin({
 	state,
@@ -18,219 +21,239 @@ export default function Step3Origin({
 	onPrevious,
 }: Step3OriginProps) {
 	const origins = useOrigins();
+	const [expandedOriginId, setExpandedOriginId] = useState<string | null>(
+		state.originId
+	);
+	const [slideDistance, setSlideDistance] = useState<number>(0);
+	const itemRefs = useRef<Map<string, HTMLDivElement>>(new Map());
 
-	const handleOriginSelect = (originId: string) => {
-		onUpdate({ originId });
-	};
+	const handleOriginClick = (originId: string) => {
+		// Calculate slide distance before expanding
+		if (!expandedOriginId && originId) {
+			const element = itemRefs.current.get(originId);
+			if (element) {
+				const rect = element.getBoundingClientRect();
+				const containerRect = element.parentElement?.getBoundingClientRect();
+				if (containerRect) {
+					setSlideDistance(rect.top - containerRect.top);
+				}
+			}
+		}
 
-	const handleContinue = () => {
-		if (state.originId) {
-			onNext();
+		// If clicking the already expanded origin, collapse it
+		if (expandedOriginId === originId) {
+			setExpandedOriginId(null);
+		} else {
+			// Expand the clicked origin
+			setExpandedOriginId(originId);
 		}
 	};
 
-	const selectedOrigin = origins.find((o) => o.id === state.originId);
+	const handleSelectOrigin = () => {
+		if (expandedOriginId) {
+			onUpdate({ originId: expandedOriginId });
+		}
+	};
+
+	const selectedOrigin = origins.find((o) => o.id === expandedOriginId);
+	const isOriginSelected = state.originId === expandedOriginId;
+
+	// Reorder origins so expanded one is first
+	const orderedOrigins = expandedOriginId
+		? [
+				origins.find((o) => o.id === expandedOriginId)!,
+				...origins.filter((o) => o.id !== expandedOriginId),
+		  ]
+		: origins;
 
 	return (
-		<div className="space-y-6">
-			<div>
-				<h2 className="text-3xl font-bold text-accent-400 mb-2">
-					Choose Your Origin
-				</h2>
-				<p className="text-parchment-300">
-					Your background determines your character's history and provides
-					proficiencies, equipment, and a special feature.
-				</p>
-			</div>
+		<div className="space-y-2">
+			{orderedOrigins.map((origin) => {
+				const isExpanded = origin.id === expandedOriginId;
+				const isCollapsed = expandedOriginId && !isExpanded;
 
-			{/* Origin Cards */}
-			<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-				{origins.map((origin) => {
-					const isSelected = state.originId === origin.id;
-
-					return (
+				return (
+					<div
+						key={origin.id}
+						ref={(el) => {
+							if (el) itemRefs.current.set(origin.id, el);
+						}}
+						className={`collapsible-item ${isExpanded ? "collapsible-item-expanded" : ""}`}
+						style={
+							isExpanded ? { "--slide-distance": `${slideDistance}px` } as React.CSSProperties : undefined
+						}
+					>
+						{/* Origin Header Button */}
 						<button
-							key={origin.id}
-							onClick={() => handleOriginSelect(origin.id)}
-							className={`text-left p-6 rounded-lg border-2 transition-all ${
-								isSelected
-									? "border-accent-400 bg-accent-400/10"
-									: "border-accent-400/20 bg-background-tertiary/60 hover:border-accent-400/40"
-							}`}
+							onClick={() => handleOriginClick(origin.id)}
+							className={`w-full text-left p-4 rounded-lg transition-all duration-300 ${
+								isExpanded
+									? "bg-background-secondary border-2 border-accent-400 hover:bg-background-tertiary/30 hover:shadow-lg hover:shadow-accent-400/20"
+									: "bg-background-secondary border border-accent-400/20 hover:border-accent-400/40 hover:bg-background-tertiary/30 hover:scale-[1.02] hover:shadow-lg hover:shadow-accent-400/10"
+							} ${isCollapsed ? "collapsible-item-collapsed" : ""}`}
 						>
-							<div className="mb-3">
-								<h3 className="text-xl font-bold text-parchment-100 mb-2">
-									{origin.name}
-								</h3>
-								{origin.description && (
-									<p className="text-sm text-parchment-300 line-clamp-2">
-										{origin.description}
+							<div className="flex items-center justify-between">
+								<div className="flex-1">
+									<h3
+										className={`font-bold text-accent-400 transition-colors ${
+											isExpanded ? "text-xl" : "text-lg"
+										}`}
+									>
+										{origin.name.toUpperCase()}
+									</h3>
+									<p className="text-sm text-parchment-300 mt-1">
+										Skills: {origin.skillProficiencies.join(", ")}
+										{origin.toolProficiencies.length > 0 &&
+											` • Tools: ${origin.toolProficiencies.join(", ")}`}
 									</p>
-								)}
-							</div>
-
-							<div className="space-y-2 text-sm">
-								<div>
-									<span className="text-parchment-300">Skills: </span>
-									<span className="text-parchment-100">
-										{origin.skillProficiencies.join(", ")}
-									</span>
 								</div>
+								<div className="text-accent-400 text-sm transition-transform">
+									{isExpanded ? "← Back" : "View Details →"}
+								</div>
+							</div>
+						</button>
 
-								{origin.toolProficiencies.length > 0 && (
+						{/* Origin Details - Only shown when expanded */}
+						{isExpanded && selectedOrigin && (
+							<div className="mt-4 bg-background-secondary border border-accent-400/20 rounded-lg p-6 space-y-6 animate-slideInFromBottom">
+								{/* Description */}
+								{selectedOrigin.description && (
 									<div>
-										<span className="text-parchment-300">Tools: </span>
-										<span className="text-parchment-100">
-											{origin.toolProficiencies.join(", ")}
-										</span>
+										<p className="text-parchment-200 leading-relaxed">
+											{selectedOrigin.description}
+										</p>
 									</div>
 								)}
 
+								{/* Proficiencies */}
+								<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+									<div>
+										<div className="text-xs text-accent-400 uppercase font-semibold mb-1">
+											Skill Proficiencies
+										</div>
+										<div className="text-sm text-parchment-200">
+											{selectedOrigin.skillProficiencies.join(", ")}
+										</div>
+									</div>
+
+									{selectedOrigin.toolProficiencies.length > 0 && (
+										<div>
+											<div className="text-xs text-accent-400 uppercase font-semibold mb-1">
+												Tool Proficiencies
+											</div>
+											<div className="text-sm text-parchment-200">
+												{selectedOrigin.toolProficiencies.join(", ")}
+											</div>
+										</div>
+									)}
+
+									<div>
+										<div className="text-xs text-accent-400 uppercase font-semibold mb-1">
+											Languages
+										</div>
+										<div className="text-sm text-parchment-200">
+											{selectedOrigin.languages === 1
+												? "One language of your choice"
+												: `${selectedOrigin.languages} languages`}
+										</div>
+									</div>
+								</div>
+
+								{/* Starting Equipment */}
 								<div>
-									<span className="text-parchment-300">Languages: </span>
-									<span className="text-parchment-100">
-										{origin.languages === 1 ? "1 of your choice" : origin.languages}
-									</span>
-								</div>
-							</div>
-
-							{isSelected && (
-								<div className="mt-4 text-accent-400 text-sm font-semibold">
-									✓ Selected
-								</div>
-							)}
-						</button>
-					);
-				})}
-			</div>
-
-			{/* Selected Origin Details */}
-			{selectedOrigin && (
-				<div className="bg-background-tertiary/60 border border-accent-400/20 rounded-lg p-6">
-					<h3 className="text-lg font-bold text-parchment-100 mb-3">
-						{selectedOrigin.name} Details
-					</h3>
-
-					<div className="space-y-4 text-sm">
-						{selectedOrigin.description && (
-							<div>
-								<div className="text-parchment-300 font-semibold mb-1">
-									Description
-								</div>
-								<div className="text-parchment-200">
-									{selectedOrigin.description}
-								</div>
-							</div>
-						)}
-
-						<div>
-							<div className="text-parchment-300 font-semibold mb-1">
-								Skill Proficiencies
-							</div>
-							<div className="text-parchment-200">
-								{selectedOrigin.skillProficiencies.join(", ")}
-							</div>
-						</div>
-
-						{selectedOrigin.toolProficiencies.length > 0 && (
-							<div>
-								<div className="text-parchment-300 font-semibold mb-1">
-									Tool Proficiencies
-								</div>
-								<div className="text-parchment-200">
-									{selectedOrigin.toolProficiencies.join(", ")}
-								</div>
-							</div>
-						)}
-
-						<div>
-							<div className="text-parchment-300 font-semibold mb-1">
-								Languages
-							</div>
-							<div className="text-parchment-200">
-								{selectedOrigin.languages === 1
-									? "One language of your choice"
-									: `${selectedOrigin.languages} languages`}
-							</div>
-						</div>
-
-						<div>
-							<div className="text-parchment-300 font-semibold mb-1">
-								Starting Equipment
-							</div>
-							<div className="text-parchment-200">
-								<ul className="list-disc list-inside space-y-1">
-									{selectedOrigin.equipment.map((item, idx) => (
-										<li key={idx}>{item}</li>
-									))}
-								</ul>
-							</div>
-						</div>
-
-						{selectedOrigin.feature && (
-							<div>
-								<div className="text-parchment-300 font-semibold mb-1">
-									Feature: {selectedOrigin.feature.name}
-								</div>
-								<div className="text-parchment-200">
-									{selectedOrigin.feature.description}
-								</div>
-							</div>
-						)}
-
-						{selectedOrigin.suggestedCharacteristics && (
-							<div>
-								<div className="text-parchment-300 font-semibold mb-2">
-									Suggested Characteristics
-								</div>
-								<div className="space-y-2">
-									{selectedOrigin.suggestedCharacteristics.traits &&
-										selectedOrigin.suggestedCharacteristics.traits.length >
-											0 && (
-											<div>
-												<div className="text-parchment-200 font-semibold text-xs">
-													Personality Traits
-												</div>
-												<div className="text-parchment-300 text-xs">
-													{selectedOrigin.suggestedCharacteristics.traits[0]}
-												</div>
+									<div className="text-xs text-accent-400 uppercase font-semibold mb-3">
+										Starting Equipment
+									</div>
+									<div className="space-y-2">
+										{selectedOrigin.equipment.map((item, idx) => (
+											<div
+												key={idx}
+												className="bg-background-tertiary/30 rounded p-3 text-sm text-parchment-200"
+											>
+												• {item}
 											</div>
-										)}
-									{selectedOrigin.suggestedCharacteristics.ideals &&
-										selectedOrigin.suggestedCharacteristics.ideals.length >
-											0 && (
-											<div>
-												<div className="text-parchment-200 font-semibold text-xs">
-													Ideals
-												</div>
-												<div className="text-parchment-300 text-xs">
-													{selectedOrigin.suggestedCharacteristics.ideals[0]}
-												</div>
+										))}
+									</div>
+								</div>
+
+								{/* Feature */}
+								{selectedOrigin.feature && (
+									<div>
+										<div className="text-xs text-accent-400 uppercase font-semibold mb-3">
+											{selectedOrigin.name.toUpperCase()} Gets the Following
+											Feature
+										</div>
+										<div className="bg-background-tertiary/30 rounded p-4">
+											<div className="text-sm font-semibold text-parchment-100 mb-2 uppercase">
+												{selectedOrigin.feature.name}
 											</div>
-										)}
+											<p className="text-sm text-parchment-300">
+												{selectedOrigin.feature.description}
+											</p>
+										</div>
+									</div>
+								)}
+
+								{/* Suggested Characteristics */}
+								{selectedOrigin.suggestedCharacteristics && (
+									<div>
+										<div className="text-xs text-accent-400 uppercase font-semibold mb-3">
+											Suggested Characteristics
+										</div>
+										<div className="space-y-3">
+											{selectedOrigin.suggestedCharacteristics.traits &&
+												selectedOrigin.suggestedCharacteristics.traits.length >
+													0 && (
+													<div className="bg-background-tertiary/30 rounded p-3">
+														<div className="text-sm font-semibold text-parchment-100 mb-1">
+															Personality Traits
+														</div>
+														<p className="text-sm text-parchment-300">
+															{selectedOrigin.suggestedCharacteristics.traits[0]}
+														</p>
+													</div>
+												)}
+											{selectedOrigin.suggestedCharacteristics.ideals &&
+												selectedOrigin.suggestedCharacteristics.ideals.length >
+													0 && (
+													<div className="bg-background-tertiary/30 rounded p-3">
+														<div className="text-sm font-semibold text-parchment-100 mb-1">
+															Ideals
+														</div>
+														<p className="text-sm text-parchment-300">
+															{selectedOrigin.suggestedCharacteristics.ideals[0]}
+														</p>
+													</div>
+												)}
+										</div>
+									</div>
+								)}
+
+								{/* Select Origin Button */}
+								<div className="flex justify-center pt-4">
+									<button
+										onClick={handleSelectOrigin}
+										className="px-8 py-3 bg-accent-400 hover:bg-accent-500 text-background-primary font-semibold rounded-md transition-colors text-lg"
+									>
+										{isOriginSelected
+											? "✓ Background Selected"
+											: `Select ${selectedOrigin.name}`}
+									</button>
 								</div>
 							</div>
 						)}
 					</div>
+				);
+			})}
+
+			{/* Navigation hint when no origin expanded */}
+			{!expandedOriginId && (
+				<div className="text-center py-8">
+					<p className="text-parchment-400 text-sm">
+						Click on a background to view its details and features
+					</p>
 				</div>
 			)}
-
-			{/* Navigation Buttons */}
-			<div className="flex justify-between">
-				<button
-					onClick={onPrevious}
-					className="px-8 py-3 bg-accent-400/20 hover:bg-accent-400/30 text-accent-400 font-semibold rounded-md transition-colors"
-				>
-					← Back
-				</button>
-				<button
-					onClick={handleContinue}
-					disabled={!state.originId}
-					className="px-8 py-3 bg-accent-400 hover:bg-accent-500 disabled:bg-accent-400/30 disabled:cursor-not-allowed text-background-primary font-semibold rounded-md transition-colors"
-				>
-					Continue →
-				</button>
-			</div>
 		</div>
 	);
 }

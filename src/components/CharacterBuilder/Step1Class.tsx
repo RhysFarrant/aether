@@ -1,3 +1,4 @@
+import { useState, useRef } from "react";
 import type { CharacterBuilderState } from "../../types/characterBuilder";
 import { useClasses } from "../../hooks/useSRD";
 
@@ -8,7 +9,9 @@ interface Step1ClassProps {
 }
 
 /**
- * Step 1: Class selection
+ * Step 1: Class selection with collapsible detail view
+ * BG3-inspired interaction: click to expand, click again to collapse
+ * Items smoothly slide to position when selected/deselected
  */
 export default function Step1Class({
 	state,
@@ -16,169 +19,242 @@ export default function Step1Class({
 	onNext,
 }: Step1ClassProps) {
 	const classes = useClasses();
+	const [expandedClassId, setExpandedClassId] = useState<string | null>(
+		state.classId
+	);
+	const [slideDistance, setSlideDistance] = useState<number>(0);
+	const itemRefs = useRef<Map<string, HTMLDivElement>>(new Map());
 
-	const handleClassSelect = (classId: string) => {
-		onUpdate({ classId });
-	};
+	const handleClassClick = (classId: string) => {
+		// Calculate slide distance before expanding
+		if (!expandedClassId && classId) {
+			const element = itemRefs.current.get(classId);
+			if (element) {
+				const rect = element.getBoundingClientRect();
+				const containerRect = element.parentElement?.getBoundingClientRect();
+				if (containerRect) {
+					setSlideDistance(rect.top - containerRect.top);
+				}
+			}
+		}
 
-	const handleContinue = () => {
-		if (state.classId) {
-			onNext();
+		// If clicking the already expanded class, collapse it
+		if (expandedClassId === classId) {
+			setExpandedClassId(null);
+		} else {
+			// Expand the clicked class
+			setExpandedClassId(classId);
 		}
 	};
 
-	const selectedClass = classes.find((c) => c.id === state.classId);
+	const handleSelectClass = () => {
+		if (expandedClassId) {
+			onUpdate({ classId: expandedClassId });
+		}
+	};
+
+	const selectedClass = classes.find((c) => c.id === expandedClassId);
+	const isClassSelected = state.classId === expandedClassId;
+
+	// Reorder classes so expanded one is first
+	const orderedClasses = expandedClassId
+		? [
+				classes.find((c) => c.id === expandedClassId)!,
+				...classes.filter((c) => c.id !== expandedClassId),
+		  ]
+		: classes;
 
 	return (
-		<div className="space-y-6">
-			<div>
-				<h2 className="text-3xl font-bold text-accent-400 mb-2">
-					Choose Your Class
-				</h2>
-				<p className="text-parchment-300">
-					Your class determines your combat abilities, skills, and how you
-					approach adventures.
-				</p>
-			</div>
+		<div className="space-y-2">
+			{orderedClasses.map((classOption) => {
+				const isExpanded = classOption.id === expandedClassId;
+				const isCollapsed = expandedClassId && !isExpanded;
 
-			{/* Class Cards */}
-			<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-				{classes.map((classOption) => {
-					const isSelected = state.classId === classOption.id;
-
-					return (
+				return (
+					<div
+						key={classOption.id}
+						ref={(el) => {
+							if (el) itemRefs.current.set(classOption.id, el);
+						}}
+						className={`collapsible-item ${isExpanded ? "collapsible-item-expanded" : ""}`}
+						style={
+							isExpanded ? { "--slide-distance": `${slideDistance}px` } as React.CSSProperties : undefined
+						}
+					>
+						{/* Class Header Button */}
 						<button
-							key={classOption.id}
-							onClick={() => handleClassSelect(classOption.id)}
-							className={`text-left p-6 rounded-lg border-2 transition-all ${
-								isSelected
-									? "border-accent-400 bg-accent-400/10"
-									: "border-accent-400/20 bg-background-tertiary/60 hover:border-accent-400/40"
-							}`}
+							onClick={() => handleClassClick(classOption.id)}
+							className={`w-full text-left p-4 rounded-lg transition-all duration-300 ${
+								isExpanded
+									? "bg-background-secondary border-2 border-accent-400 hover:bg-background-tertiary/30 hover:shadow-lg hover:shadow-accent-400/20"
+									: "bg-background-secondary border border-accent-400/20 hover:border-accent-400/40 hover:bg-background-tertiary/30 hover:scale-[1.02] hover:shadow-lg hover:shadow-accent-400/10"
+							} ${isCollapsed ? "collapsible-item-collapsed" : ""}`}
 						>
-							<div className="flex items-start justify-between mb-3">
-								<h3 className="text-xl font-bold text-parchment-100">
-									{classOption.name}
-								</h3>
-								<div className="text-sm text-parchment-300">
-									d{classOption.hitDie}
+							<div className="flex items-center justify-between">
+								<div className="flex-1">
+									<h3
+										className={`font-bold text-accent-400 transition-colors ${
+											isExpanded ? "text-xl" : "text-lg"
+										}`}
+									>
+										{classOption.name.toUpperCase()}
+									</h3>
+									<p className="text-sm text-parchment-300 mt-1">
+										Hit Die: d{classOption.hitDie} • Primary:{" "}
+										{classOption.primaryAbility.join(", ")}
+										{classOption.spellcasting && " • ⚡ Spellcaster"}
+									</p>
+								</div>
+								<div className="text-accent-400 text-sm transition-transform">
+									{isExpanded ? "← Back" : "View Details →"}
 								</div>
 							</div>
+						</button>
 
-							<div className="space-y-2 text-sm">
+						{/* Class Details - Only shown when expanded */}
+						{isExpanded && selectedClass && (
+							<div className="mt-4 bg-background-secondary border border-accent-400/20 rounded-lg p-6 space-y-6 animate-slideInFromBottom">
+								{/* Hit Die */}
 								<div>
-									<span className="text-parchment-300">Primary: </span>
-									<span className="text-parchment-100">
-										{classOption.primaryAbility.join(", ")}
-									</span>
+									<div className="text-xs text-accent-400 uppercase font-semibold mb-1">
+										Hit Die
+									</div>
+									<div className="text-sm text-parchment-200">
+										d{selectedClass.hitDie} per level
+									</div>
 								</div>
 
-								<div>
-									<span className="text-parchment-300">Saves: </span>
-									<span className="text-parchment-100">
-										{classOption.savingThrows.join(", ")}
-									</span>
+								{/* Primary Ability & Saving Throws */}
+								<div className="grid grid-cols-2 gap-4">
+									<div>
+										<div className="text-xs text-accent-400 uppercase font-semibold mb-1">
+											Primary Ability
+										</div>
+										<div className="text-sm text-parchment-200">
+											{selectedClass.primaryAbility.join(", ")}
+										</div>
+									</div>
+									<div>
+										<div className="text-xs text-accent-400 uppercase font-semibold mb-1">
+											Saving Throws
+										</div>
+										<div className="text-sm text-parchment-200">
+											{selectedClass.savingThrows.join(", ")}
+										</div>
+									</div>
 								</div>
 
-								{classOption.spellcasting && (
-									<div className="mt-2 text-accent-400/80 text-xs">
-										⚡ Spellcaster
+								{/* Proficiencies */}
+								<div>
+									<div className="text-xs text-accent-400 uppercase font-semibold mb-3">
+										Proficiencies
+									</div>
+									<div className="space-y-2 text-sm">
+										<div className="bg-background-tertiary/30 rounded p-3">
+											<span className="text-parchment-300 font-semibold">
+												Armor:{" "}
+											</span>
+											<span className="text-parchment-200">
+												{selectedClass.proficiencies.armor.join(", ") || "None"}
+											</span>
+										</div>
+										<div className="bg-background-tertiary/30 rounded p-3">
+											<span className="text-parchment-300 font-semibold">
+												Weapons:{" "}
+											</span>
+											<span className="text-parchment-200">
+												{selectedClass.proficiencies.weapons.join(", ")}
+											</span>
+										</div>
+										<div className="bg-background-tertiary/30 rounded p-3">
+											<span className="text-parchment-300 font-semibold">
+												Tools:{" "}
+											</span>
+											<span className="text-parchment-200">
+												{selectedClass.proficiencies.tools.join(", ") || "None"}
+											</span>
+										</div>
+									</div>
+								</div>
+
+								{/* Skills */}
+								<div>
+									<div className="text-xs text-accent-400 uppercase font-semibold mb-1">
+										Skill Choices
+									</div>
+									<div className="text-sm text-parchment-200">
+										Choose {selectedClass.skillChoices.choose} from:{" "}
+										{selectedClass.skillChoices.from.join(", ")}
+									</div>
+								</div>
+
+								{/* Level 1 Features */}
+								{selectedClass.features && selectedClass.features.length > 0 && (
+									<div>
+										<div className="text-xs text-accent-400 uppercase font-semibold mb-3">
+											{selectedClass.name.toUpperCase()} Gets the Following
+											Features at Level 1
+										</div>
+										<div className="space-y-3">
+											{selectedClass.features
+												.filter((f) => f.level === 1)
+												.map((feature, idx) => (
+													<div
+														key={idx}
+														className="bg-background-tertiary/30 rounded p-3"
+													>
+														<div className="text-sm font-semibold text-parchment-100 mb-1 uppercase">
+															{feature.name}
+														</div>
+														<p className="text-sm text-parchment-300">
+															{feature.description}
+														</p>
+													</div>
+												))}
+										</div>
 									</div>
 								)}
-							</div>
 
-							{isSelected && (
-								<div className="mt-4 text-accent-400 text-sm font-semibold">
-									✓ Selected
-								</div>
-							)}
-						</button>
-					);
-				})}
-			</div>
-
-			{/* Selected Class Details */}
-			{selectedClass && (
-				<div className="bg-background-tertiary/60 border border-accent-400/20 rounded-lg p-6">
-					<h3 className="text-lg font-bold text-parchment-100 mb-3">
-						{selectedClass.name} Details
-					</h3>
-
-					<div className="space-y-3 text-sm">
-						<div>
-							<div className="text-parchment-300 font-semibold mb-1">
-								Hit Die
-							</div>
-							<div className="text-parchment-200">
-								d{selectedClass.hitDie} per level
-							</div>
-						</div>
-
-						<div>
-							<div className="text-parchment-300 font-semibold mb-1">
-								Proficiencies
-							</div>
-							<div className="text-parchment-200">
-								<div>
-									<span className="text-parchment-300">Armor: </span>
-									{selectedClass.proficiencies.armor.join(", ") || "None"}
-								</div>
-								<div>
-									<span className="text-parchment-300">Weapons: </span>
-									{selectedClass.proficiencies.weapons.join(", ")}
-								</div>
-								<div>
-									<span className="text-parchment-300">Tools: </span>
-									{selectedClass.proficiencies.tools.join(", ") || "None"}
-								</div>
-							</div>
-						</div>
-
-						<div>
-							<div className="text-parchment-300 font-semibold mb-1">
-								Skills
-							</div>
-							<div className="text-parchment-200">
-								Choose {selectedClass.skillChoices.choose} from:{" "}
-								{selectedClass.skillChoices.from.join(", ")}
-							</div>
-						</div>
-
-						{selectedClass.features && selectedClass.features.length > 0 && (
-							<div>
-								<div className="text-parchment-300 font-semibold mb-1">
-									Level 1 Features
-								</div>
-								<div className="space-y-2">
-									{selectedClass.features
-										.filter((f) => f.level === 1)
-										.map((feature) => (
-											<div key={feature.name}>
-												<div className="text-parchment-100 font-semibold text-sm">
-													{feature.name}
-												</div>
-												<div className="text-parchment-300 text-xs">
-													{feature.description}
+								{/* Spellcasting Indicator */}
+								{selectedClass.spellcasting && (
+									<div className="bg-accent-400/10 border border-accent-400/30 rounded-lg p-4">
+										<div className="flex items-center gap-2 text-accent-400">
+											<span className="text-xl">⚡</span>
+											<div>
+												<div className="font-semibold">Spellcasting Class</div>
+												<div className="text-xs text-parchment-300">
+													This class has access to spells
 												</div>
 											</div>
-										))}
+										</div>
+									</div>
+								)}
+
+								{/* Select Class Button */}
+								<div className="flex justify-center pt-4">
+									<button
+										onClick={handleSelectClass}
+										className="px-8 py-3 bg-accent-400 hover:bg-accent-500 text-background-primary font-semibold rounded-md transition-colors text-lg"
+									>
+										{isClassSelected
+											? "✓ Class Selected"
+											: `Select ${selectedClass.name}`}
+									</button>
 								</div>
 							</div>
 						)}
 					</div>
+				);
+			})}
+
+			{/* Navigation hint when no class expanded */}
+			{!expandedClassId && (
+				<div className="text-center py-8">
+					<p className="text-parchment-400 text-sm">
+						Click on a class to view its details and features
+					</p>
 				</div>
 			)}
-
-			{/* Continue Button */}
-			<div className="flex justify-end">
-				<button
-					onClick={handleContinue}
-					disabled={!state.classId}
-					className="px-8 py-3 bg-accent-400 hover:bg-accent-500 disabled:bg-accent-400/30 disabled:cursor-not-allowed text-background-primary font-semibold rounded-md transition-colors"
-				>
-					Continue →
-				</button>
-			</div>
 		</div>
 	);
 }

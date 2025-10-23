@@ -8,10 +8,11 @@ import Step5Skills from "../components/CharacterBuilder/Step5Skills";
 import Step6Equipment from "../components/CharacterBuilder/Step6Equipment";
 import Step7Details from "../components/CharacterBuilder/Step7Details";
 import Step8Review from "../components/CharacterBuilder/Step8Review";
+import CharacterSidebar from "../components/CharacterBuilder/CharacterSidebar";
 
 /**
  * CreateCharacterPage - Character creation wizard
- * Mystical green D&D-inspired theme
+ * BG3-inspired layout with persistent sidebar
  */
 export default function CreateCharacterPage() {
 	const { state, updateState, nextStep, previousStep, goToStep, reset } =
@@ -98,68 +99,72 @@ export default function CreateCharacterPage() {
 	};
 
 	return (
-		<div className="min-h-screen bg-background-primary p-6">
-			<div className="max-w-4xl mx-auto">
-				{/* Page Header */}
-				<div className="mb-8">
+		<div className="h-screen max-h-screen bg-background-primary grid grid-cols-[288px_1fr] overflow-hidden">
+			{/* Persistent Sidebar */}
+			<CharacterSidebar state={state} />
+
+			{/* Main Content Area */}
+			<div className="flex flex-col h-full">
+				{/* Top Navigation Bar */}
+				<div className="bg-background-secondary border-b border-accent-400/20 px-6 py-3 shrink-0">
 					<div className="flex items-center justify-between">
-						<div>
-							<h1 className="text-4xl font-bold text-accent-400">
-								Create New Character
-							</h1>
-							<p className="text-parchment-300 mt-2">
-								Step {state.currentStep} of {wizardSteps.length}
-								: {wizardSteps[state.currentStep - 1]?.title}
-							</p>
+						<div className="flex items-center gap-2">
+							{/* Tab Navigation */}
+							{wizardSteps.map((step) => (
+								<button
+									key={step.number}
+									onClick={() => goToStep(step.number)}
+									disabled={step.number > state.currentStep}
+									className={`px-4 py-2 rounded-t transition-colors text-sm ${
+										step.number === state.currentStep
+											? "bg-accent-400 text-background-primary font-semibold"
+											: step.number < state.currentStep
+											? "bg-background-tertiary/50 text-parchment-200 hover:bg-background-tertiary"
+											: "bg-transparent text-parchment-400 cursor-not-allowed"
+									}`}
+									title={step.description}
+								>
+									{step.title}
+								</button>
+							))}
 						</div>
 						<Link
 							to="/characters"
-							className="text-parchment-300 hover:text-accent-400 transition-colors"
+							className="text-parchment-300 hover:text-accent-400 transition-colors text-sm"
 						>
 							Cancel
 						</Link>
 					</div>
 				</div>
 
-				{/* Progress Bar */}
-				<div className="mb-8">
-					<div className="flex items-center gap-2">
-						{wizardSteps.map((step) => (
-							<div key={step.number} className="flex-1">
-								<div
-									className={`h-2 rounded-full transition-all ${
-										step.number < state.currentStep
-											? "bg-accent-400"
-											: step.number === state.currentStep
-											? "bg-accent-400/60"
-											: "bg-accent-400/10"
-									}`}
-								/>
-							</div>
-						))}
-					</div>
-					<div className="flex items-center gap-2 mt-2">
-						{wizardSteps.map((step) => (
-							<button
-								key={step.number}
-								onClick={() => goToStep(step.number)}
-								disabled={step.number > state.currentStep}
-								className={`flex-1 text-xs transition-colors text-center ${
-									step.number <= state.currentStep
-										? "text-accent-400 hover:text-accent-500 cursor-pointer"
-										: "text-parchment-400 cursor-not-allowed"
-								}`}
-								title={step.description}
-							>
-								{step.title}
-							</button>
-						))}
+				{/* Step Content */}
+				<div className="flex-1 overflow-y-auto bg-background-primary min-h-0">
+					<div className="p-8">
+						{renderStep()}
 					</div>
 				</div>
 
-				{/* Step Content */}
-				<div className="bg-background-secondary/80 border border-accent-400/20 rounded-lg p-8">
-					{renderStep()}
+				{/* Bottom Navigation */}
+				<div className="bg-background-secondary border-t border-accent-400/20 px-6 py-3 shrink-0">
+					<div className="flex items-center justify-between max-w-5xl mx-auto">
+						<button
+							onClick={previousStep}
+							disabled={state.currentStep === 1}
+							className="px-5 py-1.5 bg-accent-400/20 hover:bg-accent-400/30 disabled:bg-accent-400/10 disabled:cursor-not-allowed text-accent-400 disabled:text-accent-400/40 font-semibold rounded transition-colors text-sm"
+						>
+							Previous
+						</button>
+						<div className="text-parchment-300 text-sm">
+							Step {state.currentStep} of {wizardSteps.length}
+						</div>
+						<button
+							onClick={nextStep}
+							disabled={state.currentStep === wizardSteps.length}
+							className="px-5 py-1.5 bg-accent-400 hover:bg-accent-500 disabled:bg-accent-400/20 disabled:cursor-not-allowed text-background-primary disabled:text-accent-400/40 font-semibold rounded transition-colors text-sm"
+						>
+							Next
+						</button>
+					</div>
 				</div>
 			</div>
 		</div>

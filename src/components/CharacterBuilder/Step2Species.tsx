@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import type { CharacterBuilderState } from "../../types/characterBuilder";
 import { useSpecies, useSubspeciesByParent } from "../../hooks/useSRD";
 
@@ -10,7 +10,9 @@ interface Step2SpeciesProps {
 }
 
 /**
- * Step 2: Species selection (with subspecies support)
+ * Step 2: Species selection with collapsible detail view
+ * BG3-inspired interaction: click to expand, click again to collapse
+ * Items smoothly slide to position when selected/deselected
  */
 export default function Step2Species({
 	state,
@@ -19,280 +21,274 @@ export default function Step2Species({
 	onPrevious,
 }: Step2SpeciesProps) {
 	const allSpecies = useSpecies();
-	const [selectedSpeciesId, setSelectedSpeciesId] = useState<string | null>(
+	const [expandedSpeciesId, setExpandedSpeciesId] = useState<string | null>(
 		state.speciesId
 	);
-	const subspecies = useSubspeciesByParent(selectedSpeciesId || undefined);
+	const [slideDistance, setSlideDistance] = useState<number>(0);
+	const itemRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+	const subspecies = useSubspeciesByParent(expandedSpeciesId || undefined);
 
-	const handleSpeciesSelect = (speciesId: string) => {
-		setSelectedSpeciesId(speciesId);
-		onUpdate({ speciesId, subspeciesId: null }); // Reset subspecies when species changes
-	};
-
-	const handleSubspeciesSelect = (subspeciesId: string | null) => {
-		onUpdate({ subspeciesId });
-	};
-
-	const handleContinue = () => {
-		if (state.speciesId) {
-			// If species has subspecies but none selected, don't allow continue
-			const selectedSpecies = allSpecies.find(
-				(s) => s.id === state.speciesId
-			);
-			if (
-				selectedSpecies?.subraces &&
-				selectedSpecies.subraces.length > 0 &&
-				!state.subspeciesId
-			) {
-				return; // Don't continue if subspecies is required but not selected
+	const handleSpeciesClick = (speciesId: string) => {
+		// Calculate slide distance before expanding
+		if (!expandedSpeciesId && speciesId) {
+			const element = itemRefs.current.get(speciesId);
+			if (element) {
+				const rect = element.getBoundingClientRect();
+				const containerRect = element.parentElement?.getBoundingClientRect();
+				if (containerRect) {
+					setSlideDistance(rect.top - containerRect.top);
+				}
 			}
-			onNext();
+		}
+
+		// If clicking the already expanded species, collapse it
+		if (expandedSpeciesId === speciesId) {
+			setExpandedSpeciesId(null);
+		} else {
+			// Expand the clicked species
+			setExpandedSpeciesId(speciesId);
 		}
 	};
 
-	const selectedSpecies = allSpecies.find((s) => s.id === state.speciesId);
-	const selectedSubspecies = subspecies.find(
-		(s) => s.id === state.subspeciesId
-	);
-	const hasSubspecies =
-		selectedSpecies?.subraces && selectedSpecies.subraces.length > 0;
+	const handleSelectSpecies = () => {
+		if (expandedSpeciesId) {
+			// Check if subspecies is required but not selected
+			const selectedSpecies = allSpecies.find((s) => s.id === expandedSpeciesId);
+			if (
+				selectedSpecies?.subraces &&
+				selectedSpecies.subraces.length > 0 &&
+				!selectedSubspeciesId
+			) {
+				// Need to select subspecies first
+				return;
+			}
+			onUpdate({
+				speciesId: expandedSpeciesId,
+				subspeciesId: selectedSubspeciesId || null,
+			});
+		}
+	};
+
+	const [selectedSubspeciesId, setSelectedSubspeciesId] = useState<
+		string | null
+	>(state.subspeciesId || null);
+
+	const handleSubspeciesSelect = (subspeciesId: string) => {
+		// Just store the selection, don't update state yet
+		setSelectedSubspeciesId(subspeciesId);
+	};
+
+	const selectedSpecies = allSpecies.find((s) => s.id === expandedSpeciesId);
+	const isSpeciesSelected = state.speciesId === expandedSpeciesId;
+	const canContinue =
+		state.speciesId &&
+		(!selectedSpecies?.subraces ||
+			selectedSpecies.subraces.length === 0 ||
+			state.subspeciesId);
+
+	// Reorder species so expanded one is first
+	const orderedSpecies = expandedSpeciesId
+		? [
+				allSpecies.find((s) => s.id === expandedSpeciesId)!,
+				...allSpecies.filter((s) => s.id !== expandedSpeciesId),
+		  ]
+		: allSpecies;
 
 	return (
-		<div className="space-y-6">
-			<div>
-				<h2 className="text-3xl font-bold text-accent-400 mb-2">
-					Choose Your Species
-				</h2>
-				<p className="text-parchment-300">
-					Your species determines your physical characteristics and innate
-					abilities.
-				</p>
-			</div>
+		<div className="space-y-2">
+			{orderedSpecies.map((species) => {
+				const isExpanded = species.id === expandedSpeciesId;
+				const isCollapsed = expandedSpeciesId && !isExpanded;
 
-			{/* Species Cards */}
-			<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-				{allSpecies.map((species) => {
-					const isSelected = state.speciesId === species.id;
-
-					return (
+				return (
+					<div
+						key={species.id}
+						ref={(el) => {
+							if (el) itemRefs.current.set(species.id, el);
+						}}
+						className={`collapsible-item ${isExpanded ? "collapsible-item-expanded" : ""}`}
+						style={
+							isExpanded ? { "--slide-distance": `${slideDistance}px` } as React.CSSProperties : undefined
+						}
+					>
+						{/* Species Header Button */}
 						<button
-							key={species.id}
-							onClick={() => handleSpeciesSelect(species.id)}
-							className={`text-left p-6 rounded-lg border-2 transition-all ${
-								isSelected
-									? "border-accent-400 bg-accent-400/10"
-									: "border-accent-400/20 bg-background-tertiary/60 hover:border-accent-400/40"
-							}`}
+							onClick={() => handleSpeciesClick(species.id)}
+							className={`w-full text-left p-4 rounded-lg transition-all duration-300 ${
+								isExpanded
+									? "bg-background-secondary border-2 border-accent-400 hover:bg-background-tertiary/30 hover:shadow-lg hover:shadow-accent-400/20"
+									: "bg-background-secondary border border-accent-400/20 hover:border-accent-400/40 hover:bg-background-tertiary/30 hover:scale-[1.02] hover:shadow-lg hover:shadow-accent-400/10"
+							} ${isCollapsed ? "collapsible-item-collapsed" : ""}`}
 						>
-							<div className="flex items-start justify-between mb-3">
-								<h3 className="text-xl font-bold text-parchment-100">
-									{species.name}
-								</h3>
-								<div className="text-sm text-parchment-300">
-									{species.size}
+							<div className="flex items-center justify-between">
+								<div className="flex-1">
+									<h3
+										className={`font-bold text-accent-400 transition-colors ${
+											isExpanded ? "text-xl" : "text-lg"
+										}`}
+									>
+										{species.name.toUpperCase()}
+									</h3>
+									<p className="text-sm text-parchment-300 mt-1">
+										{species.description}
+									</p>
+								</div>
+								<div className="text-accent-400 text-sm transition-transform">
+									{isExpanded ? "← Back" : "View Details →"}
 								</div>
 							</div>
-
-							<div className="space-y-2 text-sm">
-								<div>
-									<span className="text-parchment-300">Speed: </span>
-									<span className="text-parchment-100">
-										{species.speed} ft.
-									</span>
-								</div>
-
-								<div>
-									<span className="text-parchment-300">Abilities: </span>
-									<span className="text-parchment-100">
-										{Object.entries(species.abilityIncreases)
-											.map(([ability, bonus]) => `${ability.substring(0, 3).toUpperCase()} +${bonus}`)
-											.join(", ")}
-									</span>
-								</div>
-
-								{species.subraces && species.subraces.length > 0 && (
-									<div className="mt-2 text-accent-400/80 text-xs">
-										Has Subspecies
-									</div>
-								)}
-							</div>
-
-							{isSelected && (
-								<div className="mt-4 text-accent-400 text-sm font-semibold">
-									✓ Selected
-								</div>
-							)}
 						</button>
-					);
-				})}
-			</div>
 
-			{/* Subspecies Selection */}
-			{hasSubspecies && subspecies.length > 0 && (
-				<div className="border-t border-accent-400/20 pt-6">
-					<h3 className="text-2xl font-bold text-accent-400 mb-3">
-						Choose Your Subspecies
-					</h3>
-					<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-						{subspecies.map((sub) => {
-							const isSelected = state.subspeciesId === sub.id;
-
-							return (
-								<button
-									key={sub.id}
-									onClick={() => handleSubspeciesSelect(sub.id)}
-									className={`text-left p-6 rounded-lg border-2 transition-all ${
-										isSelected
-											? "border-accent-400 bg-accent-400/10"
-											: "border-accent-400/20 bg-background-tertiary/60 hover:border-accent-400/40"
-									}`}
-								>
-									<h4 className="text-lg font-bold text-parchment-100 mb-3">
-										{sub.name}
-									</h4>
-
-									<div className="space-y-2 text-sm">
-										{Object.keys(sub.abilityIncreases).length > 0 && (
-											<div>
-												<span className="text-parchment-300">
-													Additional:
-												</span>
-												<span className="text-parchment-100">
-													{Object.entries(sub.abilityIncreases)
-														.map(
-															([ability, bonus]) =>
-																` ${ability.substring(0, 3).toUpperCase()} +${bonus}`
-														)
-														.join(", ")}
-												</span>
-											</div>
-										)}
-
-										{sub.description && (
-											<p className="text-parchment-300 text-xs">
-												{sub.description}
-											</p>
-										)}
-									</div>
-
-									{isSelected && (
-										<div className="mt-4 text-accent-400 text-sm font-semibold">
-											✓ Selected
-										</div>
-									)}
-								</button>
-							);
-						})}
-					</div>
-				</div>
-			)}
-
-			{/* Selected Species/Subspecies Details */}
-			{selectedSpecies && (
-				<div className="bg-background-tertiary/60 border border-accent-400/20 rounded-lg p-6">
-					<h3 className="text-lg font-bold text-parchment-100 mb-3">
-						{selectedSubspecies ? selectedSubspecies.name : selectedSpecies.name}{" "}
-						Details
-					</h3>
-
-					<div className="space-y-3 text-sm">
-						<div>
-							<div className="text-parchment-300 font-semibold mb-1">
-								Size & Speed
-							</div>
-							<div className="text-parchment-200">
-								{selectedSpecies.size} size, {selectedSpecies.speed} ft. speed
-							</div>
-						</div>
-
-						<div>
-							<div className="text-parchment-300 font-semibold mb-1">
-								Ability Score Increases
-							</div>
-							<div className="text-parchment-200">
-								{Object.entries(selectedSpecies.abilityIncreases).map(
-									([ability, bonus]) => (
-										<div key={ability}>
-											{ability.charAt(0).toUpperCase() + ability.slice(1)}: +
-											{bonus}
-										</div>
-									)
-								)}
-								{selectedSubspecies &&
-									Object.entries(selectedSubspecies.abilityIncreases).map(
-										([ability, bonus]) => (
-											<div key={ability}>
-												{ability.charAt(0).toUpperCase() + ability.slice(1)}: +
-												{bonus}
-											</div>
-										)
-									)}
-							</div>
-						</div>
-
-						{selectedSpecies.traits && selectedSpecies.traits.length > 0 && (
-							<div>
-								<div className="text-parchment-300 font-semibold mb-1">
-									Traits
+						{/* Species Details - Only shown when expanded */}
+						{isExpanded && (
+							<div className="mt-4 bg-background-secondary border border-accent-400/20 rounded-lg p-6 space-y-6 animate-slideInFromBottom">
+								{/* Description */}
+								<div>
+									<p className="text-parchment-200 leading-relaxed">
+										{species.description}
+									</p>
 								</div>
-								<div className="space-y-2">
-									{selectedSpecies.traits.map((trait) => (
-										<div key={trait.name}>
-											<div className="text-parchment-100 font-semibold text-sm">
-												{trait.name}
-											</div>
-											<div className="text-parchment-300 text-xs">
-												{trait.description}
-											</div>
+
+								{/* Stats */}
+								<div className="grid grid-cols-2 gap-4">
+									<div>
+										<div className="text-xs text-accent-400 uppercase font-semibold mb-1">
+											Ability Score Increases:
 										</div>
-									))}
+										<div className="text-sm text-parchment-200">
+											{Object.entries(species.abilityScoreIncrease || {})
+												.map(
+													([ability, value]) => `${ability.toUpperCase()} +${value}`
+												)
+												.join(", ")}
+										</div>
+									</div>
+									<div>
+										<div className="text-xs text-accent-400 uppercase font-semibold mb-1">
+											Speed:
+										</div>
+										<div className="text-sm text-parchment-200">
+											{species.speed} ft
+										</div>
+									</div>
+									<div>
+										<div className="text-xs text-accent-400 uppercase font-semibold mb-1">
+											Size:
+										</div>
+										<div className="text-sm text-parchment-200">
+											{species.size}
+										</div>
+									</div>
+									<div>
+										<div className="text-xs text-accent-400 uppercase font-semibold mb-1">
+											Languages:
+										</div>
+										<div className="text-sm text-parchment-200">
+											{species.languages?.join(", ") || "Common"}
+										</div>
+									</div>
+								</div>
+
+								{/* Traits */}
+								{species.traits && species.traits.length > 0 && (
+									<div>
+										<div className="text-xs text-accent-400 uppercase font-semibold mb-3">
+											{species.name.toUpperCase()}'S GET THE FOLLOWING TRAITS
+										</div>
+										<div className="space-y-3">
+											{species.traits.map((trait, idx) => (
+												<div
+													key={idx}
+													className="bg-background-tertiary/30 rounded p-3"
+												>
+													<div className="text-sm font-semibold text-parchment-100 mb-1 uppercase">
+														{trait.name}
+													</div>
+													<p className="text-sm text-parchment-300">
+														{trait.description}
+													</p>
+												</div>
+											))}
+										</div>
+									</div>
+								)}
+
+								{/* Subspecies Selection */}
+								{subspecies.length > 0 && (
+									<div>
+										<div className="text-xs text-accent-400 uppercase font-semibold mb-3">
+											Choose a Subspecies
+										</div>
+										<div className="space-y-2">
+											{subspecies.map((sub) => (
+												<button
+													key={sub.id}
+													onClick={() => handleSubspeciesSelect(sub.id)}
+													className={`w-full text-left p-4 rounded-lg border-2 transition-all ${
+														selectedSubspeciesId === sub.id
+															? "border-accent-400 bg-accent-400/10"
+															: "border-accent-400/20 bg-background-tertiary/30 hover:border-accent-400/40"
+													}`}
+												>
+													<div className="flex items-center justify-between">
+														<div className="flex-1">
+															<div className="text-sm font-semibold text-parchment-100 uppercase">
+																{sub.name}
+															</div>
+															<p className="text-xs text-parchment-300 mt-1">
+																{sub.description}
+															</p>
+															{sub.abilityScoreIncrease && (
+																<div className="text-xs text-accent-400 mt-2">
+																	{Object.entries(sub.abilityScoreIncrease)
+																		.map(
+																			([ability, value]) =>
+																				`${ability.toUpperCase()} +${value}`
+																		)
+																		.join(", ")}
+																</div>
+															)}
+														</div>
+														{selectedSubspeciesId === sub.id && (
+															<div className="text-accent-400 ml-3">✓</div>
+														)}
+													</div>
+												</button>
+											))}
+										</div>
+									</div>
+								)}
+
+								{/* Select Species Button */}
+								<div className="flex justify-center pt-4">
+									<button
+										onClick={handleSelectSpecies}
+										disabled={subspecies.length > 0 && !selectedSubspeciesId}
+										className="px-8 py-3 bg-accent-400 hover:bg-accent-500 disabled:bg-accent-400/30 disabled:cursor-not-allowed text-background-primary font-semibold rounded-md transition-colors text-lg"
+									>
+										{isSpeciesSelected
+											? "✓ Species Selected"
+											: subspecies.length > 0
+											? selectedSubspeciesId
+												? "Select Species"
+												: "Select a Subspecies First"
+											: "Select Species"}
+									</button>
 								</div>
 							</div>
 						)}
-
-						{selectedSubspecies?.traits &&
-							selectedSubspecies.traits.length > 0 && (
-								<div>
-									<div className="text-parchment-300 font-semibold mb-1">
-										{selectedSubspecies.name} Traits
-									</div>
-									<div className="space-y-2">
-										{selectedSubspecies.traits.map((trait) => (
-											<div key={trait.name}>
-												<div className="text-parchment-100 font-semibold text-sm">
-													{trait.name}
-												</div>
-												<div className="text-parchment-300 text-xs">
-													{trait.description}
-												</div>
-											</div>
-										))}
-									</div>
-								</div>
-							)}
 					</div>
+				);
+			})}
+
+			{/* Navigation hint when no species expanded */}
+			{!expandedSpeciesId && (
+				<div className="text-center py-8">
+					<p className="text-parchment-400 text-sm">
+						Click on a species to view its details and traits
+					</p>
 				</div>
 			)}
-
-			{/* Navigation Buttons */}
-			<div className="flex justify-between">
-				<button
-					onClick={onPrevious}
-					className="px-8 py-3 bg-accent-400/20 hover:bg-accent-400/30 text-accent-400 font-semibold rounded-md transition-colors"
-				>
-					← Back
-				</button>
-				<button
-					onClick={handleContinue}
-					disabled={
-						!state.speciesId ||
-						(hasSubspecies && !state.subspeciesId)
-					}
-					className="px-8 py-3 bg-accent-400 hover:bg-accent-500 disabled:bg-accent-400/30 disabled:cursor-not-allowed text-background-primary font-semibold rounded-md transition-colors"
-				>
-					Continue →
-				</button>
-			</div>
 		</div>
 	);
 }
