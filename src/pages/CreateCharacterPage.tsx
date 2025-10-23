@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { useCharacterBuilder, wizardSteps } from "../hooks/useCharacterBuilder";
+import { useClass } from "../hooks/useSRD";
 import Step1Class from "../components/CharacterBuilder/Step1Class";
 import Step2Species from "../components/CharacterBuilder/Step2Species";
 import Step3Origin from "../components/CharacterBuilder/Step3Origin";
@@ -18,6 +19,46 @@ import CharacterSidebar from "../components/CharacterBuilder/CharacterSidebar";
 export default function CreateCharacterPage() {
 	const { state, updateState, nextStep, previousStep, goToStep, reset } =
 		useCharacterBuilder();
+
+	const selectedClass = useClass(state.classId || undefined);
+
+	// Check if a step is completed
+	const isStepComplete = (stepNumber: number): boolean => {
+		switch (stepNumber) {
+			case 1: // Class
+				return !!state.classId;
+			case 2: // Species
+				return !!state.speciesId;
+			case 3: // Origin
+				return !!state.originId;
+			case 4: // Ability Scores
+				return !!state.abilityScores;
+			case 5: // Skills
+				return state.selectedSkills.length > 0;
+			case 6: { // Spells
+				// Check if this class is a spellcaster
+				const hasSpellcasting = selectedClass?.spellcasting;
+				const isPaladin = selectedClass?.id === "class_paladin_srd";
+
+				// Non-spellcasters and Paladins (who don't get spells at level 1) are always complete
+				if (!hasSpellcasting || isPaladin) {
+					return true;
+				}
+
+				// For spellcasters, only complete if they've selected spells/cantrips
+				const hasSelections = state.selectedCantrips.length > 0 || state.selectedSpells.length > 0;
+				return hasSelections;
+			}
+			case 7: // Equipment
+				return state.selectedEquipment.length > 0 || Object.keys(state.equipmentChoices).length > 0;
+			case 8: // Details
+				return state.name.trim().length > 0;
+			case 9: // Review
+				return false; // Never mark review as complete
+			default:
+				return false;
+		}
+	};
 
 	// Render the current step component
 	const renderStep = () => {
@@ -124,23 +165,32 @@ export default function CreateCharacterPage() {
 					<div className="flex items-center justify-between">
 						<div className="flex items-center gap-2">
 							{/* Tab Navigation */}
-							{wizardSteps.map((step) => (
-								<button
-									key={step.number}
-									onClick={() => goToStep(step.number)}
-									disabled={step.number > state.currentStep}
-									className={`px-4 py-2 rounded-t transition-colors text-sm ${
-										step.number === state.currentStep
-											? "bg-accent-400 text-background-primary font-semibold"
-											: step.number < state.currentStep
-											? "bg-background-tertiary/50 text-parchment-200 hover:bg-background-tertiary"
-											: "bg-transparent text-parchment-400 cursor-not-allowed"
-									}`}
-									title={step.description}
-								>
-									{step.title}
-								</button>
-							))}
+							{wizardSteps.map((step) => {
+								const isComplete = isStepComplete(step.number);
+								const isCurrent = step.number === state.currentStep;
+								const isPast = step.number < state.currentStep;
+
+								return (
+									<button
+										key={step.number}
+										onClick={() => goToStep(step.number)}
+										disabled={step.number > state.currentStep}
+										className={`px-4 py-2 rounded-t transition-colors text-sm flex items-center gap-2 ${
+											isCurrent
+												? "bg-accent-400 text-background-primary font-semibold"
+												: isPast
+												? "bg-background-tertiary/50 text-parchment-200 hover:bg-background-tertiary"
+												: "bg-transparent text-parchment-400 cursor-not-allowed"
+										}`}
+										title={step.description}
+									>
+										{step.title}
+										{isComplete && !isCurrent && (
+											<span className="text-accent-400 font-bold">✓</span>
+										)}
+									</button>
+								);
+							})}
 						</div>
 						<Link
 							to="/characters"
