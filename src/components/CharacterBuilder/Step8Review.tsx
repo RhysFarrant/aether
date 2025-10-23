@@ -66,7 +66,15 @@ export default function Step8Review({
 			selectedClass.equipmentChoices.forEach((choice, choiceIndex) => {
 				const selectedOption = state.equipmentChoices[choiceIndex];
 				if (selectedOption !== undefined && choice.options[selectedOption]) {
-					equipment.push(...choice.options[selectedOption]);
+					const items = choice.options[selectedOption];
+					items.forEach((item, itemIdx) => {
+						// Check if this item has a specific weapon sub-selection
+						const subSelectionKey = `${choiceIndex}-${selectedOption}-${itemIdx}`;
+						const selectedWeapon = state.weaponSubSelections?.[subSelectionKey];
+
+						// Use the specific weapon if selected, otherwise use the generic item name
+						equipment.push(selectedWeapon || item);
+					});
 				}
 			});
 		}

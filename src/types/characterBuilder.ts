@@ -32,6 +32,7 @@ export interface CharacterBuilderState {
 	// Step 7: Equipment
 	selectedEquipment: string[];
 	equipmentChoices: Record<number, number>; // choice index -> selected option index
+	weaponSubSelections: Record<string, string>; // "choiceIndex-optionIndex-itemIndex" -> specific weapon name
 
 	// Step 8: Details
 	alignment: string;
@@ -58,6 +59,7 @@ export const initialBuilderState: CharacterBuilderState = {
 	selectedSpells: [],
 	selectedEquipment: [],
 	equipmentChoices: {},
+	weaponSubSelections: {},
 	alignment: "true-neutral",
 	currentStep: 1,
 	level: 1,
