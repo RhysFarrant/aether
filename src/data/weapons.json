@@ -2,186 +2,297 @@
   "Club": {
     "damage": "1d4",
     "damageType": "Bludgeoning",
-    "properties": ["Light"]
+    "properties": ["Light"],
+    "category": "Simple Melee",
+    "cost": "1 sp",
+    "weight": "2 lb"
   },
   "Dagger": {
     "damage": "1d4",
     "damageType": "Piercing",
-    "properties": ["Finesse", "Light", "Thrown (20/60)"]
+    "properties": ["Finesse", "Light", "Thrown (20/60)"],
+    "category": "Simple Melee",
+    "cost": "2 gp",
+    "weight": "1 lb"
   },
   "Greatclub": {
     "damage": "1d8",
     "damageType": "Bludgeoning",
-    "properties": ["Two-handed"]
+    "properties": ["Two-handed"],
+    "category": "Simple Melee",
+    "cost": "2 sp",
+    "weight": "10 lb"
   },
   "Handaxe": {
     "damage": "1d6",
     "damageType": "Slashing",
-    "properties": ["Light", "Thrown (20/60)"]
+    "properties": ["Light", "Thrown (20/60)"],
+    "category": "Simple Melee",
+    "cost": "5 gp",
+    "weight": "2 lb"
   },
   "Javelin": {
     "damage": "1d6",
     "damageType": "Piercing",
-    "properties": ["Thrown (30/120)"]
+    "properties": ["Thrown (30/120)"],
+    "category": "Simple Melee",
+    "cost": "5 sp",
+    "weight": "2 lb"
   },
   "Light hammer": {
     "damage": "1d4",
     "damageType": "Bludgeoning",
-    "properties": ["Light", "Thrown (20/60)"]
+    "properties": ["Light", "Thrown (20/60)"],
+    "category": "Simple Melee",
+    "cost": "2 gp",
+    "weight": "2 lb"
   },
   "Mace": {
     "damage": "1d6",
     "damageType": "Bludgeoning",
-    "properties": []
+    "properties": [],
+    "category": "Simple Melee",
+    "cost": "5 gp",
+    "weight": "4 lb"
   },
   "Quarterstaff": {
     "damage": "1d6",
     "damageType": "Bludgeoning",
-    "properties": ["Versatile (1d8)"]
+    "properties": ["Versatile (1d8)"],
+    "category": "Simple Melee",
+    "cost": "2 sp",
+    "weight": "4 lb"
   },
   "Sickle": {
     "damage": "1d4",
     "damageType": "Slashing",
-    "properties": ["Light"]
+    "properties": ["Light"],
+    "category": "Simple Melee",
+    "cost": "1 gp",
+    "weight": "2 lb"
   },
   "Spear": {
     "damage": "1d6",
     "damageType": "Piercing",
-    "properties": ["Thrown (20/60)", "Versatile (1d8)"]
+    "properties": ["Thrown (20/60)", "Versatile (1d8)"],
+    "category": "Simple Melee",
+    "cost": "1 gp",
+    "weight": "3 lb"
   },
   "Light crossbow": {
     "damage": "1d8",
     "damageType": "Piercing",
-    "properties": ["Ammunition (80/320)", "Loading", "Two-handed"]
+    "properties": ["Ammunition (80/320)", "Loading", "Two-handed"],
+    "category": "Simple Ranged",
+    "cost": "25 gp",
+    "weight": "5 lb"
   },
   "Dart": {
     "damage": "1d4",
     "damageType": "Piercing",
-    "properties": ["Finesse", "Thrown (20/60)"]
+    "properties": ["Finesse", "Thrown (20/60)"],
+    "category": "Simple Ranged",
+    "cost": "5 cp",
+    "weight": "0.25 lb"
   },
   "Shortbow": {
     "damage": "1d6",
     "damageType": "Piercing",
-    "properties": ["Ammunition (80/320)", "Two-handed"]
+    "properties": ["Ammunition (80/320)", "Two-handed"],
+    "category": "Simple Ranged",
+    "cost": "25 gp",
+    "weight": "2 lb"
   },
   "Sling": {
     "damage": "1d4",
     "damageType": "Bludgeoning",
-    "properties": ["Ammunition (30/120)"]
+    "properties": ["Ammunition (30/120)"],
+    "category": "Simple Ranged",
+    "cost": "1 sp",
+    "weight": "0 lb"
   },
   "Battleaxe": {
     "damage": "1d8",
     "damageType": "Slashing",
-    "properties": ["Versatile (1d10)"]
+    "properties": ["Versatile (1d10)"],
+    "category": "Martial Melee",
+    "cost": "10 gp",
+    "weight": "4 lb"
   },
   "Flail": {
     "damage": "1d8",
     "damageType": "Bludgeoning",
-    "properties": []
+    "properties": [],
+    "category": "Martial Melee",
+    "cost": "10 gp",
+    "weight": "2 lb"
   },
   "Glaive": {
     "damage": "1d10",
     "damageType": "Slashing",
-    "properties": ["Heavy", "Reach", "Two-handed"]
+    "properties": ["Heavy", "Reach", "Two-handed"],
+    "category": "Martial Melee",
+    "cost": "20 gp",
+    "weight": "6 lb"
   },
   "Greataxe": {
     "damage": "1d12",
     "damageType": "Slashing",
-    "properties": ["Heavy", "Two-handed"]
+    "properties": ["Heavy", "Two-handed"],
+    "category": "Martial Melee",
+    "cost": "30 gp",
+    "weight": "7 lb"
   },
   "Greatsword": {
     "damage": "2d6",
     "damageType": "Slashing",
-    "properties": ["Heavy", "Two-handed"]
+    "properties": ["Heavy", "Two-handed"],
+    "category": "Martial Melee",
+    "cost": "50 gp",
+    "weight": "6 lb"
   },
   "Halberd": {
     "damage": "1d10",
     "damageType": "Slashing",
-    "properties": ["Heavy", "Reach", "Two-handed"]
+    "properties": ["Heavy", "Reach", "Two-handed"],
+    "category": "Martial Melee",
+    "cost": "20 gp",
+    "weight": "6 lb"
   },
   "Lance": {
     "damage": "1d12",
     "damageType": "Piercing",
-    "properties": ["Reach", "Special"]
+    "properties": ["Reach", "Special"],
+    "category": "Martial Melee",
+    "cost": "10 gp",
+    "weight": "6 lb"
   },
   "Longsword": {
     "damage": "1d8",
     "damageType": "Slashing",
-    "properties": ["Versatile (1d10)"]
+    "properties": ["Versatile (1d10)"],
+    "category": "Martial Melee",
+    "cost": "15 gp",
+    "weight": "3 lb"
   },
   "Maul": {
     "damage": "2d6",
     "damageType": "Bludgeoning",
-    "properties": ["Heavy", "Two-handed"]
+    "properties": ["Heavy", "Two-handed"],
+    "category": "Martial Melee",
+    "cost": "10 gp",
+    "weight": "10 lb"
   },
   "Morningstar": {
     "damage": "1d8",
     "damageType": "Piercing",
-    "properties": []
+    "properties": [],
+    "category": "Martial Melee",
+    "cost": "15 gp",
+    "weight": "4 lb"
   },
   "Pike": {
     "damage": "1d10",
     "damageType": "Piercing",
-    "properties": ["Heavy", "Reach", "Two-handed"]
+    "properties": ["Heavy", "Reach", "Two-handed"],
+    "category": "Martial Melee",
+    "cost": "5 gp",
+    "weight": "18 lb"
   },
   "Rapier": {
     "damage": "1d8",
     "damageType": "Piercing",
-    "properties": ["Finesse"]
+    "properties": ["Finesse"],
+    "category": "Martial Melee",
+    "cost": "25 gp",
+    "weight": "2 lb"
   },
   "Scimitar": {
     "damage": "1d6",
     "damageType": "Slashing",
-    "properties": ["Finesse", "Light"]
+    "properties": ["Finesse", "Light"],
+    "category": "Martial Melee",
+    "cost": "25 gp",
+    "weight": "3 lb"
   },
   "Shortsword": {
     "damage": "1d6",
     "damageType": "Piercing",
-    "properties": ["Finesse", "Light"]
+    "properties": ["Finesse", "Light"],
+    "category": "Martial Melee",
+    "cost": "10 gp",
+    "weight": "2 lb"
   },
   "Trident": {
     "damage": "1d6",
     "damageType": "Piercing",
-    "properties": ["Thrown (20/60)", "Versatile (1d8)"]
+    "properties": ["Thrown (20/60)", "Versatile (1d8)"],
+    "category": "Martial Melee",
+    "cost": "5 gp",
+    "weight": "4 lb"
   },
   "War pick": {
     "damage": "1d8",
     "damageType": "Piercing",
-    "properties": []
+    "properties": [],
+    "category": "Martial Melee",
+    "cost": "5 gp",
+    "weight": "2 lb"
   },
   "Warhammer": {
     "damage": "1d8",
     "damageType": "Bludgeoning",
-    "properties": ["Versatile (1d10)"]
+    "properties": ["Versatile (1d10)"],
+    "category": "Martial Melee",
+    "cost": "15 gp",
+    "weight": "2 lb"
   },
   "Whip": {
     "damage": "1d4",
     "damageType": "Slashing",
-    "properties": ["Finesse", "Reach"]
+    "properties": ["Finesse", "Reach"],
+    "category": "Martial Melee",
+    "cost": "2 gp",
+    "weight": "3 lb"
   },
   "Blowgun": {
     "damage": "1",
     "damageType": "Piercing",
-    "properties": ["Ammunition (25/100)", "Loading"]
+    "properties": ["Ammunition (25/100)", "Loading"],
+    "category": "Martial Ranged",
+    "cost": "10 gp",
+    "weight": "1 lb"
   },
   "Hand crossbow": {
     "damage": "1d6",
     "damageType": "Piercing",
-    "properties": ["Ammunition (30/120)", "Light", "Loading"]
+    "properties": ["Ammunition (30/120)", "Light", "Loading"],
+    "category": "Martial Ranged",
+    "cost": "75 gp",
+    "weight": "3 lb"
   },
   "Heavy crossbow": {
     "damage": "1d10",
     "damageType": "Piercing",
-    "properties": ["Ammunition (100/400)", "Heavy", "Loading", "Two-handed"]
+    "properties": ["Ammunition (100/400)", "Heavy", "Loading", "Two-handed"],
+    "category": "Martial Ranged",
+    "cost": "50 gp",
+    "weight": "18 lb"
   },
   "Longbow": {
     "damage": "1d8",
     "damageType": "Piercing",
-    "properties": ["Ammunition (150/600)", "Heavy", "Two-handed"]
+    "properties": ["Ammunition (150/600)", "Heavy", "Two-handed"],
+    "category": "Martial Ranged",
+    "cost": "50 gp",
+    "weight": "2 lb"
   },
   "Net": {
     "damage": "—",
     "damageType": "—",
-    "properties": ["Special", "Thrown (5/15)"]
+    "properties": ["Special", "Thrown (5/15)"],
+    "category": "Martial Ranged",
+    "cost": "1 gp",
+    "weight": "3 lb"
   }
 }

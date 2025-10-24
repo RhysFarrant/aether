@@ -6,6 +6,9 @@ interface WeaponProperties {
 	damage: string;
 	damageType: string;
 	properties: string[];
+	category: string;
+	cost: string;
+	weight: string;
 }
 
 const WEAPON_DATA = weaponDataImport as Record<string, WeaponProperties>;
@@ -26,6 +29,85 @@ function getAbilityModifier(score: number): number {
  */
 function formatModifier(modifier: number): string {
 	return modifier >= 0 ? `+${modifier}` : `${modifier}`;
+}
+
+/**
+ * Determine if character is proficient with a weapon
+ */
+function isWeaponProficient(
+	weaponName: string,
+	weaponCategory: string,
+	characterClass: any
+): boolean {
+	const weaponProficiencies = characterClass.proficiencies?.weapons || [];
+
+	// Check for exact weapon name match
+	if (weaponProficiencies.includes(weaponName)) {
+		return true;
+	}
+
+	// Check for category proficiency (e.g., "Simple Melee", "Martial Weapons")
+	if (weaponCategory.includes("Simple") && weaponProficiencies.includes("Simple weapons")) {
+		return true;
+	}
+	if (weaponCategory.includes("Martial") && weaponProficiencies.includes("Martial weapons")) {
+		return true;
+	}
+
+	return false;
+}
+
+/**
+ * Calculate attack bonus for a weapon
+ */
+function calculateAttackBonus(
+	weaponName: string,
+	weaponProperties: WeaponProperties,
+	strMod: number,
+	dexMod: number,
+	proficiencyBonus: number,
+	characterClass: any
+): { attackBonus: number; damageBonus: number; abilityUsed: string } {
+	// Determine which ability modifier to use
+	let abilityMod: number;
+	let abilityUsed: string;
+
+	// Finesse weapons can use STR or DEX (use higher)
+	if (weaponProperties.properties.some((p) => p.includes("Finesse"))) {
+		if (dexMod >= strMod) {
+			abilityMod = dexMod;
+			abilityUsed = "DEX";
+		} else {
+			abilityMod = strMod;
+			abilityUsed = "STR";
+		}
+	}
+	// Ranged weapons use DEX
+	else if (weaponProperties.category.includes("Ranged")) {
+		abilityMod = dexMod;
+		abilityUsed = "DEX";
+	}
+	// Melee weapons use STR
+	else {
+		abilityMod = strMod;
+		abilityUsed = "STR";
+	}
+
+	// Check proficiency
+	const isProficient = isWeaponProficient(
+		weaponName,
+		weaponProperties.category,
+		characterClass
+	);
+
+	// Calculate attack bonus: ability modifier + proficiency (if proficient)
+	const attackBonus = abilityMod + (isProficient ? proficiencyBonus : 0);
+
+	return {
+		attackBonus,
+		damageBonus: abilityMod,
+		abilityUsed,
+	};
 }
 
 /**
@@ -589,30 +671,43 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 							</h3>
 							<div className="space-y-3">
 								{weapons.length > 0 ? (
-									weapons.map((weapon, idx) => (
-										<div
-											key={idx}
-											className="bg-background-tertiary/50 border border-accent-400/20 rounded-lg p-4"
-										>
-											<div className="font-semibold text-parchment-100">
-												{weapon.name}
-												{weapon.count > 1 && (
-													<span className="ml-2 text-accent-400 text-xs">
-														×{weapon.count}
-													</span>
-												)}
+									weapons.map((weapon, idx) => {
+										const attackData = calculateAttackBonus(
+											weapon.name,
+											weapon.properties,
+											strMod,
+											dexMod,
+											proficiencyBonus,
+											charClass
+										);
+
+										return (
+											<div
+												key={idx}
+												className="bg-background-tertiary/50 border border-accent-400/20 rounded-lg p-4"
+											>
+												<div className="font-semibold text-parchment-100">
+													{weapon.name}
+													{weapon.count > 1 && (
+														<span className="ml-2 text-accent-400 text-xs">
+															×{weapon.count}
+														</span>
+													)}
+												</div>
+												<div className="text-sm text-accent-400 mt-1">
+													{formatModifier(attackData.attackBonus)} to hit
+												</div>
+												<div className="text-xs text-parchment-400 mt-1">
+													{weapon.properties.damage}
+													{attackData.damageBonus !== 0 &&
+														formatModifier(attackData.damageBonus)}{" "}
+													{weapon.properties.damageType}
+													{weapon.properties.properties.length > 0 &&
+														` - ${weapon.properties.properties.join(", ")}`}
+												</div>
 											</div>
-											<div className="text-xs text-parchment-400 mt-1">
-												{weapon.properties.damage} -{" "}
-												{weapon.properties.damageType}
-												{weapon.properties.properties
-													.length > 0 &&
-													` - ${weapon.properties.properties.join(
-														", "
-													)}`}
-											</div>
-										</div>
-									))
+										);
+									})
 								) : (
 									<div className="text-center py-4 text-parchment-400 text-sm">
 										No weapons equipped
