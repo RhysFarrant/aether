@@ -850,18 +850,20 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 										return (
 											<div
 												key={idx}
-												className="bg-background-tertiary/50 border border-accent-400/20 rounded-lg p-4"
+												className="bg-background-tertiary/50 border border-accent-400/20 rounded-lg p-3"
 											>
-												<div className="font-semibold text-parchment-100">
-													{weapon.name}
-													{weapon.count > 1 && (
-														<span className="ml-2 text-accent-400 text-xs">
-															×{weapon.count}
-														</span>
-													)}
-												</div>
-												<div className="text-sm text-accent-400 mt-1">
-													{formatModifier(attackData.attackBonus)} to hit
+												<div className="flex items-center justify-between">
+													<div className="font-semibold text-parchment-100">
+														{weapon.name}
+														{weapon.count > 1 && (
+															<span className="ml-2 text-accent-400 text-xs">
+																×{weapon.count}
+															</span>
+														)}
+													</div>
+													<div className="text-sm text-accent-400">
+														{formatModifier(attackData.attackBonus)} to hit
+													</div>
 												</div>
 												<div className="text-xs text-parchment-400 mt-1">
 													{weapon.properties.damage}
