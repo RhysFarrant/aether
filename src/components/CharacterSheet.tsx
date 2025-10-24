@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { Character } from "../types/character";
 import weaponDataImport from "../data/weapons.json";
+import conditionsDataImport from "../data/conditions.json";
 
 interface WeaponProperties {
 	damage: string;
@@ -11,7 +12,14 @@ interface WeaponProperties {
 	weight: string;
 }
 
+interface Condition {
+	description: string;
+	effects: string[];
+	levels?: Record<string, string>;
+}
+
 const WEAPON_DATA = weaponDataImport as Record<string, WeaponProperties>;
+const CONDITIONS_DATA = conditionsDataImport as Record<string, Condition>;
 
 interface CharacterSheetProps {
 	character: Character;
@@ -185,6 +193,12 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 	const [isShortResting, setIsShortResting] = useState(false);
 	const [hitDiceToSpend, setHitDiceToSpend] = useState(0);
 
+	// Conditions tracking
+	const [activeConditions, setActiveConditions] = useState<
+		Map<string, number | null>
+	>(new Map());
+	const [showConditionPicker, setShowConditionPicker] = useState(false);
+
 	// Extract weapons from equipment
 	const weapons = getWeaponsFromEquipment(equipment);
 
@@ -285,6 +299,45 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 		setCurrentHP(maxHitPoints);
 		const restoredAmount = Math.max(1, Math.floor(level / 2));
 		setCurrentHitDice(Math.min(currentHitDice + restoredAmount, level));
+	};
+
+	// Conditions functions
+	const toggleCondition = (conditionName: string) => {
+		setActiveConditions((prev) => {
+			const newConditions = new Map(prev);
+			if (newConditions.has(conditionName)) {
+				newConditions.delete(conditionName);
+			} else {
+				// For exhaustion, default to level 1, otherwise null (no level)
+				newConditions.set(
+					conditionName,
+					conditionName === "Exhaustion" ? 1 : null
+				);
+				// Close picker after adding a condition
+				setShowConditionPicker(false);
+			}
+			return newConditions;
+		});
+	};
+
+	const removeCondition = (conditionName: string) => {
+		setActiveConditions((prev) => {
+			const newConditions = new Map(prev);
+			newConditions.delete(conditionName);
+			return newConditions;
+		});
+	};
+
+	const setExhaustionLevel = (level: number) => {
+		setActiveConditions((prev) => {
+			const newConditions = new Map(prev);
+			if (level === 0) {
+				newConditions.delete("Exhaustion");
+			} else {
+				newConditions.set("Exhaustion", level);
+			}
+			return newConditions;
+		});
 	};
 
 	// All D&D 5e skills with their associated abilities
@@ -947,8 +1000,121 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 							</div>
 						)}
 						{rightTab === "conditions" && (
-							<div className="text-center text-parchment-400 py-4">
-								No active conditions
+							<div className="space-y-3">
+								{/* Active Conditions */}
+								{activeConditions.size > 0 ? (
+									<div className="space-y-2">
+										<div className="flex flex-wrap gap-2">
+											{Array.from(activeConditions.entries()).map(
+												([name, level]) => (
+													<div
+														key={name}
+														className="bg-accent-400/20 border border-accent-400/40 rounded px-3 py-1.5 flex items-center gap-2"
+													>
+														<span className="text-sm font-semibold text-accent-400">
+															{name}
+															{level !== null && ` ${level}`}
+														</span>
+														<button
+															onClick={() => removeCondition(name)}
+															className="text-parchment-300 hover:text-red-400 transition-colors text-xs"
+														>
+															✕
+														</button>
+													</div>
+												)
+											)}
+										</div>
+										{/* Exhaustion Level Selector */}
+										{activeConditions.has("Exhaustion") && (
+											<div className="bg-background-secondary/50 border border-accent-400/20 rounded-lg p-3">
+												<div className="text-xs text-parchment-400 mb-2">
+													Exhaustion Level:
+												</div>
+												<div className="flex gap-1">
+													{[1, 2, 3, 4, 5, 6].map((lvl) => (
+														<button
+															key={lvl}
+															onClick={() => setExhaustionLevel(lvl)}
+															className={`flex-1 px-2 py-1 rounded text-xs font-semibold transition-colors ${
+																activeConditions.get("Exhaustion") === lvl
+																	? "bg-accent-400 text-background-primary"
+																	: "bg-background-tertiary/50 text-parchment-300 hover:bg-accent-400/20"
+															}`}
+														>
+															{lvl}
+														</button>
+													))}
+												</div>
+											</div>
+										)}
+									</div>
+								) : (
+									<div className="text-center text-parchment-400 text-sm py-2">
+										No active conditions
+									</div>
+								)}
+
+								{/* Add Condition Button */}
+								<button
+									onClick={() => setShowConditionPicker(!showConditionPicker)}
+									className="w-full py-2 px-3 rounded bg-accent-400/20 hover:bg-accent-400/30 text-accent-400 text-sm font-semibold transition-colors"
+								>
+									{showConditionPicker ? "Hide Conditions" : "Add Condition"}
+								</button>
+
+								{/* Condition Picker */}
+								<div
+									className={`overflow-hidden transition-all duration-300 ease-in-out ${
+										showConditionPicker ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
+									}`}
+								>
+									<div className="overflow-y-auto space-y-2 pr-1 max-h-96">
+										{Object.entries(CONDITIONS_DATA)
+											.filter(([name]) => !activeConditions.has(name))
+											.map(([name, condition]) => (
+												<div
+													key={name}
+													className="border border-accent-400/20 bg-background-secondary/50 rounded-lg p-3"
+												>
+													{/* Condition Header */}
+													<div className="flex items-start justify-between mb-2">
+														<div className="flex-1">
+															<div className="font-semibold text-parchment-100">
+																{name}
+															</div>
+															<div className="text-xs text-parchment-400 mt-1">
+																{condition.description}
+															</div>
+														</div>
+														<button
+															onClick={() => toggleCondition(name)}
+															className="ml-2 px-3 py-1 rounded text-xs font-semibold transition-colors flex-shrink-0 bg-background-tertiary text-parchment-300 hover:bg-accent-400/20"
+														>
+															Add
+														</button>
+													</div>
+
+													{/* Condition Effects */}
+													{condition.effects.length > 0 && (
+														<div className="mt-2 space-y-1">
+															{condition.effects.map((effect, idx) => (
+																<div
+																	key={idx}
+																	className="text-xs text-parchment-300 flex items-start"
+																>
+																	<span className="text-accent-400 mr-2">
+																		•
+																	</span>
+																	<span>{effect}</span>
+																</div>
+															))}
+														</div>
+													)}
+												</div>
+											))}
+									</div>
+								</div>
 							</div>
 						)}
 					</div>
