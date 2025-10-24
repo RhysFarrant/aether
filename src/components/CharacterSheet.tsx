@@ -177,6 +177,14 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 	const [deathSaveSuccesses, setDeathSaveSuccesses] = useState(0);
 	const [deathSaveFailures, setDeathSaveFailures] = useState(0);
 
+	// Initiative tracking
+	const [initiative, setInitiative] = useState<number | null>(null);
+
+	// Hit dice tracking (starts at character level)
+	const [currentHitDice, setCurrentHitDice] = useState(level);
+	const [isShortResting, setIsShortResting] = useState(false);
+	const [hitDiceToSpend, setHitDiceToSpend] = useState(0);
+
 	// Extract weapons from equipment
 	const weapons = getWeaponsFromEquipment(equipment);
 
@@ -234,6 +242,51 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 		}
 	};
 
+	// Initiative functions
+	const rollInitiative = () => {
+		const roll = Math.floor(Math.random() * 20) + 1;
+		setInitiative(roll + dexMod);
+	};
+
+	const clearInitiative = () => {
+		setInitiative(null);
+	};
+
+	// Hit dice functions
+	const startShortRest = () => {
+		setIsShortResting(true);
+		setHitDiceToSpend(0);
+	};
+
+	const cancelShortRest = () => {
+		setIsShortResting(false);
+		setHitDiceToSpend(0);
+	};
+
+	const confirmShortRest = () => {
+		// Roll each hit die and apply healing
+		let totalHealing = 0;
+		for (let i = 0; i < hitDiceToSpend; i++) {
+			const hitDieSize = charClass.hitDie;
+			const roll = Math.floor(Math.random() * hitDieSize) + 1;
+			const healing = Math.max(1, roll + conMod); // Minimum 1 HP
+			totalHealing += healing;
+		}
+
+		// Apply healing and spend hit dice
+		setCurrentHP(Math.min(currentHP + totalHealing, maxHitPoints));
+		setCurrentHitDice(currentHitDice - hitDiceToSpend);
+		setIsShortResting(false);
+		setHitDiceToSpend(0);
+	};
+
+	const longRest = () => {
+		// On long rest: restore HP to max and restore up to half of total hit dice (minimum 1)
+		setCurrentHP(maxHitPoints);
+		const restoredAmount = Math.max(1, Math.floor(level / 2));
+		setCurrentHitDice(Math.min(currentHitDice + restoredAmount, level));
+	};
+
 	// All D&D 5e skills with their associated abilities
 	const allSkills = [
 		{ name: "Acrobatics", ability: "DEX", modifier: dexMod },
@@ -285,13 +338,35 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 						</div>
 
 						{/* Initiative */}
-						<div className="bg-background-tertiary border border-accent-400/30 rounded-lg px-4 py-2 text-center min-w-[80px]">
-							<div className="text-xs text-parchment-400 uppercase tracking-wider">
+						<div className="bg-background-tertiary border border-accent-400/30 rounded-lg px-4 py-2 min-w-[120px]">
+							<div className="text-xs text-parchment-400 uppercase tracking-wider text-center mb-1">
 								Initiative
 							</div>
-							<div className="text-xl font-bold text-accent-400">
-								{formatModifier(dexMod)}
-							</div>
+							{initiative !== null ? (
+								<div className="flex flex-col items-center gap-1">
+									<div className="text-2xl font-bold text-accent-400">
+										{initiative}
+									</div>
+									<button
+										onClick={clearInitiative}
+										className="text-xs text-parchment-400 hover:text-accent-400 transition-colors"
+									>
+										Clear
+									</button>
+								</div>
+							) : (
+								<div className="flex flex-col items-center gap-1">
+									<div className="text-lg font-bold text-parchment-200">
+										{formatModifier(dexMod)}
+									</div>
+									<button
+										onClick={rollInitiative}
+										className="text-xs bg-accent-400/20 hover:bg-accent-400/30 text-accent-400 px-2 py-0.5 rounded transition-colors"
+									>
+										Roll
+									</button>
+								</div>
+							)}
 						</div>
 
 						{/* Speed */}
@@ -302,6 +377,97 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 							<div className="text-xl font-bold text-accent-400">
 								{species.speed}
 							</div>
+						</div>
+
+						{/* Hit Dice */}
+						<div className="bg-background-tertiary border border-accent-400/30 rounded-lg px-4 py-2 min-w-[120px]">
+							<div className="text-xs text-parchment-400 uppercase tracking-wider text-center mb-1">
+								Hit Dice
+							</div>
+							{!isShortResting ? (
+								<div className="flex items-center justify-between gap-2">
+									<div className="flex flex-col items-center">
+										<div className="text-lg font-bold text-accent-400">
+											{currentHitDice}/{level}
+										</div>
+										<div className="text-xs text-parchment-400">
+											d{charClass.hitDie}
+										</div>
+									</div>
+									<div className="flex flex-col gap-0.5">
+										<button
+											onClick={startShortRest}
+											disabled={currentHitDice === 0}
+											className={`px-2 py-0.5 rounded transition-colors text-xs font-semibold ${
+												currentHitDice > 0
+													? "bg-accent-400/20 hover:bg-accent-400/30 text-accent-400"
+													: "bg-background-tertiary/30 text-parchment-400 cursor-not-allowed"
+											}`}
+										>
+											Short
+										</button>
+										<button
+											onClick={longRest}
+											className="px-2 py-0.5 rounded transition-colors text-xs font-semibold bg-accent-400/20 hover:bg-accent-400/30 text-accent-400"
+										>
+											Long
+										</button>
+									</div>
+								</div>
+							) : (
+								<div className="flex flex-col items-center gap-1">
+									{/* Hit Dice Selector */}
+									<div className="flex items-center justify-center gap-1">
+										<button
+											onClick={() => setHitDiceToSpend(Math.max(0, hitDiceToSpend - 1))}
+											disabled={hitDiceToSpend === 0}
+											className={`w-6 h-6 rounded transition-colors text-sm font-bold ${
+												hitDiceToSpend > 0
+													? "bg-background-tertiary/50 hover:bg-background-tertiary border border-accent-400/20 hover:border-accent-400/40 text-accent-400"
+													: "bg-background-tertiary/30 border border-accent-400/10 text-parchment-400 cursor-not-allowed"
+											}`}
+										>
+											−
+										</button>
+										<div className="bg-background-tertiary/50 border border-accent-400/30 rounded px-2 py-0.5 min-w-[40px] text-center">
+											<div className="text-base font-bold text-accent-400">
+												{hitDiceToSpend}
+											</div>
+										</div>
+										<button
+											onClick={() => setHitDiceToSpend(Math.min(currentHitDice, hitDiceToSpend + 1))}
+											disabled={hitDiceToSpend >= currentHitDice}
+											className={`w-6 h-6 rounded transition-colors text-sm font-bold ${
+												hitDiceToSpend < currentHitDice
+													? "bg-background-tertiary/50 hover:bg-background-tertiary border border-accent-400/20 hover:border-accent-400/40 text-accent-400"
+													: "bg-background-tertiary/30 border border-accent-400/10 text-parchment-400 cursor-not-allowed"
+											}`}
+										>
+											+
+										</button>
+									</div>
+									{/* Roll and Cancel Buttons */}
+									<div className="flex gap-1 w-full">
+										<button
+											onClick={confirmShortRest}
+											disabled={hitDiceToSpend === 0}
+											className={`flex-1 px-2 py-0.5 rounded transition-colors text-xs font-semibold ${
+												hitDiceToSpend > 0
+													? "bg-accent-400 hover:bg-accent-400/90 text-background-primary"
+													: "bg-background-tertiary/30 text-parchment-400 cursor-not-allowed"
+											}`}
+										>
+											Roll
+										</button>
+										<button
+											onClick={cancelShortRest}
+											className="px-2 py-0.5 text-xs text-parchment-400 hover:text-accent-400 transition-colors"
+										>
+											✕
+										</button>
+									</div>
+								</div>
+							)}
 						</div>
 
 						{/* Ability Scores - Compact */}
