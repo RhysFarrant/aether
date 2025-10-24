@@ -1,0 +1,601 @@
+{
+  "wizard": {
+    "cantrips": [
+      {
+        "name": "Fire Bolt",
+        "description": "Hurl a mote of fire at a creature. 1d10 fire damage.",
+        "school": "Evocation",
+        "castingTime": "1 action",
+        "range": "120 feet",
+        "components": ["V", "S"],
+        "duration": "Instantaneous"
+      },
+      {
+        "name": "Mage Hand",
+        "description": "Conjure a spectral hand to manipulate objects at a distance.",
+        "school": "Conjuration",
+        "castingTime": "1 action",
+        "range": "30 feet",
+        "components": ["V", "S"],
+        "duration": "1 minute"
+      },
+      {
+        "name": "Light",
+        "description": "Touch an object to make it shed bright light.",
+        "school": "Evocation",
+        "castingTime": "1 action",
+        "range": "Touch",
+        "components": ["V", "M"],
+        "duration": "1 hour"
+      },
+      {
+        "name": "Ray of Frost",
+        "description": "A frigid beam of blue-white light. 1d8 cold damage.",
+        "school": "Evocation",
+        "castingTime": "1 action",
+        "range": "60 feet",
+        "components": ["V", "S"],
+        "duration": "Instantaneous"
+      },
+      {
+        "name": "Shocking Grasp",
+        "description": "Lightning springs from your hand. 1d8 lightning damage.",
+        "school": "Evocation",
+        "castingTime": "1 action",
+        "range": "Touch",
+        "components": ["V", "S"],
+        "duration": "Instantaneous"
+      },
+      {
+        "name": "Prestidigitation",
+        "description": "Perform minor magical tricks and illusions.",
+        "school": "Transmutation",
+        "castingTime": "1 action",
+        "range": "10 feet",
+        "components": ["V", "S"],
+        "duration": "Up to 1 hour"
+      },
+      {
+        "name": "Acid Splash",
+        "description": "Hurl a bubble of acid. 1d6 acid damage.",
+        "school": "Conjuration",
+        "castingTime": "1 action",
+        "range": "60 feet",
+        "components": ["V", "S"],
+        "duration": "Instantaneous"
+      },
+      {
+        "name": "Minor Illusion",
+        "description": "Create a sound or an image of an object.",
+        "school": "Illusion",
+        "castingTime": "1 action",
+        "range": "30 feet",
+        "components": ["S", "M"],
+        "duration": "1 minute"
+      },
+      {
+        "name": "Poison Spray",
+        "description": "Extend your hand and project a puff of noxious gas. 1d12 poison damage.",
+        "school": "Conjuration",
+        "castingTime": "1 action",
+        "range": "10 feet",
+        "components": ["V", "S"],
+        "duration": "Instantaneous"
+      }
+    ],
+    "level1": [
+      {
+        "name": "Magic Missile",
+        "description": "Three darts of magical force strike their target. 1d4+1 force damage each.",
+        "school": "Evocation",
+        "level": 1,
+        "castingTime": "1 action",
+        "range": "120 feet",
+        "components": ["V", "S"],
+        "duration": "Instantaneous"
+      },
+      {
+        "name": "Shield",
+        "description": "An invisible barrier grants +5 AC until your next turn.",
+        "school": "Abjuration",
+        "level": 1,
+        "castingTime": "1 reaction",
+        "range": "Self",
+        "components": ["V", "S"],
+        "duration": "1 round"
+      },
+      {
+        "name": "Mage Armor",
+        "description": "Touch a creature to surround them with protective force. AC 13 + Dex modifier.",
+        "school": "Abjuration",
+        "level": 1,
+        "castingTime": "1 action",
+        "range": "Touch",
+        "components": ["V", "S", "M"],
+        "duration": "8 hours"
+      },
+      {
+        "name": "Detect Magic",
+        "description": "Sense the presence of magic within 30 feet.",
+        "school": "Divination",
+        "level": 1,
+        "castingTime": "1 action",
+        "range": "Self",
+        "components": ["V", "S"],
+        "duration": "Concentration, up to 10 minutes",
+        "ritual": true
+      },
+      {
+        "name": "Identify",
+        "description": "Learn the properties of a magical object or spell affecting a creature.",
+        "school": "Divination",
+        "level": 1,
+        "castingTime": "1 minute",
+        "range": "Touch",
+        "components": ["V", "S", "M"],
+        "duration": "Instantaneous",
+        "ritual": true
+      },
+      {
+        "name": "Burning Hands",
+        "description": "A thin sheet of flames shoots from your hands. 3d6 fire damage.",
+        "school": "Evocation",
+        "level": 1,
+        "castingTime": "1 action",
+        "range": "Self (15-foot cone)",
+        "components": ["V", "S"],
+        "duration": "Instantaneous"
+      },
+      {
+        "name": "Charm Person",
+        "description": "Attempt to charm a humanoid you can see within range.",
+        "school": "Enchantment",
+        "level": 1,
+        "castingTime": "1 action",
+        "range": "30 feet",
+        "components": ["V", "S"],
+        "duration": "1 hour"
+      },
+      {
+        "name": "Sleep",
+        "description": "Send creatures into a magical slumber. 5d8 hit points of creatures.",
+        "school": "Enchantment",
+        "level": 1,
+        "castingTime": "1 action",
+        "range": "90 feet",
+        "components": ["V", "S", "M"],
+        "duration": "1 minute"
+      },
+      {
+        "name": "Thunderwave",
+        "description": "A wave of thunderous force. 2d8 thunder damage and push 10 feet.",
+        "school": "Evocation",
+        "level": 1,
+        "castingTime": "1 action",
+        "range": "Self (15-foot cube)",
+        "components": ["V", "S"],
+        "duration": "Instantaneous"
+      },
+      {
+        "name": "Feather Fall",
+        "description": "Choose up to 5 falling creatures to slow their descent.",
+        "school": "Transmutation",
+        "level": 1,
+        "castingTime": "1 reaction",
+        "range": "60 feet",
+        "components": ["V", "M"],
+        "duration": "1 minute"
+      },
+      {
+        "name": "Grease",
+        "description": "Slick grease covers the ground in a 10-foot square.",
+        "school": "Conjuration",
+        "level": 1,
+        "castingTime": "1 action",
+        "range": "60 feet",
+        "components": ["V", "S", "M"],
+        "duration": "1 minute"
+      },
+      {
+        "name": "Fog Cloud",
+        "description": "Create a 20-foot-radius sphere of fog.",
+        "school": "Conjuration",
+        "level": 1,
+        "castingTime": "1 action",
+        "range": "120 feet",
+        "components": ["V", "S"],
+        "duration": "Concentration, up to 1 hour"
+      }
+    ]
+  },
+  "cleric": {
+    "cantrips": [
+      {
+        "name": "Sacred Flame",
+        "description": "Flame-like radiance descends on a creature. 1d8 radiant damage.",
+        "school": "Evocation",
+        "castingTime": "1 action",
+        "range": "60 feet",
+        "components": ["V", "S"],
+        "duration": "Instantaneous"
+      },
+      {
+        "name": "Guidance",
+        "description": "Touch a creature to grant it 1d4 to one ability check.",
+        "school": "Divination",
+        "castingTime": "1 action",
+        "range": "Touch",
+        "components": ["V", "S"],
+        "duration": "Concentration, up to 1 minute"
+      },
+      {
+        "name": "Light",
+        "description": "Touch an object to make it shed bright light.",
+        "school": "Evocation",
+        "castingTime": "1 action",
+        "range": "Touch",
+        "components": ["V", "M"],
+        "duration": "1 hour"
+      },
+      {
+        "name": "Spare the Dying",
+        "description": "Touch a dying creature to stabilize it.",
+        "school": "Necromancy",
+        "castingTime": "1 action",
+        "range": "Touch",
+        "components": ["V", "S"],
+        "duration": "Instantaneous"
+      },
+      {
+        "name": "Thaumaturgy",
+        "description": "Manifest a minor wonder, a sign of supernatural power.",
+        "school": "Transmutation",
+        "castingTime": "1 action",
+        "range": "30 feet",
+        "components": ["V"],
+        "duration": "Up to 1 minute"
+      },
+      {
+        "name": "Resistance",
+        "description": "Touch a creature to grant it 1d4 to one saving throw.",
+        "school": "Abjuration",
+        "castingTime": "1 action",
+        "range": "Touch",
+        "components": ["V", "S", "M"],
+        "duration": "Concentration, up to 1 minute"
+      },
+      {
+        "name": "Mending",
+        "description": "Repair a single break or tear in an object.",
+        "school": "Transmutation",
+        "castingTime": "1 minute",
+        "range": "Touch",
+        "components": ["V", "S", "M"],
+        "duration": "Instantaneous"
+      }
+    ],
+    "level1": [
+      {
+        "name": "Cure Wounds",
+        "description": "Touch a creature to restore hit points. 1d8 + spellcasting modifier.",
+        "school": "Evocation",
+        "level": 1,
+        "castingTime": "1 action",
+        "range": "Touch",
+        "components": ["V", "S"],
+        "duration": "Instantaneous"
+      },
+      {
+        "name": "Bless",
+        "description": "Bless up to 3 creatures. They add 1d4 to attacks and saves.",
+        "school": "Enchantment",
+        "level": 1,
+        "castingTime": "1 action",
+        "range": "30 feet",
+        "components": ["V", "S", "M"],
+        "duration": "Concentration, up to 1 minute"
+      },
+      {
+        "name": "Guiding Bolt",
+        "description": "A flash of light streaks toward a creature. 4d6 radiant damage.",
+        "school": "Evocation",
+        "level": 1,
+        "castingTime": "1 action",
+        "range": "120 feet",
+        "components": ["V", "S"],
+        "duration": "1 round"
+      },
+      {
+        "name": "Healing Word",
+        "description": "Speak a word of healing to restore hit points. 1d4 + modifier.",
+        "school": "Evocation",
+        "level": 1,
+        "castingTime": "1 bonus action",
+        "range": "60 feet",
+        "components": ["V"],
+        "duration": "Instantaneous"
+      },
+      {
+        "name": "Shield of Faith",
+        "description": "A shimmering field surrounds a creature, granting +2 AC.",
+        "school": "Abjuration",
+        "level": 1,
+        "castingTime": "1 bonus action",
+        "range": "60 feet",
+        "components": ["V", "S", "M"],
+        "duration": "Concentration, up to 10 minutes"
+      },
+      {
+        "name": "Command",
+        "description": "Speak a one-word command to a creature within range.",
+        "school": "Enchantment",
+        "level": 1,
+        "castingTime": "1 action",
+        "range": "60 feet",
+        "components": ["V"],
+        "duration": "1 round"
+      },
+      {
+        "name": "Detect Evil and Good",
+        "description": "Sense the presence of aberrations, celestials, fiends, or undead.",
+        "school": "Divination",
+        "level": 1,
+        "castingTime": "1 action",
+        "range": "Self",
+        "components": ["V", "S"],
+        "duration": "Concentration, up to 10 minutes"
+      },
+      {
+        "name": "Sanctuary",
+        "description": "Ward a creature. Attackers must make a Wisdom save to target it.",
+        "school": "Abjuration",
+        "level": 1,
+        "castingTime": "1 bonus action",
+        "range": "30 feet",
+        "components": ["V", "S", "M"],
+        "duration": "1 minute"
+      },
+      {
+        "name": "Inflict Wounds",
+        "description": "Make a melee spell attack. 3d10 necrotic damage.",
+        "school": "Necromancy",
+        "level": 1,
+        "castingTime": "1 action",
+        "range": "Touch",
+        "components": ["V", "S"],
+        "duration": "Instantaneous"
+      },
+      {
+        "name": "Create or Destroy Water",
+        "description": "Create or destroy up to 10 gallons of water.",
+        "school": "Transmutation",
+        "level": 1,
+        "castingTime": "1 action",
+        "range": "30 feet",
+        "components": ["V", "S", "M"],
+        "duration": "Instantaneous"
+      }
+    ]
+  },
+  "sorcerer": {
+    "cantrips": [
+      {
+        "name": "Fire Bolt",
+        "description": "Hurl a mote of fire at a creature. 1d10 fire damage.",
+        "school": "Evocation",
+        "castingTime": "1 action",
+        "range": "120 feet",
+        "components": ["V", "S"],
+        "duration": "Instantaneous"
+      },
+      {
+        "name": "Ray of Frost",
+        "description": "A frigid beam of blue-white light. 1d8 cold damage.",
+        "school": "Evocation",
+        "castingTime": "1 action",
+        "range": "60 feet",
+        "components": ["V", "S"],
+        "duration": "Instantaneous"
+      },
+      {
+        "name": "Shocking Grasp",
+        "description": "Lightning springs from your hand. 1d8 lightning damage.",
+        "school": "Evocation",
+        "castingTime": "1 action",
+        "range": "Touch",
+        "components": ["V", "S"],
+        "duration": "Instantaneous"
+      },
+      {
+        "name": "Light",
+        "description": "Touch an object to make it shed bright light.",
+        "school": "Evocation",
+        "castingTime": "1 action",
+        "range": "Touch",
+        "components": ["V", "M"],
+        "duration": "1 hour"
+      },
+      {
+        "name": "Mage Hand",
+        "description": "Conjure a spectral hand to manipulate objects at a distance.",
+        "school": "Conjuration",
+        "castingTime": "1 action",
+        "range": "30 feet",
+        "components": ["V", "S"],
+        "duration": "1 minute"
+      },
+      {
+        "name": "Prestidigitation",
+        "description": "Perform minor magical tricks and illusions.",
+        "school": "Transmutation",
+        "castingTime": "1 action",
+        "range": "10 feet",
+        "components": ["V", "S"],
+        "duration": "Up to 1 hour"
+      }
+    ],
+    "level1": [
+      {
+        "name": "Magic Missile",
+        "description": "Three darts of magical force strike their target. 1d4+1 force damage each.",
+        "school": "Evocation",
+        "level": 1,
+        "castingTime": "1 action",
+        "range": "120 feet",
+        "components": ["V", "S"],
+        "duration": "Instantaneous"
+      },
+      {
+        "name": "Shield",
+        "description": "An invisible barrier grants +5 AC until your next turn.",
+        "school": "Abjuration",
+        "level": 1,
+        "castingTime": "1 reaction",
+        "range": "Self",
+        "components": ["V", "S"],
+        "duration": "1 round"
+      },
+      {
+        "name": "Mage Armor",
+        "description": "Touch a creature to surround them with protective force. AC 13 + Dex modifier.",
+        "school": "Abjuration",
+        "level": 1,
+        "castingTime": "1 action",
+        "range": "Touch",
+        "components": ["V", "S", "M"],
+        "duration": "8 hours"
+      },
+      {
+        "name": "Burning Hands",
+        "description": "A thin sheet of flames shoots from your hands. 3d6 fire damage.",
+        "school": "Evocation",
+        "level": 1,
+        "castingTime": "1 action",
+        "range": "Self (15-foot cone)",
+        "components": ["V", "S"],
+        "duration": "Instantaneous"
+      },
+      {
+        "name": "Charm Person",
+        "description": "Attempt to charm a humanoid you can see within range.",
+        "school": "Enchantment",
+        "level": 1,
+        "castingTime": "1 action",
+        "range": "30 feet",
+        "components": ["V", "S"],
+        "duration": "1 hour"
+      },
+      {
+        "name": "Thunderwave",
+        "description": "A wave of thunderous force. 2d8 thunder damage and push 10 feet.",
+        "school": "Evocation",
+        "level": 1,
+        "castingTime": "1 action",
+        "range": "Self (15-foot cube)",
+        "components": ["V", "S"],
+        "duration": "Instantaneous"
+      }
+    ]
+  },
+  "warlock": {
+    "cantrips": [
+      {
+        "name": "Eldritch Blast",
+        "description": "A beam of crackling energy. 1d10 force damage.",
+        "school": "Evocation",
+        "castingTime": "1 action",
+        "range": "120 feet",
+        "components": ["V", "S"],
+        "duration": "Instantaneous"
+      },
+      {
+        "name": "Mage Hand",
+        "description": "Conjure a spectral hand to manipulate objects at a distance.",
+        "school": "Conjuration",
+        "castingTime": "1 action",
+        "range": "30 feet",
+        "components": ["V", "S"],
+        "duration": "1 minute"
+      },
+      {
+        "name": "Minor Illusion",
+        "description": "Create a sound or an image of an object.",
+        "school": "Illusion",
+        "castingTime": "1 action",
+        "range": "30 feet",
+        "components": ["S", "M"],
+        "duration": "1 minute"
+      },
+      {
+        "name": "Poison Spray",
+        "description": "Extend your hand and project a puff of noxious gas. 1d12 poison damage.",
+        "school": "Conjuration",
+        "castingTime": "1 action",
+        "range": "10 feet",
+        "components": ["V", "S"],
+        "duration": "Instantaneous"
+      },
+      {
+        "name": "Prestidigitation",
+        "description": "Perform minor magical tricks and illusions.",
+        "school": "Transmutation",
+        "castingTime": "1 action",
+        "range": "10 feet",
+        "components": ["V", "S"],
+        "duration": "Up to 1 hour"
+      }
+    ],
+    "level1": [
+      {
+        "name": "Armor of Agathys",
+        "description": "A protective magical force surrounds you. Gain 5 temporary hit points.",
+        "school": "Abjuration",
+        "level": 1,
+        "castingTime": "1 action",
+        "range": "Self",
+        "components": ["V", "S", "M"],
+        "duration": "1 hour"
+      },
+      {
+        "name": "Arms of Hadar",
+        "description": "Summon tendrils of dark energy. 2d6 necrotic damage.",
+        "school": "Conjuration",
+        "level": 1,
+        "castingTime": "1 action",
+        "range": "Self (10-foot radius)",
+        "components": ["V", "S"],
+        "duration": "Instantaneous"
+      },
+      {
+        "name": "Hex",
+        "description": "Place a curse on a creature. Extra 1d6 necrotic damage.",
+        "school": "Enchantment",
+        "level": 1,
+        "castingTime": "1 bonus action",
+        "range": "90 feet",
+        "components": ["V", "S", "M"],
+        "duration": "Concentration, up to 1 hour"
+      },
+      {
+        "name": "Hellish Rebuke",
+        "description": "Point your finger and the creature is engulfed in flames. 2d10 fire damage.",
+        "school": "Evocation",
+        "level": 1,
+        "castingTime": "1 reaction",
+        "range": "60 feet",
+        "components": ["V", "S"],
+        "duration": "Instantaneous"
+      },
+      {
+        "name": "Witch Bolt",
+        "description": "A beam of crackling energy. 1d12 lightning damage initially.",
+        "school": "Evocation",
+        "level": 1,
+        "castingTime": "1 action",
+        "range": "30 feet",
+        "components": ["V", "S", "M"],
+        "duration": "Concentration, up to 1 minute"
+      }
+    ]
+  }
+}

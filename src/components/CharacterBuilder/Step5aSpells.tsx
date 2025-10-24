@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import type { CharacterBuilderState } from "../../types/characterBuilder";
 import { useClass } from "../../hooks/useSRD";
+import spellDataImport from "../../data/spells.json";
 
 interface Step5aSpellsProps {
 	state: CharacterBuilderState;
@@ -9,54 +10,26 @@ interface Step5aSpellsProps {
 	onPrevious: () => void;
 }
 
-// Placeholder spell lists - TODO: Move to JSON data files
 interface Spell {
 	name: string;
 	description: string;
-	school?: string;
+	school: string;
+	castingTime?: string;
+	range?: string;
+	components?: string[];
+	duration?: string;
+	level?: number;
+	ritual?: boolean;
 }
 
-const WIZARD_CANTRIPS: Spell[] = [
-	{ name: "Fire Bolt", description: "Hurl a mote of fire at a creature. 1d10 fire damage.", school: "Evocation" },
-	{ name: "Mage Hand", description: "Conjure a spectral hand to manipulate objects at a distance.", school: "Conjuration" },
-	{ name: "Light", description: "Touch an object to make it shed bright light.", school: "Evocation" },
-	{ name: "Ray of Frost", description: "A frigid beam of blue-white light. 1d8 cold damage.", school: "Evocation" },
-	{ name: "Shocking Grasp", description: "Lightning springs from your hand. 1d8 lightning damage.", school: "Evocation" },
-	{ name: "Prestidigitation", description: "Perform minor magical tricks and illusions.", school: "Transmutation" },
-];
+interface SpellData {
+	[className: string]: {
+		cantrips: Spell[];
+		level1: Spell[];
+	};
+}
 
-const WIZARD_LEVEL1_SPELLS: Spell[] = [
-	{ name: "Magic Missile", description: "Three darts of magical force strike their target. 1d4+1 force damage each.", school: "Evocation" },
-	{ name: "Shield", description: "An invisible barrier grants +5 AC until your next turn.", school: "Abjuration" },
-	{ name: "Mage Armor", description: "Touch a creature to surround them with protective force. AC 13 + Dex modifier.", school: "Abjuration" },
-	{ name: "Detect Magic", description: "Sense the presence of magic within 30 feet.", school: "Divination" },
-	{ name: "Identify", description: "Learn the properties of a magical object or spell affecting a creature.", school: "Divination" },
-	{ name: "Burning Hands", description: "A thin sheet of flames shoots from your hands. 3d6 fire damage.", school: "Evocation" },
-	{ name: "Charm Person", description: "Attempt to charm a humanoid you can see within range.", school: "Enchantment" },
-	{ name: "Sleep", description: "Send creatures into a magical slumber. 5d8 hit points of creatures.", school: "Enchantment" },
-	{ name: "Thunderwave", description: "A wave of thunderous force. 2d8 thunder damage and push 10 feet.", school: "Evocation" },
-	{ name: "Feather Fall", description: "Choose up to 5 falling creatures to slow their descent.", school: "Transmutation" },
-];
-
-const CLERIC_CANTRIPS: Spell[] = [
-	{ name: "Sacred Flame", description: "Flame-like radiance descends on a creature. 1d8 radiant damage.", school: "Evocation" },
-	{ name: "Guidance", description: "Touch a creature to grant it 1d4 to one ability check.", school: "Divination" },
-	{ name: "Light", description: "Touch an object to make it shed bright light.", school: "Evocation" },
-	{ name: "Spare the Dying", description: "Touch a dying creature to stabilize it.", school: "Necromancy" },
-	{ name: "Thaumaturgy", description: "Manifest a minor wonder, a sign of supernatural power.", school: "Transmutation" },
-	{ name: "Resistance", description: "Touch a creature to grant it 1d4 to one saving throw.", school: "Abjuration" },
-];
-
-const CLERIC_LEVEL1_SPELLS: Spell[] = [
-	{ name: "Cure Wounds", description: "Touch a creature to restore hit points. 1d8 + spellcasting modifier.", school: "Evocation" },
-	{ name: "Bless", description: "Bless up to 3 creatures. They add 1d4 to attacks and saves.", school: "Enchantment" },
-	{ name: "Guiding Bolt", description: "A flash of light streaks toward a creature. 4d6 radiant damage.", school: "Evocation" },
-	{ name: "Healing Word", description: "Speak a word of healing to restore hit points. 1d4 + modifier.", school: "Evocation" },
-	{ name: "Shield of Faith", description: "A shimmering field surrounds a creature, granting +2 AC.", school: "Abjuration" },
-	{ name: "Command", description: "Speak a one-word command to a creature within range.", school: "Enchantment" },
-	{ name: "Detect Evil and Good", description: "Sense the presence of aberrations, celestials, fiends, or undead.", school: "Divination" },
-	{ name: "Sanctuary", description: "Ward a creature. Attackers must make a Wisdom save to target it.", school: "Abjuration" },
-];
+const SPELL_DATA = spellDataImport as SpellData;
 
 /**
  * Step 5a: Spell Selection (only for spellcasters)
@@ -98,12 +71,21 @@ export default function Step5aSpells({
 	let availableCantrips: Spell[] = [];
 	let availableSpells: Spell[] = [];
 
-	if (selectedClass?.id === "class_wizard_srd") {
-		availableCantrips = WIZARD_CANTRIPS;
-		availableSpells = WIZARD_LEVEL1_SPELLS;
-	} else if (selectedClass?.id === "class_cleric_srd") {
-		availableCantrips = CLERIC_CANTRIPS;
-		availableSpells = CLERIC_LEVEL1_SPELLS;
+	// Map class IDs to spell data keys
+	const classSpellMap: Record<string, string> = {
+		"class_wizard_srd": "wizard",
+		"class_cleric_srd": "cleric",
+		"class_sorcerer_srd": "sorcerer",
+		"class_warlock_srd": "warlock",
+	};
+
+	if (selectedClass?.id && classSpellMap[selectedClass.id]) {
+		const spellKey = classSpellMap[selectedClass.id];
+		const classSpells = SPELL_DATA[spellKey];
+		if (classSpells) {
+			availableCantrips = classSpells.cantrips || [];
+			availableSpells = classSpells.level1 || [];
+		}
 	}
 
 	const hasNoSpells = availableCantrips.length === 0 && availableSpells.length === 0;
