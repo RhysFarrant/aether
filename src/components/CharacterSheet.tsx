@@ -380,58 +380,6 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 
 					{/* Right: Quick Stats */}
 					<div className="flex items-center gap-3">
-						{/* Proficiency */}
-						<div className="bg-background-tertiary border border-accent-400/30 rounded-lg px-4 py-2 text-center min-w-[80px]">
-							<div className="text-xs text-parchment-400 uppercase tracking-wider">
-								Proficiency
-							</div>
-							<div className="text-xl font-bold text-accent-400">
-								+{proficiencyBonus}
-							</div>
-						</div>
-
-						{/* Initiative */}
-						<div className="bg-background-tertiary border border-accent-400/30 rounded-lg px-4 py-2 min-w-[120px]">
-							<div className="text-xs text-parchment-400 uppercase tracking-wider text-center mb-1">
-								Initiative
-							</div>
-							{initiative !== null ? (
-								<div className="flex flex-col items-center gap-1">
-									<div className="text-2xl font-bold text-accent-400">
-										{initiative}
-									</div>
-									<button
-										onClick={clearInitiative}
-										className="text-xs text-parchment-400 hover:text-accent-400 transition-colors"
-									>
-										Clear
-									</button>
-								</div>
-							) : (
-								<div className="flex flex-col items-center gap-1">
-									<div className="text-lg font-bold text-parchment-200">
-										{formatModifier(dexMod)}
-									</div>
-									<button
-										onClick={rollInitiative}
-										className="text-xs bg-accent-400/20 hover:bg-accent-400/30 text-accent-400 px-2 py-0.5 rounded transition-colors"
-									>
-										Roll
-									</button>
-								</div>
-							)}
-						</div>
-
-						{/* Speed */}
-						<div className="bg-background-tertiary border border-accent-400/30 rounded-lg px-4 py-2 text-center min-w-[80px]">
-							<div className="text-xs text-parchment-400 uppercase tracking-wider">
-								Speed
-							</div>
-							<div className="text-xl font-bold text-accent-400">
-								{species.speed}
-							</div>
-						</div>
-
 						{/* Hit Dice */}
 						<div className="bg-background-tertiary border border-accent-400/30 rounded-lg px-4 py-2 min-w-[120px]">
 							<div className="text-xs text-parchment-400 uppercase tracking-wider text-center mb-1">
@@ -522,67 +470,78 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 								</div>
 							)}
 						</div>
-
-						{/* Ability Scores - Compact */}
-						{[
-							{
-								label: "STR",
-								score: abilityScores.strength,
-								mod: strMod,
-							},
-							{
-								label: "DEX",
-								score: abilityScores.dexterity,
-								mod: dexMod,
-							},
-							{
-								label: "CON",
-								score: abilityScores.constitution,
-								mod: conMod,
-							},
-							{
-								label: "INT",
-								score: abilityScores.intelligence,
-								mod: intMod,
-							},
-							{
-								label: "WIS",
-								score: abilityScores.wisdom,
-								mod: wisMod,
-							},
-							{
-								label: "CHA",
-								score: abilityScores.charisma,
-								mod: chaMod,
-							},
-						].map((ability) => (
-							<div
-								key={ability.label}
-								className="bg-background-tertiary border border-accent-400/30 rounded-lg px-3 py-2 text-center min-w-[70px]"
-							>
-								<div className="text-xs text-parchment-400 uppercase tracking-wider">
-									{ability.label}
-								</div>
-								<div className="text-lg font-bold text-parchment-100">
-									{ability.score}
-								</div>
-								<div className="text-sm text-accent-400">
-									{formatModifier(ability.mod)}
-								</div>
-							</div>
-						))}
 					</div>
 				</div>
 			</div>
 
 			{/* Main Content - 3 Column Grid */}
 			<div className="flex-1 grid grid-cols-[400px_1fr_450px] gap-0 overflow-hidden">
-				{/* LEFT COLUMN - Skills & Notes */}
+				{/* LEFT COLUMN - Ability Scores, Skills & Saves */}
 				<div className="bg-background-primary border-r border-accent-400/20 flex flex-col overflow-hidden">
-					{/* Skills List */}
-					<div className="flex-1 overflow-y-auto p-4">
-						<div className="space-y-1">
-							{allSkills.map((skill) => {
+					{/* Ability Scores */}
+					<div className="border-b border-accent-400/20 p-3 flex-shrink-0">
+						<div className="grid grid-cols-2 gap-2">
+							{[
+								{
+									label: "STR",
+									score: abilityScores.strength,
+									mod: strMod,
+								},
+								{
+									label: "DEX",
+									score: abilityScores.dexterity,
+									mod: dexMod,
+								},
+								{
+									label: "CON",
+									score: abilityScores.constitution,
+									mod: conMod,
+								},
+								{
+									label: "INT",
+									score: abilityScores.intelligence,
+									mod: intMod,
+								},
+								{
+									label: "WIS",
+									score: abilityScores.wisdom,
+									mod: wisMod,
+								},
+								{
+									label: "CHA",
+									score: abilityScores.charisma,
+									mod: chaMod,
+								},
+							].map((ability) => (
+								<div
+									key={ability.label}
+									className="bg-background-secondary/50 border border-accent-400/30 rounded-lg px-3 py-1.5 flex items-center justify-between"
+								>
+									<div className="text-xs text-parchment-400 uppercase tracking-wider font-semibold">
+										{ability.label}
+									</div>
+									<div className="flex items-center gap-2">
+										<div className="text-base font-bold text-parchment-100">
+											{ability.score}
+										</div>
+										<div className="text-sm text-accent-400 min-w-[2rem] text-center">
+											{formatModifier(ability.mod)}
+										</div>
+									</div>
+								</div>
+							))}
+						</div>
+					</div>
+
+					{/* Skills & Saving Throws */}
+					<div className="flex-1 overflow-y-auto p-4 space-y-4">
+						{/* Skills */}
+						<div>
+							<div className="text-xs text-accent-400 uppercase tracking-wider mb-3 text-center">
+								Skills
+							</div>
+							<div className="space-y-0.5">
+								{allSkills.map((skill) => {
 								const isProficient =
 									skillProficiencies.includes(skill.name);
 								const totalModifier =
@@ -592,23 +551,23 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 								return (
 									<div
 										key={skill.name}
-										className="flex items-center justify-between py-2 px-3 hover:bg-background-secondary/50 rounded transition-colors"
+										className="flex items-center justify-between py-1 px-3 hover:bg-background-secondary/50 rounded transition-colors"
 									>
 										<div className="flex items-center gap-2">
 											{/* Proficiency Indicator */}
 											<div
-												className={`w-2 h-2 rounded-full ${
+												className={`w-1.5 h-1.5 rounded-full ${
 													isProficient
 														? "bg-accent-400"
 														: "border border-parchment-400/30"
 												}`}
 											/>
 											<span
-												className={
+												className={`text-sm ${
 													isProficient
 														? "text-parchment-100"
 														: "text-parchment-300"
-												}
+												}`}
 											>
 												{skill.name}
 											</span>
@@ -617,150 +576,140 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 											<span className="text-xs text-parchment-400 uppercase">
 												({skill.ability})
 											</span>
-											<span className="text-accent-400 font-semibold min-w-[2.5rem] text-right">
+											<span className="text-accent-400 font-semibold min-w-[2rem] text-right text-sm">
 												{formatModifier(totalModifier)}
 											</span>
 										</div>
 									</div>
 								);
 							})}
-						</div>
-					</div>
-
-					{/* Notes Section */}
-					<div className="border-t border-accent-400/20 p-4 h-48 flex-shrink-0">
-						<div className="h-full bg-background-secondary/50 border border-accent-400/20 rounded-lg p-3">
-							<div className="text-sm text-parchment-400 mb-1">
-								Notes section placeholder
 							</div>
-							{notes && (
-								<p className="text-xs text-parchment-300 whitespace-pre-wrap">
-									{notes}
-								</p>
-							)}
+						</div>
+
+						{/* Saving Throws */}
+						<div>
+							<div className="text-xs text-accent-400 uppercase tracking-wider mb-3 text-center">
+								Saving Throws
+							</div>
+							<div className="space-y-0.5">
+							{[
+								{
+									name: "Strength",
+									ability: "STR",
+									mod: strMod,
+								},
+								{
+									name: "Dexterity",
+									ability: "DEX",
+									mod: dexMod,
+								},
+								{
+									name: "Constitution",
+									ability: "CON",
+									mod: conMod,
+								},
+								{
+									name: "Intelligence",
+									ability: "INT",
+									mod: intMod,
+								},
+								{
+									name: "Wisdom",
+									ability: "WIS",
+									mod: wisMod,
+								},
+								{
+									name: "Charisma",
+									ability: "CHA",
+									mod: chaMod,
+								},
+							].map((save) => {
+								const isProficient =
+									charClass.savingThrows.includes(
+										save.ability
+									);
+								const totalModifier =
+									save.mod +
+									(isProficient ? proficiencyBonus : 0);
+
+								return (
+									<div
+										key={save.ability}
+										className="flex items-center justify-between py-1 px-3 hover:bg-background-secondary/50 rounded transition-colors"
+									>
+										<div className="flex items-center gap-2">
+											{/* Proficiency Indicator */}
+											<div
+												className={`w-1.5 h-1.5 rounded-full ${
+													isProficient
+														? "bg-accent-400"
+														: "border border-parchment-400/30"
+												}`}
+											/>
+											<span
+												className={`text-sm ${
+													isProficient
+														? "text-parchment-100"
+														: "text-parchment-300"
+												}`}
+											>
+												{save.name}
+											</span>
+										</div>
+										<div className="flex items-center gap-2">
+											<span className="text-xs text-parchment-400 uppercase">
+												({save.ability})
+											</span>
+											<span className="text-accent-400 font-semibold min-w-[2rem] text-right text-sm">
+												{formatModifier(totalModifier)}
+											</span>
+										</div>
+									</div>
+								);
+							})}
+							</div>
+						</div>
+
+						{/* Stats Section - Initiative, Proficiency, Speed */}
+						<div className="border-t border-accent-400/20 pt-4">
+						<div className="grid grid-cols-3 gap-3">
+							{/* Initiative */}
+							<div className="bg-background-secondary/50 border border-accent-400/20 rounded-lg p-2 text-center">
+								<div className="text-xs text-parchment-400 uppercase mb-1">
+									Initiative
+								</div>
+								<div className="text-lg font-bold text-accent-400">
+									{formatModifier(dexMod)}
+								</div>
+							</div>
+
+							{/* Proficiency Bonus */}
+							<div className="bg-background-secondary/50 border border-accent-400/20 rounded-lg p-2 text-center">
+								<div className="text-xs text-parchment-400 uppercase mb-1">
+									Proficiency
+								</div>
+								<div className="text-lg font-bold text-accent-400">
+									{formatModifier(proficiencyBonus)}
+								</div>
+							</div>
+
+							{/* Speed */}
+							<div className="bg-background-secondary/50 border border-accent-400/20 rounded-lg p-2 text-center">
+								<div className="text-xs text-parchment-400 uppercase mb-1">
+									Speed
+								</div>
+								<div className="text-lg font-bold text-accent-400">
+									{species.speed} ft
+								</div>
+							</div>
+						</div>
 						</div>
 					</div>
 				</div>
 
-				{/* MIDDLE COLUMN - Saving Throws, Combat Stats, Actions */}
+				{/* MIDDLE COLUMN - Combat Stats, Actions */}
 				<div className="bg-background-primary overflow-y-auto p-6">
 					<div className="space-y-6 max-w-3xl mx-auto">
-						{/* Saving Throws */}
-						<div className="bg-background-secondary border border-accent-400/30 rounded-lg p-6 min-w-[500px]">
-							<div className="grid grid-cols-3 gap-4">
-								{[
-									{
-										name: "Strength",
-										ability: "STR",
-										mod: strMod,
-									},
-									{
-										name: "Dexterity",
-										ability: "DEX",
-										mod: dexMod,
-									},
-									{
-										name: "Constitution",
-										ability: "CON",
-										mod: conMod,
-									},
-									{
-										name: "Intelligence",
-										ability: "INT",
-										mod: intMod,
-									},
-									{
-										name: "Wisdom",
-										ability: "WIS",
-										mod: wisMod,
-									},
-									{
-										name: "Charisma",
-										ability: "CHA",
-										mod: chaMod,
-									},
-								].map((save) => {
-									const isProficient =
-										charClass.savingThrows.includes(
-											save.ability
-										);
-									const totalModifier =
-										save.mod +
-										(isProficient ? proficiencyBonus : 0);
-
-									return (
-										<div
-											key={save.ability}
-											className="text-center"
-										>
-											<div className="flex items-center justify-center gap-2 mb-1">
-												<div
-													className={`w-2 h-2 rounded-full ${
-														isProficient
-															? "bg-accent-400"
-															: "border border-parchment-400/30"
-													}`}
-												/>
-												<div className="text-sm font-semibold text-parchment-200 uppercase">
-													{save.name}
-												</div>
-											</div>
-											<div className="text-xs text-parchment-400 mb-1">
-												({save.ability})
-											</div>
-											<div className="text-2xl font-bold text-accent-400">
-												{formatModifier(totalModifier)}
-											</div>
-										</div>
-									);
-								})}
-							</div>
-
-							{/* Success/Failure Tracking */}
-							<div className="mt-6 flex items-center justify-center gap-8">
-								<div className="text-center">
-									<div className="text-xs text-parchment-400 uppercase mb-2">
-										Successes
-									</div>
-									<div className="flex gap-2">
-										{[0, 1, 2].map((i) => (
-											<button
-												key={i}
-												onClick={() =>
-													toggleDeathSaveSuccess(i)
-												}
-												className={`w-6 h-6 rounded-full border-2 transition-all ${
-													i < deathSaveSuccesses
-														? "bg-accent-400/30 border-accent-400/60"
-														: "border-parchment-400/30 hover:border-accent-400/40"
-												}`}
-											/>
-										))}
-									</div>
-								</div>
-								<div className="text-center">
-									<div className="text-xs text-parchment-400 uppercase mb-2">
-										Failures
-									</div>
-									<div className="flex gap-2">
-										{[0, 1, 2].map((i) => (
-											<button
-												key={i}
-												onClick={() =>
-													toggleDeathSaveFailure(i)
-												}
-												className={`w-6 h-6 rounded-full border-2 transition-all ${
-													i < deathSaveFailures
-														? "bg-red-900/40 border-red-800/60"
-														: "border-parchment-400/30 hover:border-red-800/40"
-												}`}
-											/>
-										))}
-									</div>
-								</div>
-							</div>
-						</div>
-
 						{/* Combat Stats */}
 						<div className="bg-background-secondary border border-accent-400/30 rounded-lg p-4 min-w-[500px]">
 							<div className="flex gap-2 items-center justify-evenly">
@@ -878,6 +827,60 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 										>
 											+
 										</button>
+									</div>
+								</div>
+							</div>
+
+							{/* Death Saves */}
+							<div className="flex justify-center mt-4">
+								<div className="bg-background-tertiary/30 border border-accent-400/20 rounded-lg px-4 py-2 inline-flex items-center gap-6">
+									{/* Successes */}
+									<div className="flex flex-col items-center gap-1">
+										<div className="text-xs text-parchment-400">
+											Success
+										</div>
+										<div className="flex gap-1">
+											{[0, 1, 2].map((i) => (
+												<button
+													key={i}
+													onClick={() =>
+														toggleDeathSaveSuccess(i)
+													}
+													className={`w-5 h-5 rounded-full border-2 transition-all ${
+														i < deathSaveSuccesses
+															? "bg-accent-400/30 border-accent-400/60"
+															: "border-parchment-400/30 hover:border-accent-400/40"
+													}`}
+												/>
+											))}
+										</div>
+									</div>
+
+									{/* Death Saves Label */}
+									<div className="text-xs text-parchment-400 uppercase">
+										Death Saves
+									</div>
+
+									{/* Failures */}
+									<div className="flex flex-col items-center gap-1">
+										<div className="text-xs text-parchment-400">
+											Failure
+										</div>
+										<div className="flex gap-1">
+											{[0, 1, 2].map((i) => (
+												<button
+													key={i}
+													onClick={() =>
+														toggleDeathSaveFailure(i)
+													}
+													className={`w-5 h-5 rounded-full border-2 transition-all ${
+														i < deathSaveFailures
+															? "bg-red-900/40 border-red-800/60"
+															: "border-parchment-400/30 hover:border-red-800/40"
+													}`}
+												/>
+											))}
+										</div>
 									</div>
 								</div>
 							</div>
