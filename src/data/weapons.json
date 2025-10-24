@@ -1,0 +1,187 @@
+{
+  "Club": {
+    "damage": "1d4",
+    "damageType": "Bludgeoning",
+    "properties": ["Light"]
+  },
+  "Dagger": {
+    "damage": "1d4",
+    "damageType": "Piercing",
+    "properties": ["Finesse", "Light", "Thrown (20/60)"]
+  },
+  "Greatclub": {
+    "damage": "1d8",
+    "damageType": "Bludgeoning",
+    "properties": ["Two-handed"]
+  },
+  "Handaxe": {
+    "damage": "1d6",
+    "damageType": "Slashing",
+    "properties": ["Light", "Thrown (20/60)"]
+  },
+  "Javelin": {
+    "damage": "1d6",
+    "damageType": "Piercing",
+    "properties": ["Thrown (30/120)"]
+  },
+  "Light hammer": {
+    "damage": "1d4",
+    "damageType": "Bludgeoning",
+    "properties": ["Light", "Thrown (20/60)"]
+  },
+  "Mace": {
+    "damage": "1d6",
+    "damageType": "Bludgeoning",
+    "properties": []
+  },
+  "Quarterstaff": {
+    "damage": "1d6",
+    "damageType": "Bludgeoning",
+    "properties": ["Versatile (1d8)"]
+  },
+  "Sickle": {
+    "damage": "1d4",
+    "damageType": "Slashing",
+    "properties": ["Light"]
+  },
+  "Spear": {
+    "damage": "1d6",
+    "damageType": "Piercing",
+    "properties": ["Thrown (20/60)", "Versatile (1d8)"]
+  },
+  "Light crossbow": {
+    "damage": "1d8",
+    "damageType": "Piercing",
+    "properties": ["Ammunition (80/320)", "Loading", "Two-handed"]
+  },
+  "Dart": {
+    "damage": "1d4",
+    "damageType": "Piercing",
+    "properties": ["Finesse", "Thrown (20/60)"]
+  },
+  "Shortbow": {
+    "damage": "1d6",
+    "damageType": "Piercing",
+    "properties": ["Ammunition (80/320)", "Two-handed"]
+  },
+  "Sling": {
+    "damage": "1d4",
+    "damageType": "Bludgeoning",
+    "properties": ["Ammunition (30/120)"]
+  },
+  "Battleaxe": {
+    "damage": "1d8",
+    "damageType": "Slashing",
+    "properties": ["Versatile (1d10)"]
+  },
+  "Flail": {
+    "damage": "1d8",
+    "damageType": "Bludgeoning",
+    "properties": []
+  },
+  "Glaive": {
+    "damage": "1d10",
+    "damageType": "Slashing",
+    "properties": ["Heavy", "Reach", "Two-handed"]
+  },
+  "Greataxe": {
+    "damage": "1d12",
+    "damageType": "Slashing",
+    "properties": ["Heavy", "Two-handed"]
+  },
+  "Greatsword": {
+    "damage": "2d6",
+    "damageType": "Slashing",
+    "properties": ["Heavy", "Two-handed"]
+  },
+  "Halberd": {
+    "damage": "1d10",
+    "damageType": "Slashing",
+    "properties": ["Heavy", "Reach", "Two-handed"]
+  },
+  "Lance": {
+    "damage": "1d12",
+    "damageType": "Piercing",
+    "properties": ["Reach", "Special"]
+  },
+  "Longsword": {
+    "damage": "1d8",
+    "damageType": "Slashing",
+    "properties": ["Versatile (1d10)"]
+  },
+  "Maul": {
+    "damage": "2d6",
+    "damageType": "Bludgeoning",
+    "properties": ["Heavy", "Two-handed"]
+  },
+  "Morningstar": {
+    "damage": "1d8",
+    "damageType": "Piercing",
+    "properties": []
+  },
+  "Pike": {
+    "damage": "1d10",
+    "damageType": "Piercing",
+    "properties": ["Heavy", "Reach", "Two-handed"]
+  },
+  "Rapier": {
+    "damage": "1d8",
+    "damageType": "Piercing",
+    "properties": ["Finesse"]
+  },
+  "Scimitar": {
+    "damage": "1d6",
+    "damageType": "Slashing",
+    "properties": ["Finesse", "Light"]
+  },
+  "Shortsword": {
+    "damage": "1d6",
+    "damageType": "Piercing",
+    "properties": ["Finesse", "Light"]
+  },
+  "Trident": {
+    "damage": "1d6",
+    "damageType": "Piercing",
+    "properties": ["Thrown (20/60)", "Versatile (1d8)"]
+  },
+  "War pick": {
+    "damage": "1d8",
+    "damageType": "Piercing",
+    "properties": []
+  },
+  "Warhammer": {
+    "damage": "1d8",
+    "damageType": "Bludgeoning",
+    "properties": ["Versatile (1d10)"]
+  },
+  "Whip": {
+    "damage": "1d4",
+    "damageType": "Slashing",
+    "properties": ["Finesse", "Reach"]
+  },
+  "Blowgun": {
+    "damage": "1",
+    "damageType": "Piercing",
+    "properties": ["Ammunition (25/100)", "Loading"]
+  },
+  "Hand crossbow": {
+    "damage": "1d6",
+    "damageType": "Piercing",
+    "properties": ["Ammunition (30/120)", "Light", "Loading"]
+  },
+  "Heavy crossbow": {
+    "damage": "1d10",
+    "damageType": "Piercing",
+    "properties": ["Ammunition (100/400)", "Heavy", "Loading", "Two-handed"]
+  },
+  "Longbow": {
+    "damage": "1d8",
+    "damageType": "Piercing",
+    "properties": ["Ammunition (150/600)", "Heavy", "Two-handed"]
+  },
+  "Net": {
+    "damage": "—",
+    "damageType": "—",
+    "properties": ["Special", "Thrown (5/15)"]
+  }
+}

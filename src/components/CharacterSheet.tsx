@@ -1,5 +1,14 @@
 import { useState } from "react";
 import type { Character } from "../types/character";
+import weaponDataImport from "../data/weapons.json";
+
+interface WeaponProperties {
+	damage: string;
+	damageType: string;
+	properties: string[];
+}
+
+const WEAPON_DATA = weaponDataImport as Record<string, WeaponProperties>;
 
 interface CharacterSheetProps {
 	character: Character;
@@ -20,7 +29,29 @@ function formatModifier(modifier: number): string {
 }
 
 /**
- * CharacterSheet - Full read-only character sheet display
+ * Extract weapons from equipment list (deduplicated)
+ */
+function getWeaponsFromEquipment(
+	equipment: string[]
+): Array<{ name: string; properties: WeaponProperties; count: number }> {
+	const weaponCounts = new Map<string, number>();
+
+	for (const item of equipment) {
+		// Check if item is a known weapon
+		if (WEAPON_DATA[item]) {
+			weaponCounts.set(item, (weaponCounts.get(item) || 0) + 1);
+		}
+	}
+
+	return Array.from(weaponCounts.entries()).map(([name, count]) => ({
+		name,
+		properties: WEAPON_DATA[name],
+		count,
+	}));
+}
+
+/**
+ * CharacterSheet - Full-screen character sheet with BG3-inspired layout
  */
 export default function CharacterSheet({ character }: CharacterSheetProps) {
 	const {
@@ -29,7 +60,6 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 		species,
 		subspecies,
 		class: charClass,
-		origin,
 		abilityScores,
 		currentHitPoints,
 		maxHitPoints,
@@ -37,7 +67,6 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 		proficiencyBonus,
 		equipment,
 		skillProficiencies,
-		personality,
 		notes,
 	} = character;
 
@@ -49,436 +78,800 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 	const wisMod = getAbilityModifier(abilityScores.wisdom);
 	const chaMod = getAbilityModifier(abilityScores.charisma);
 
-	// Tab state for Features & Traits section
-	const [activeTab, setActiveTab] = useState<"features" | "spells">("features");
+	// Tab states
+	const [rightTab, setRightTab] = useState<"proficiencies" | "conditions">(
+		"proficiencies"
+	);
+	const [featuresTab, setFeaturesTab] = useState<
+		"features" | "spells" | "inventory"
+	>("features");
+
+	// HP and combat state
+	const [currentHP, setCurrentHP] = useState(currentHitPoints);
+	const [tempHP, setTempHP] = useState(0);
+	const [hpAmount, setHpAmount] = useState("");
+
+	// Death saves
+	const [deathSaveSuccesses, setDeathSaveSuccesses] = useState(0);
+	const [deathSaveFailures, setDeathSaveFailures] = useState(0);
+
+	// Extract weapons from equipment
+	const weapons = getWeaponsFromEquipment(equipment);
+
+	// HP functions
+	const applyHealing = () => {
+		const amount = parseInt(hpAmount) || 0;
+		if (amount > 0) {
+			setCurrentHP(Math.min(currentHP + amount, maxHitPoints));
+			setHpAmount("");
+		}
+	};
+
+	const applyDamage = () => {
+		const amount = parseInt(hpAmount) || 0;
+		if (amount > 0) {
+			// First subtract from temp HP
+			if (tempHP > 0) {
+				if (amount <= tempHP) {
+					setTempHP(tempHP - amount);
+				} else {
+					const remainingDamage = amount - tempHP;
+					setTempHP(0);
+					setCurrentHP(Math.max(0, currentHP - remainingDamage));
+				}
+			} else {
+				setCurrentHP(Math.max(0, currentHP - amount));
+			}
+			setHpAmount("");
+		}
+	};
+
+	// Temp HP functions
+	const increaseTempHP = () => {
+		setTempHP(tempHP + 1);
+	};
+
+	const decreaseTempHP = () => {
+		setTempHP(Math.max(0, tempHP - 1));
+	};
+
+	// Death save functions
+	const toggleDeathSaveSuccess = (index: number) => {
+		if (index < deathSaveSuccesses) {
+			setDeathSaveSuccesses(index);
+		} else {
+			setDeathSaveSuccesses(index + 1);
+		}
+	};
+
+	const toggleDeathSaveFailure = (index: number) => {
+		if (index < deathSaveFailures) {
+			setDeathSaveFailures(index);
+		} else {
+			setDeathSaveFailures(index + 1);
+		}
+	};
+
+	// All D&D 5e skills with their associated abilities
+	const allSkills = [
+		{ name: "Acrobatics", ability: "DEX", modifier: dexMod },
+		{ name: "Animal Handling", ability: "WIS", modifier: wisMod },
+		{ name: "Arcana", ability: "INT", modifier: intMod },
+		{ name: "Athletics", ability: "STR", modifier: strMod },
+		{ name: "Deception", ability: "CHA", modifier: chaMod },
+		{ name: "History", ability: "INT", modifier: intMod },
+		{ name: "Insight", ability: "WIS", modifier: wisMod },
+		{ name: "Intimidation", ability: "CHA", modifier: chaMod },
+		{ name: "Investigation", ability: "INT", modifier: intMod },
+		{ name: "Medicine", ability: "WIS", modifier: wisMod },
+		{ name: "Nature", ability: "INT", modifier: intMod },
+		{ name: "Perception", ability: "WIS", modifier: wisMod },
+		{ name: "Performance", ability: "CHA", modifier: chaMod },
+		{ name: "Persuasion", ability: "CHA", modifier: chaMod },
+		{ name: "Religion", ability: "INT", modifier: intMod },
+		{ name: "Sleight of Hand", ability: "DEX", modifier: dexMod },
+		{ name: "Stealth", ability: "DEX", modifier: dexMod },
+		{ name: "Survival", ability: "WIS", modifier: wisMod },
+	];
 
 	return (
-		<div className="max-w-7xl mx-auto space-y-6">
-			{/* Header Section */}
-			<div className="bg-background-secondary border border-accent-400/30 rounded-lg p-6">
-				<div className="flex items-start justify-between">
+		<div className="h-screen bg-background-primary text-parchment-100 flex flex-col overflow-hidden">
+			{/* Top Header Bar */}
+			<div className="bg-background-secondary border-b border-accent-400/20 px-6 py-4 flex-shrink-0">
+				<div className="flex items-center justify-between">
+					{/* Left: Character Name & Info */}
 					<div>
-						<h1 className="text-4xl font-bold text-accent-400 mb-2">{name}</h1>
-						<p className="text-parchment-200 text-lg">
-							Level {level} {subspecies ? subspecies.name : species.name}{" "}
-							{charClass.name}
+						<h1 className="text-3xl font-bold text-accent-400 uppercase tracking-wide">
+							{name || "Unnamed Character"}
+						</h1>
+						<p className="text-parchment-300 text-sm mt-1">
+							{subspecies ? subspecies.name : species.name} -{" "}
+							{charClass.name} {level}
 						</p>
-						<p className="text-parchment-300 text-sm mt-1">{origin.name}</p>
 					</div>
-					<div className="text-right space-y-1">
-						<div className="text-parchment-300 text-sm">Proficiency Bonus</div>
-						<div className="text-2xl font-bold text-accent-400">
-							+{proficiencyBonus}
-						</div>
-					</div>
-				</div>
-			</div>
 
-			{/* Combat Stats Row */}
-			<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-				{/* Hit Points */}
-				<div className="bg-background-secondary border border-accent-400/30 rounded-lg p-6">
-					<div className="text-center">
-						<div className="text-parchment-300 text-sm mb-2">Hit Points</div>
-						<div className="text-4xl font-bold text-accent-400">
-							{currentHitPoints} / {maxHitPoints}
-						</div>
-						<div className="text-parchment-400 text-xs mt-1">
-							Hit Die: d{charClass.hitDie}
-						</div>
-					</div>
-				</div>
-
-				{/* Armor Class */}
-				<div className="bg-background-secondary border border-accent-400/30 rounded-lg p-6">
-					<div className="text-center">
-						<div className="text-parchment-300 text-sm mb-2">Armor Class</div>
-						<div className="text-4xl font-bold text-accent-400">{armorClass}</div>
-					</div>
-				</div>
-
-				{/* Speed */}
-				<div className="bg-background-secondary border border-accent-400/30 rounded-lg p-6">
-					<div className="text-center">
-						<div className="text-parchment-300 text-sm mb-2">Speed</div>
-						<div className="text-4xl font-bold text-accent-400">
-							{species.speed} ft.
-						</div>
-					</div>
-				</div>
-			</div>
-
-			{/* Ability Scores */}
-			<div className="bg-background-secondary border border-accent-400/30 rounded-lg p-6">
-				<h2 className="text-2xl font-bold text-accent-400 mb-4">
-					Ability Scores
-				</h2>
-				<div className="grid grid-cols-3 md:grid-cols-6 gap-4">
-					{/* STR */}
-					<div className="text-center">
-						<div className="text-parchment-300 text-sm font-semibold mb-1">
-							STR
-						</div>
-						<div className="bg-background-primary border border-accent-400/20 rounded-lg p-3">
-							<div className="text-2xl font-bold text-parchment-100">
-								{abilityScores.strength}
+					{/* Right: Quick Stats */}
+					<div className="flex items-center gap-3">
+						{/* Proficiency */}
+						<div className="bg-background-tertiary border border-accent-400/30 rounded-lg px-4 py-2 text-center min-w-[80px]">
+							<div className="text-xs text-parchment-400 uppercase tracking-wider">
+								Proficiency
 							</div>
-							<div className="text-accent-400 text-sm">
-								{formatModifier(strMod)}
+							<div className="text-xl font-bold text-accent-400">
+								+{proficiencyBonus}
 							</div>
 						</div>
-					</div>
 
-					{/* DEX */}
-					<div className="text-center">
-						<div className="text-parchment-300 text-sm font-semibold mb-1">
-							DEX
-						</div>
-						<div className="bg-background-primary border border-accent-400/20 rounded-lg p-3">
-							<div className="text-2xl font-bold text-parchment-100">
-								{abilityScores.dexterity}
+						{/* Initiative */}
+						<div className="bg-background-tertiary border border-accent-400/30 rounded-lg px-4 py-2 text-center min-w-[80px]">
+							<div className="text-xs text-parchment-400 uppercase tracking-wider">
+								Initiative
 							</div>
-							<div className="text-accent-400 text-sm">
+							<div className="text-xl font-bold text-accent-400">
 								{formatModifier(dexMod)}
 							</div>
 						</div>
-					</div>
 
-					{/* CON */}
-					<div className="text-center">
-						<div className="text-parchment-300 text-sm font-semibold mb-1">
-							CON
-						</div>
-						<div className="bg-background-primary border border-accent-400/20 rounded-lg p-3">
-							<div className="text-2xl font-bold text-parchment-100">
-								{abilityScores.constitution}
+						{/* Speed */}
+						<div className="bg-background-tertiary border border-accent-400/30 rounded-lg px-4 py-2 text-center min-w-[80px]">
+							<div className="text-xs text-parchment-400 uppercase tracking-wider">
+								Speed
 							</div>
-							<div className="text-accent-400 text-sm">
-								{formatModifier(conMod)}
+							<div className="text-xl font-bold text-accent-400">
+								{species.speed}
 							</div>
 						</div>
-					</div>
 
-					{/* INT */}
-					<div className="text-center">
-						<div className="text-parchment-300 text-sm font-semibold mb-1">
-							INT
-						</div>
-						<div className="bg-background-primary border border-accent-400/20 rounded-lg p-3">
-							<div className="text-2xl font-bold text-parchment-100">
-								{abilityScores.intelligence}
+						{/* Ability Scores - Compact */}
+						{[
+							{
+								label: "STR",
+								score: abilityScores.strength,
+								mod: strMod,
+							},
+							{
+								label: "DEX",
+								score: abilityScores.dexterity,
+								mod: dexMod,
+							},
+							{
+								label: "CON",
+								score: abilityScores.constitution,
+								mod: conMod,
+							},
+							{
+								label: "INT",
+								score: abilityScores.intelligence,
+								mod: intMod,
+							},
+							{
+								label: "WIS",
+								score: abilityScores.wisdom,
+								mod: wisMod,
+							},
+							{
+								label: "CHA",
+								score: abilityScores.charisma,
+								mod: chaMod,
+							},
+						].map((ability) => (
+							<div
+								key={ability.label}
+								className="bg-background-tertiary border border-accent-400/30 rounded-lg px-3 py-2 text-center min-w-[70px]"
+							>
+								<div className="text-xs text-parchment-400 uppercase tracking-wider">
+									{ability.label}
+								</div>
+								<div className="text-lg font-bold text-parchment-100">
+									{ability.score}
+								</div>
+								<div className="text-sm text-accent-400">
+									{formatModifier(ability.mod)}
+								</div>
 							</div>
-							<div className="text-accent-400 text-sm">
-								{formatModifier(intMod)}
-							</div>
-						</div>
-					</div>
-
-					{/* WIS */}
-					<div className="text-center">
-						<div className="text-parchment-300 text-sm font-semibold mb-1">
-							WIS
-						</div>
-						<div className="bg-background-primary border border-accent-400/20 rounded-lg p-3">
-							<div className="text-2xl font-bold text-parchment-100">
-								{abilityScores.wisdom}
-							</div>
-							<div className="text-accent-400 text-sm">
-								{formatModifier(wisMod)}
-							</div>
-						</div>
-					</div>
-
-					{/* CHA */}
-					<div className="text-center">
-						<div className="text-parchment-300 text-sm font-semibold mb-1">
-							CHA
-						</div>
-						<div className="bg-background-primary border border-accent-400/20 rounded-lg p-3">
-							<div className="text-2xl font-bold text-parchment-100">
-								{abilityScores.charisma}
-							</div>
-							<div className="text-accent-400 text-sm">
-								{formatModifier(chaMod)}
-							</div>
-						</div>
+						))}
 					</div>
 				</div>
 			</div>
 
-			{/* Two Column Layout */}
-			<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-				{/* Left Column */}
-				<div className="space-y-6">
-					{/* Saving Throws */}
-					<div className="bg-background-secondary border border-accent-400/30 rounded-lg p-6">
-						<h2 className="text-2xl font-bold text-accent-400 mb-4">
-							Saving Throws
-						</h2>
-						<div className="space-y-2 text-parchment-200">
-							{charClass.savingThrows.map((save) => (
-								<div
-									key={save}
-									className="flex justify-between items-center py-1"
-								>
-									<span className="font-semibold">{save}</span>
-									<span className="text-accent-400">Proficient</span>
-								</div>
-							))}
+			{/* Main Content - 3 Column Grid */}
+			<div className="flex-1 grid grid-cols-[400px_1fr_450px] gap-0 overflow-hidden">
+				{/* LEFT COLUMN - Skills & Notes */}
+				<div className="bg-background-primary border-r border-accent-400/20 flex flex-col overflow-hidden">
+					{/* Skills List */}
+					<div className="flex-1 overflow-y-auto p-4">
+						<div className="space-y-1">
+							{allSkills.map((skill) => {
+								const isProficient =
+									skillProficiencies.includes(skill.name);
+								const totalModifier =
+									skill.modifier +
+									(isProficient ? proficiencyBonus : 0);
+
+								return (
+									<div
+										key={skill.name}
+										className="flex items-center justify-between py-2 px-3 hover:bg-background-secondary/50 rounded transition-colors"
+									>
+										<div className="flex items-center gap-2">
+											{/* Proficiency Indicator */}
+											<div
+												className={`w-2 h-2 rounded-full ${
+													isProficient
+														? "bg-accent-400"
+														: "border border-parchment-400/30"
+												}`}
+											/>
+											<span
+												className={
+													isProficient
+														? "text-parchment-100"
+														: "text-parchment-300"
+												}
+											>
+												{skill.name}
+											</span>
+										</div>
+										<div className="flex items-center gap-2">
+											<span className="text-xs text-parchment-400 uppercase">
+												({skill.ability})
+											</span>
+											<span className="text-accent-400 font-semibold min-w-[2.5rem] text-right">
+												{formatModifier(totalModifier)}
+											</span>
+										</div>
+									</div>
+								);
+							})}
 						</div>
 					</div>
 
-					{/* Skills */}
-					<div className="bg-background-secondary border border-accent-400/30 rounded-lg p-6">
-						<h2 className="text-2xl font-bold text-accent-400 mb-4">Skills</h2>
-						<div className="space-y-2 text-parchment-200">
-							{skillProficiencies.map((skill) => (
-								<div
-									key={skill}
-									className="flex justify-between items-center py-1"
-								>
-									<span>{skill}</span>
-									<span className="text-accent-400 text-sm">Proficient</span>
-								</div>
-							))}
+					{/* Notes Section */}
+					<div className="border-t border-accent-400/20 p-4 h-48 flex-shrink-0">
+						<div className="h-full bg-background-secondary/50 border border-accent-400/20 rounded-lg p-3">
+							<div className="text-sm text-parchment-400 mb-1">
+								Notes section placeholder
+							</div>
+							{notes && (
+								<p className="text-xs text-parchment-300 whitespace-pre-wrap">
+									{notes}
+								</p>
+							)}
 						</div>
-					</div>
-
-					{/* Equipment */}
-					<div className="bg-background-secondary border border-accent-400/30 rounded-lg p-6">
-						<h2 className="text-2xl font-bold text-accent-400 mb-4">
-							Equipment
-						</h2>
-						<ul className="space-y-1 text-parchment-200">
-							{equipment.map((item, idx) => (
-								<li key={idx} className="py-1">
-									{item}
-								</li>
-							))}
-						</ul>
 					</div>
 				</div>
 
-				{/* Right Column */}
-				<div className="space-y-6">
-					{/* Features & Traits */}
-					<div className="bg-background-secondary border border-accent-400/30 rounded-lg p-6">
-						<div className="flex items-center gap-4 mb-4">
+				{/* MIDDLE COLUMN - Saving Throws, Combat Stats, Actions */}
+				<div className="bg-background-primary overflow-y-auto p-6">
+					<div className="space-y-6 max-w-3xl mx-auto">
+						{/* Saving Throws */}
+						<div className="bg-background-secondary border border-accent-400/30 rounded-lg p-6 min-w-[500px]">
+							<div className="grid grid-cols-3 gap-4">
+								{[
+									{
+										name: "Strength",
+										ability: "STR",
+										mod: strMod,
+									},
+									{
+										name: "Dexterity",
+										ability: "DEX",
+										mod: dexMod,
+									},
+									{
+										name: "Constitution",
+										ability: "CON",
+										mod: conMod,
+									},
+									{
+										name: "Intelligence",
+										ability: "INT",
+										mod: intMod,
+									},
+									{
+										name: "Wisdom",
+										ability: "WIS",
+										mod: wisMod,
+									},
+									{
+										name: "Charisma",
+										ability: "CHA",
+										mod: chaMod,
+									},
+								].map((save) => {
+									const isProficient =
+										charClass.savingThrows.includes(
+											save.ability
+										);
+									const totalModifier =
+										save.mod +
+										(isProficient ? proficiencyBonus : 0);
+
+									return (
+										<div
+											key={save.ability}
+											className="text-center"
+										>
+											<div className="flex items-center justify-center gap-2 mb-1">
+												<div
+													className={`w-2 h-2 rounded-full ${
+														isProficient
+															? "bg-accent-400"
+															: "border border-parchment-400/30"
+													}`}
+												/>
+												<div className="text-sm font-semibold text-parchment-200 uppercase">
+													{save.name}
+												</div>
+											</div>
+											<div className="text-xs text-parchment-400 mb-1">
+												({save.ability})
+											</div>
+											<div className="text-2xl font-bold text-accent-400">
+												{formatModifier(totalModifier)}
+											</div>
+										</div>
+									);
+								})}
+							</div>
+
+							{/* Success/Failure Tracking */}
+							<div className="mt-6 flex items-center justify-center gap-8">
+								<div className="text-center">
+									<div className="text-xs text-parchment-400 uppercase mb-2">
+										Successes
+									</div>
+									<div className="flex gap-2">
+										{[0, 1, 2].map((i) => (
+											<button
+												key={i}
+												onClick={() =>
+													toggleDeathSaveSuccess(i)
+												}
+												className={`w-6 h-6 rounded-full border-2 transition-all ${
+													i < deathSaveSuccesses
+														? "bg-accent-400/30 border-accent-400/60"
+														: "border-parchment-400/30 hover:border-accent-400/40"
+												}`}
+											/>
+										))}
+									</div>
+								</div>
+								<div className="text-center">
+									<div className="text-xs text-parchment-400 uppercase mb-2">
+										Failures
+									</div>
+									<div className="flex gap-2">
+										{[0, 1, 2].map((i) => (
+											<button
+												key={i}
+												onClick={() =>
+													toggleDeathSaveFailure(i)
+												}
+												className={`w-6 h-6 rounded-full border-2 transition-all ${
+													i < deathSaveFailures
+														? "bg-red-900/40 border-red-800/60"
+														: "border-parchment-400/30 hover:border-red-800/40"
+												}`}
+											/>
+										))}
+									</div>
+								</div>
+							</div>
+						</div>
+
+						{/* Combat Stats */}
+						<div className="bg-background-secondary border border-accent-400/30 rounded-lg p-4 min-w-[500px]">
+							<div className="flex gap-2 items-center justify-evenly">
+								{/* AC with Shield Icon */}
+								<div className="flex flex-col items-center min-w-[70px]">
+									<div className="text-xs text-parchment-400 uppercase mb-1">
+										AC
+									</div>
+									<div className="px-3 py-4 text-center relative overflow-hidden w-full">
+										{/* Shield Background */}
+										<div className="absolute inset-0 flex items-center justify-center opacity-10">
+											<svg
+												className="w-16 h-16"
+												viewBox="0 0 24 24"
+												fill="currentColor"
+											>
+												<path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z" />
+											</svg>
+										</div>
+										<div className="relative text-2xl font-bold text-accent-400">
+											{armorClass}
+										</div>
+									</div>
+								</div>
+
+								{/* Health */}
+								<div className="bg-background-tertiary/30 border border-accent-400/20 rounded-lg px-3 py-2 text-center">
+									<div className="text-xs text-parchment-400 uppercase">
+										Health
+									</div>
+									<div className="text-2xl font-bold text-accent-400">
+										{currentHP}/{maxHitPoints}
+									</div>
+								</div>
+
+								{/* HP Adjustment */}
+								<div className="flex-none w-32 flex flex-col items-center">
+									<div className="flex w-full items-center justify-center gap-1 mb-2">
+										<button
+											onClick={() =>
+												setHpAmount(
+													String(
+														Math.max(
+															0,
+															(parseInt(
+																hpAmount
+															) || 0) - 1
+														)
+													)
+												)
+											}
+											className="w-7 h-7 bg-background-tertiary/50 hover:bg-background-tertiary border border-accent-400/20 hover:border-accent-400/40 rounded text-accent-400 text-sm font-bold transition-colors"
+										>
+											−
+										</button>
+										<input
+											type="number"
+											value={hpAmount}
+											onChange={(e) =>
+												setHpAmount(e.target.value)
+											}
+											placeholder="0"
+											className="w-16 bg-background-tertiary/50 border border-accent-400/20 rounded px-1 py-1.5 text-center placeholder:text-center text-parchment-100 text-sm focus:outline-none focus:border-accent-400 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+										/>
+										<button
+											onClick={() =>
+												setHpAmount(
+													String(
+														(parseInt(hpAmount) ||
+															0) + 1
+													)
+												)
+											}
+											className="w-7 h-7 bg-background-tertiary/50 hover:bg-background-tertiary border border-accent-400/20 hover:border-accent-400/40 rounded text-accent-400 text-sm font-bold transition-colors"
+										>
+											+
+										</button>
+									</div>
+									<div className="grid grid-cols-2 gap-2 w-full self-stretch">
+										<button
+											onClick={applyHealing}
+											className="w-full px-2 py-1 bg-accent-400/20 hover:bg-accent-400/30 border border-accent-400/30 text-accent-400 rounded transition-colors text-xs font-semibold whitespace-nowrap text-center"
+										>
+											Heal
+										</button>
+										<button
+											onClick={applyDamage}
+											className="w-full px-2 py-1 bg-red-900/30 hover:bg-red-900/40 border border-red-900/40 text-red-400/90 rounded transition-colors text-xs font-semibold whitespace-nowrap text-center"
+										>
+											Damage
+										</button>
+									</div>
+								</div>
+
+								{/* Temp HP */}
+								<div className="bg-background-tertiary/30 border border-accent-400/20 rounded-lg px-3 py-2">
+									<div className="text-xs text-parchment-400 uppercase mb-1 text-center">
+										Temp
+									</div>
+									<div className="flex items-center gap-1.5">
+										<button
+											onClick={decreaseTempHP}
+											className="w-7 h-7 bg-background-tertiary/50 hover:bg-background-tertiary border border-accent-400/20 hover:border-accent-400/40 rounded text-accent-400 text-sm font-bold transition-colors"
+										>
+											−
+										</button>
+										<div className="bg-background-primary/50 border border-accent-400/20 rounded px-3 py-1.5 min-w-[3.5rem] text-center">
+											<div className="text-lg font-bold text-accent-400">
+												{tempHP}
+											</div>
+										</div>
+										<button
+											onClick={increaseTempHP}
+											className="w-7 h-7 bg-background-tertiary/50 hover:bg-background-tertiary border border-accent-400/20 hover:border-accent-400/40 rounded text-accent-400 text-sm font-bold transition-colors"
+										>
+											+
+										</button>
+									</div>
+								</div>
+							</div>
+						</div>
+
+						{/* Actions */}
+						<div className="bg-background-secondary border border-accent-400/30 rounded-lg p-6 min-w-[500px]">
+							<h3 className="text-lg font-bold text-accent-400 uppercase tracking-wide text-center mb-4">
+								Actions
+							</h3>
+							<div className="space-y-3">
+								{weapons.length > 0 ? (
+									weapons.map((weapon, idx) => (
+										<div
+											key={idx}
+											className="bg-background-tertiary/50 border border-accent-400/20 rounded-lg p-4"
+										>
+											<div className="font-semibold text-parchment-100">
+												{weapon.name}
+												{weapon.count > 1 && (
+													<span className="ml-2 text-accent-400 text-xs">
+														×{weapon.count}
+													</span>
+												)}
+											</div>
+											<div className="text-xs text-parchment-400 mt-1">
+												{weapon.properties.damage} -{" "}
+												{weapon.properties.damageType}
+												{weapon.properties.properties
+													.length > 0 &&
+													` - ${weapon.properties.properties.join(
+														", "
+													)}`}
+											</div>
+										</div>
+									))
+								) : (
+									<div className="text-center py-4 text-parchment-400 text-sm">
+										No weapons equipped
+									</div>
+								)}
+							</div>
+						</div>
+					</div>
+				</div>
+
+				{/* RIGHT COLUMN - Proficiencies/Conditions & Features/Spells/Inventory */}
+				<div className="bg-background-primary border-l border-accent-400/20 flex flex-col overflow-hidden">
+					{/* Top Tabs - Proficiencies / Conditions */}
+					<div className="border-b border-accent-400/20 flex-shrink-0">
+						<div className="flex items-center p-2 gap-2">
 							<button
-								onClick={() => setActiveTab("features")}
-								className={`px-4 py-2 rounded-t transition-colors text-lg font-bold ${
-									activeTab === "features"
+								onClick={() => setRightTab("proficiencies")}
+								className={`flex-1 px-4 py-2 rounded transition-colors text-sm font-semibold uppercase tracking-wide ${
+									rightTab === "proficiencies"
 										? "bg-accent-400 text-background-primary"
-										: "text-parchment-300 hover:text-accent-400"
+										: "text-parchment-300 hover:bg-background-secondary"
 								}`}
 							>
-								Features & Traits
+								<span className="mr-2">⚔</span>
+								Proficiencies
 							</button>
 							<button
-								onClick={() => setActiveTab("spells")}
-								className={`px-4 py-2 rounded-t transition-colors text-lg font-bold ${
-									activeTab === "spells"
+								onClick={() => setRightTab("conditions")}
+								className={`flex-1 px-4 py-2 rounded transition-colors text-sm font-semibold uppercase tracking-wide ${
+									rightTab === "conditions"
 										? "bg-accent-400 text-background-primary"
-										: "text-parchment-300 hover:text-accent-400"
+										: "text-parchment-300 hover:bg-background-secondary"
+								}`}
+							>
+								<span className="mr-2">❖</span>
+								Conditions
+							</button>
+						</div>
+					</div>
+
+					{/* Proficiencies/Conditions Content */}
+					<div className="p-4 border-b border-accent-400/20 flex-shrink-0">
+						{rightTab === "proficiencies" && (
+							<div className="space-y-2">
+								{/* Weapon Proficiencies */}
+								<div className="grid grid-cols-2 gap-2">
+									<div className="bg-background-secondary/50 border border-accent-400/20 rounded px-3 py-2 text-center text-sm text-parchment-200">
+										Light Armor
+									</div>
+									<div className="bg-background-secondary/50 border border-accent-400/20 rounded px-3 py-2 text-center text-sm text-parchment-200">
+										Simple Weapons
+									</div>
+									<div className="bg-background-secondary/50 border border-accent-400/20 rounded px-3 py-2 text-center text-sm text-parchment-200">
+										Crossbow, Hand
+									</div>
+									<div className="bg-background-secondary/50 border border-accent-400/20 rounded px-3 py-2 text-center text-sm text-parchment-200">
+										Longsword
+									</div>
+									<div className="bg-background-secondary/50 border border-accent-400/20 rounded px-3 py-2 text-center text-sm text-parchment-200">
+										Rapier
+									</div>
+									<div className="bg-background-secondary/50 border border-accent-400/20 rounded px-3 py-2 text-center text-sm text-parchment-200">
+										Shortsword
+									</div>
+									<div className="bg-background-secondary/50 border border-accent-400/20 rounded px-3 py-2 text-center text-sm text-parchment-200">
+										Musical Instruments
+									</div>
+								</div>
+							</div>
+						)}
+						{rightTab === "conditions" && (
+							<div className="text-center text-parchment-400 py-4">
+								No active conditions
+							</div>
+						)}
+					</div>
+
+					{/* Bottom Tabs - Features / Spells / Inventory */}
+					<div className="border-b border-accent-400/20 flex-shrink-0">
+						<div className="flex items-center p-2 gap-2">
+							<button
+								onClick={() => setFeaturesTab("features")}
+								className={`flex-1 px-3 py-2 rounded transition-colors text-sm font-semibold uppercase ${
+									featuresTab === "features"
+										? "bg-accent-400 text-background-primary"
+										: "text-parchment-300 hover:bg-background-secondary"
+								}`}
+							>
+								Features
+							</button>
+							<button
+								onClick={() => setFeaturesTab("spells")}
+								className={`flex-1 px-3 py-2 rounded transition-colors text-sm font-semibold uppercase ${
+									featuresTab === "spells"
+										? "bg-accent-400 text-background-primary"
+										: "text-parchment-300 hover:bg-background-secondary"
 								}`}
 							>
 								Spells
 							</button>
+							<button
+								onClick={() => setFeaturesTab("inventory")}
+								className={`flex-1 px-3 py-2 rounded transition-colors text-sm font-semibold uppercase ${
+									featuresTab === "inventory"
+										? "bg-accent-400 text-background-primary"
+										: "text-parchment-300 hover:bg-background-secondary"
+								}`}
+							>
+								Inventory
+							</button>
 						</div>
+					</div>
 
-						{activeTab === "features" && (
-							<div>
+					{/* Features/Spells/Inventory Content - Scrollable */}
+					<div className="flex-1 overflow-y-auto p-4">
+						{featuresTab === "features" && (
+							<div className="space-y-3">
 								{/* Species Traits */}
-								{species.traits && species.traits.length > 0 && (
-							<div className="mb-4">
-								<h3 className="text-lg font-semibold text-parchment-100 mb-2">
-									{species.name} Traits
-								</h3>
-								<div className="space-y-2">
-									{species.traits.map((trait) => (
-										<div key={trait.name}>
-											<div className="font-semibold text-parchment-200">
-												{trait.name}
-											</div>
-											<div className="text-parchment-300 text-sm">
-												{trait.description}
-											</div>
-										</div>
-									))}
-								</div>
-							</div>
-						)}
-
-						{/* Subspecies Traits */}
-						{subspecies?.traits && subspecies.traits.length > 0 && (
-							<div className="mb-4">
-								<h3 className="text-lg font-semibold text-parchment-100 mb-2">
-									{subspecies.name} Traits
-								</h3>
-								<div className="space-y-2">
-									{subspecies.traits.map((trait) => (
-										<div key={trait.name}>
-											<div className="font-semibold text-parchment-200">
-												{trait.name}
-											</div>
-											<div className="text-parchment-300 text-sm">
-												{trait.description}
-											</div>
-										</div>
-									))}
-								</div>
-							</div>
-						)}
-
-						{/* Class Features */}
-						{charClass.features && charClass.features.length > 0 && (
-							<div className="mb-4">
-								<h3 className="text-lg font-semibold text-parchment-100 mb-2">
-									{charClass.name} Features
-								</h3>
-								<div className="space-y-3">
-									{charClass.features
-										.filter((f) => f.level <= level)
-										.map((feature) => (
-											<div key={feature.name}>
-												<div className="font-semibold text-parchment-200">
-													{feature.name} (Level {feature.level})
-												</div>
-												<div className="text-parchment-300 text-sm">
-													{feature.description}
-												</div>
-											</div>
-										))}
-								</div>
-							</div>
-						)}
-
-						{/* Origin Feature */}
-						{origin.feature && (
-							<div>
-								<h3 className="text-lg font-semibold text-parchment-100 mb-2">
-									{origin.name} Feature
-								</h3>
-								<div>
-									<div className="font-semibold text-parchment-200">
-										{origin.feature.name}
-									</div>
-									<div className="text-parchment-300 text-sm">
-										{origin.feature.description}
-									</div>
-								</div>
-							</div>
-						)}
-							</div>
-						)}
-
-						{activeTab === "spells" && (
-							<div>
-								{/* Cantrips */}
-								{character.cantrips && character.cantrips.length > 0 && (
-									<div className="mb-4">
-										<h3 className="text-lg font-semibold text-parchment-100 mb-2">
-											Cantrips
-										</h3>
-										<div className="grid grid-cols-1 gap-2">
-											{character.cantrips.map((cantrip) => (
+								{species.traits &&
+									species.traits.length > 0 && (
+										<>
+											{species.traits.map((trait) => (
 												<div
-													key={cantrip}
-													className="bg-background-tertiary/60 border border-accent-400/20 rounded-lg p-3"
+													key={trait.name}
+													className="bg-background-secondary border border-accent-400/30 rounded-lg p-4"
 												>
-													<div className="font-semibold text-parchment-200">
-														{cantrip}
+													<div className="font-bold text-accent-400 uppercase text-sm mb-2">
+														{trait.name}
+													</div>
+													<div className="text-xs text-parchment-300 leading-relaxed">
+														{trait.description}
 													</div>
 												</div>
 											))}
-										</div>
-									</div>
-								)}
+										</>
+									)}
+
+								{/* Subspecies Traits */}
+								{subspecies?.traits &&
+									subspecies.traits.length > 0 && (
+										<>
+											{subspecies.traits.map((trait) => (
+												<div
+													key={trait.name}
+													className="bg-background-secondary border border-accent-400/30 rounded-lg p-4"
+												>
+													<div className="font-bold text-accent-400 uppercase text-sm mb-2">
+														{trait.name}
+													</div>
+													<div className="text-xs text-parchment-300 leading-relaxed">
+														{trait.description}
+													</div>
+												</div>
+											))}
+										</>
+									)}
+
+								{/* Class Features */}
+								{charClass.features &&
+									charClass.features.length > 0 && (
+										<>
+											{charClass.features
+												.filter((f) => f.level <= level)
+												.map((feature) => (
+													<div
+														key={feature.name}
+														className="bg-background-secondary border border-accent-400/30 rounded-lg p-4"
+													>
+														<div className="font-bold text-accent-400 uppercase text-sm mb-2">
+															{feature.name}
+														</div>
+														<div className="text-xs text-parchment-300 leading-relaxed">
+															{
+																feature.description
+															}
+														</div>
+													</div>
+												))}
+										</>
+									)}
+							</div>
+						)}
+
+						{featuresTab === "spells" && (
+							<div className="space-y-3">
+								{/* Cantrips */}
+								{character.cantrips &&
+									character.cantrips.length > 0 && (
+										<>
+											<div className="text-xs text-parchment-400 uppercase mb-2">
+												Cantrips
+											</div>
+											{character.cantrips.map(
+												(cantrip) => (
+													<div
+														key={cantrip}
+														className="bg-background-secondary border border-accent-400/30 rounded-lg p-3"
+													>
+														<div className="text-sm font-semibold text-parchment-100">
+															{cantrip}
+														</div>
+													</div>
+												)
+											)}
+										</>
+									)}
 
 								{/* Level 1 Spells */}
-								{character.spells && character.spells.length > 0 && (
-									<div className="mb-4">
-										<h3 className="text-lg font-semibold text-parchment-100 mb-2">
-											Level 1 Spells
-										</h3>
-										<div className="grid grid-cols-1 gap-2">
+								{character.spells &&
+									character.spells.length > 0 && (
+										<>
+											<div className="text-xs text-parchment-400 uppercase mb-2 mt-4">
+												Level 1 Spells
+											</div>
 											{character.spells.map((spell) => (
 												<div
 													key={spell}
-													className="bg-background-tertiary/60 border border-accent-400/20 rounded-lg p-3"
+													className="bg-background-secondary border border-accent-400/30 rounded-lg p-3"
 												>
-													<div className="font-semibold text-parchment-200">
+													<div className="text-sm font-semibold text-parchment-100">
 														{spell}
 													</div>
 												</div>
 											))}
-										</div>
-									</div>
-								)}
+										</>
+									)}
 
-								{/* No spells message */}
-								{(!character.cantrips || character.cantrips.length === 0) &&
-									(!character.spells || character.spells.length === 0) && (
-										<div className="text-center py-8 text-parchment-400">
-											This character has no spells.
+								{(!character.cantrips ||
+									character.cantrips.length === 0) &&
+									(!character.spells ||
+										character.spells.length === 0) && (
+										<div className="text-center py-8 text-parchment-400 text-sm">
+											No spells available
 										</div>
 									)}
 							</div>
 						)}
-					</div>
 
-					{/* Personality */}
-					{personality && (
-						<div className="bg-background-secondary border border-accent-400/30 rounded-lg p-6">
-							<h2 className="text-2xl font-bold text-accent-400 mb-4">
-								Personality
-							</h2>
-							<div className="space-y-3 text-parchment-200">
-								{personality.traits && (
-									<div>
-										<div className="font-semibold text-parchment-100 text-sm">
-											Personality Traits
+						{featuresTab === "inventory" && (
+							<div className="space-y-2">
+								{equipment && equipment.length > 0 ? (
+									equipment.map((item, idx) => (
+										<div
+											key={idx}
+											className="bg-background-secondary border border-accent-400/30 rounded-lg p-3"
+										>
+											<div className="text-sm text-parchment-200">
+												{item}
+											</div>
 										</div>
-										<div className="text-parchment-300">{personality.traits}</div>
-									</div>
-								)}
-								{personality.ideals && (
-									<div>
-										<div className="font-semibold text-parchment-100 text-sm">
-											Ideals
-										</div>
-										<div className="text-parchment-300">
-											{personality.ideals}
-										</div>
-									</div>
-								)}
-								{personality.bonds && (
-									<div>
-										<div className="font-semibold text-parchment-100 text-sm">
-											Bonds
-										</div>
-										<div className="text-parchment-300">{personality.bonds}</div>
-									</div>
-								)}
-								{personality.flaws && (
-									<div>
-										<div className="font-semibold text-parchment-100 text-sm">
-											Flaws
-										</div>
-										<div className="text-parchment-300">{personality.flaws}</div>
+									))
+								) : (
+									<div className="text-center py-8 text-parchment-400 text-sm">
+										No equipment
 									</div>
 								)}
 							</div>
-						</div>
-					)}
-
-					{/* Notes */}
-					{notes && (
-						<div className="bg-background-secondary border border-accent-400/30 rounded-lg p-6">
-							<h2 className="text-2xl font-bold text-accent-400 mb-4">Notes</h2>
-							<p className="text-parchment-200 whitespace-pre-wrap">{notes}</p>
-						</div>
-					)}
+						)}
+					</div>
 				</div>
 			</div>
 		</div>
