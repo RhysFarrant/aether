@@ -524,23 +524,23 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 						{/* AC and Health Section */}
 						<div className="flex items-stretch gap-4">
 							{/* AC Display */}
-							<div className="bg-background-secondary/50 border border-accent-400/30 rounded-lg px-4 py-3 flex items-center">
+							<div className="bg-background-secondary/50 border border-accent-400/30 rounded-lg px-3 py-2 flex items-center">
 								<div className="flex flex-col items-center justify-center">
-									<div className="text-xs text-parchment-400 uppercase tracking-wider mb-2">
+									<div className="text-xs text-parchment-400 uppercase tracking-wider mb-1">
 										Armor Class
 									</div>
 									<div className="relative">
 										{/* Shield SVG */}
 										<svg
 											viewBox="0 0 100 120"
-											className="w-16 h-20 text-accent-400/30"
+											className="w-12 h-16 text-accent-400/30"
 											fill="currentColor"
 										>
 											<path d="M50 5 L10 20 L10 50 Q10 90 50 115 Q90 90 90 50 L90 20 Z" />
 										</svg>
 										{/* AC Value */}
 										<div className="absolute inset-0 flex items-center justify-center">
-											<span className="text-2xl font-bold text-accent-400">
+											<span className="text-xl font-bold text-accent-400">
 												{armorClass}
 											</span>
 										</div>
@@ -549,8 +549,8 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 							</div>
 
 							{/* Health Section - Compact */}
-							<div className="bg-background-secondary/50 border border-accent-400/30 rounded-lg px-4 py-3">
-								<div className="flex items-center gap-6">
+							<div className="bg-background-secondary/50 border border-accent-400/30 rounded-lg px-3 py-2">
+								<div className="flex items-center gap-4">
 									{/* Heal/Damage Buttons with Input */}
 									<div className="flex items-center gap-1">
 										<div className="flex flex-col gap-1 w-[70px]">
