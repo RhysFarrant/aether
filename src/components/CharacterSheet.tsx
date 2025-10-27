@@ -179,7 +179,7 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 		"proficiencies"
 	);
 	const [featuresTab, setFeaturesTab] = useState<
-		"features" | "spells" | "inventory"
+		"features" | "actions" | "spells" | "inventory" | "notes"
 	>("features");
 
 	// HP and combat state
@@ -688,7 +688,7 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 				</div>
 
 				{/* Main Content - 3 Column Grid */}
-				<div className="flex-1 grid grid-cols-[400px_1fr_450px] gap-0 overflow-hidden">
+				<div className="flex-1 grid grid-cols-[400px_450px_1fr] gap-0 overflow-hidden">
 					{/* LEFT COLUMN - Skills & Saves */}
 					<div className="bg-background-primary border-r border-accent-400/20 flex flex-col overflow-hidden">
 						{/* Skills & Saving Throws */}
@@ -843,86 +843,11 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 					{/* MIDDLE COLUMN - Combat Stats, Actions */}
 					<div className="bg-background-primary overflow-y-auto p-6">
 						<div className="space-y-6 max-w-3xl mx-auto">
-							{/* Combat Stats - Removed, now in top bar */}
-
-							{/* Actions */}
-							<div className="bg-background-secondary border border-accent-400/30 rounded-lg p-6 min-w-[500px]">
-								<h3 className="text-lg font-bold text-accent-400 uppercase tracking-wide text-center mb-4">
-									Actions
-								</h3>
-								<div className="space-y-3">
-									{weapons.length > 0 ? (
-										weapons.map((weapon, idx) => {
-											const attackData =
-												calculateAttackBonus(
-													weapon.name,
-													weapon.properties,
-													strMod,
-													dexMod,
-													proficiencyBonus,
-													charClass
-												);
-
-											return (
-												<div
-													key={idx}
-													className="bg-background-tertiary/50 border border-accent-400/20 rounded-lg p-3"
-												>
-													<div className="flex items-center justify-between">
-														<div className="font-semibold text-parchment-100">
-															{weapon.name}
-															{weapon.count >
-																1 && (
-																<span className="ml-2 text-accent-400 text-xs">
-																	×
-																	{
-																		weapon.count
-																	}
-																</span>
-															)}
-														</div>
-														<div className="text-sm text-accent-400">
-															{formatModifier(
-																attackData.attackBonus
-															)}{" "}
-															to hit
-														</div>
-													</div>
-													<div className="text-xs text-parchment-400 mt-1">
-														{
-															weapon.properties
-																.damage
-														}
-														{attackData.damageBonus !==
-															0 &&
-															formatModifier(
-																attackData.damageBonus
-															)}{" "}
-														{
-															weapon.properties
-																.damageType
-														}
-														{weapon.properties
-															.properties.length >
-															0 &&
-															` - ${weapon.properties.properties.join(
-																", "
-															)}`}
-													</div>
-												</div>
-											);
-										})
-									) : (
-										<div className="text-center py-4 text-parchment-400 text-sm">
-											No weapons equipped
-										</div>
-									)}
-								</div>
-							</div>
+							{/* TODO: Decide on Middle column */}
 						</div>
 					</div>
 
-					{/* RIGHT COLUMN - Proficiencies/Conditions & Features/Spells/Inventory */}
+					{/* RIGHT COLUMN - Proficiencies/Conditions & Features/Actions/Spells/Inventory */}
 					<div className="bg-background-primary border-l border-accent-400/20 flex flex-col overflow-hidden">
 						{/* Top Tabs - Proficiencies / Conditions */}
 						<div className="border-b border-accent-400/20 flex-shrink-0">
@@ -1149,7 +1074,7 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 							)}
 						</div>
 
-						{/* Bottom Tabs - Features / Spells / Inventory */}
+						{/* Bottom Tabs - Features / Actions / Spells / Inventory */}
 						<div className="border-b border-accent-400/20 flex-shrink-0">
 							<div className="flex items-center p-2 gap-2">
 								<button
@@ -1161,6 +1086,16 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 									}`}
 								>
 									Features
+								</button>
+								<button
+									onClick={() => setFeaturesTab("actions")}
+									className={`flex-1 px-3 py-2 rounded transition-colors text-sm font-semibold uppercase ${
+										featuresTab === "actions"
+											? "bg-accent-400 text-background-primary"
+											: "text-parchment-300 hover:bg-background-secondary"
+									}`}
+								>
+									Actions
 								</button>
 								<button
 									onClick={() => setFeaturesTab("spells")}
@@ -1182,10 +1117,20 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 								>
 									Inventory
 								</button>
+								<button
+									onClick={() => setFeaturesTab("notes")}
+									className={`flex-1 px-3 py-2 rounded transition-colors text-sm font-semibold uppercase ${
+										featuresTab === "notes"
+											? "bg-accent-400 text-background-primary"
+											: "text-parchment-300 hover:bg-background-secondary"
+									}`}
+								>
+									Notes
+								</button>
 							</div>
 						</div>
 
-						{/* Features/Spells/Inventory Content - Scrollable */}
+						{/* Features/Actions/Spells/Inventory Content - Scrollable */}
 						<div className="flex-1 overflow-y-auto p-4">
 							{featuresTab === "features" && (
 								<div className="space-y-3">
@@ -1258,6 +1203,64 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 													))}
 											</>
 										)}
+								</div>
+							)}
+
+							{featuresTab === "actions" && (
+								<div className="space-y-3">
+									{/* Weapons */}
+									{weapons.map((weapon, idx) => {
+										const attackData = calculateAttackBonus(
+											weapon.name,
+											weapon.properties,
+											strMod,
+											dexMod,
+											proficiencyBonus,
+											charClass
+										);
+
+										return (
+											<div
+												key={idx}
+												className="bg-background-tertiary/50 border border-accent-400/20 rounded-lg p-3"
+											>
+												<div className="flex items-center justify-between">
+													<div className="font-semibold text-parchment-100">
+														{weapon.name}
+														{weapon.count > 1 && (
+															<span className="ml-2 text-accent-400 text-xs">
+																×{weapon.count}
+															</span>
+														)}
+													</div>
+													<div className="text-sm text-accent-400">
+														{formatModifier(
+															attackData.attackBonus
+														)}{" "}
+														to hit
+													</div>
+												</div>
+												<div className="text-xs text-parchment-400 mt-1">
+													{weapon.properties.damage}
+													{attackData.damageBonus !==
+														0 &&
+														formatModifier(
+															attackData.damageBonus
+														)}{" "}
+													{
+														weapon.properties
+															.damageType
+													}
+													{weapon.properties
+														.properties.length >
+														0 &&
+														` - ${weapon.properties.properties.join(
+															", "
+														)}`}
+												</div>
+											</div>
+										);
+									})}
 								</div>
 							)}
 
@@ -1336,6 +1339,14 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 											No equipment
 										</div>
 									)}
+								</div>
+							)}
+
+							{featuresTab === "notes" && (
+								<div className="space-y-2">
+									<div className="text-center py-8 text-parchment-400 text-sm">
+										Notes functionality coming soon!
+									</div>
 								</div>
 							)}
 						</div>
