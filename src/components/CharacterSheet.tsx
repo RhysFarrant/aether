@@ -676,10 +676,17 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 	};
 
 	const longRest = () => {
-		// On long rest: restore HP to max and restore up to half of total hit dice (minimum 1)
+		// On long rest: restore HP to max, restore up to half of total hit dice (minimum 1), and restore all spell slots
 		setCurrentHP(maxHitPoints);
 		const restoredAmount = Math.max(1, Math.floor(level / 2));
 		setCurrentHitDice(Math.min(currentHitDice + restoredAmount, level));
+
+		// Restore all spell slots
+		setCurrentSpellSlots({
+			1: maxSpellSlots[1],
+			2: maxSpellSlots[2],
+			3: maxSpellSlots[3],
+		});
 	};
 
 	// Conditions functions
