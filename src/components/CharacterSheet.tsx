@@ -170,28 +170,6 @@ function calculateAttackBonus(
 }
 
 /**
- * Extract weapons from equipment list (deduplicated)
- */
-function getWeaponsFromEquipment(
-	equipment: string[]
-): Array<{ name: string; properties: WeaponProperties; count: number }> {
-	const weaponCounts = new Map<string, number>();
-
-	for (const item of equipment) {
-		// Check if item is a known weapon
-		if (WEAPON_DATA[item]) {
-			weaponCounts.set(item, (weaponCounts.get(item) || 0) + 1);
-		}
-	}
-
-	return Array.from(weaponCounts.entries()).map(([name, count]) => ({
-		name,
-		properties: WEAPON_DATA[name],
-		count,
-	}));
-}
-
-/**
  * Get spell data from spells database
  */
 function getSpellData(spellName: string, className: string): SpellData | null {
@@ -267,7 +245,6 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 		abilityScores,
 		currentHitPoints,
 		maxHitPoints,
-		armorClass,
 		proficiencyBonus,
 		equipment,
 		skillProficiencies,
