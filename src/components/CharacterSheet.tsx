@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { Character } from "../types/character";
 import weaponDataImport from "../data/weapons.json";
 import conditionsDataImport from "../data/conditions.json";
 import spellsDataImport from "../data/spells.json";
+import armorDataImport from "../data/armor.json";
+import { updateCharacter } from "../utils/storage";
 
 interface WeaponProperties {
 	damage: string;
@@ -11,6 +13,32 @@ interface WeaponProperties {
 	category: string;
 	cost: string;
 	weight: string;
+}
+
+interface ArmorProperties {
+	armorClass: number;
+	dexModifier: string;
+	category: string;
+	stealthDisadvantage: boolean;
+	cost: string;
+	weight: string;
+	strengthRequirement: number | null;
+	note?: string;
+}
+
+interface InventoryItem {
+	name: string;
+	weight: number;
+	isCustom: boolean;
+	weaponData?: WeaponProperties;
+	armorData?: ArmorProperties;
+	customStats?: {
+		damage?: string;
+		damageType?: string;
+		armorClass?: number;
+		dexModifier?: string;
+		category?: string;
+	};
 }
 
 interface Condition {
@@ -32,6 +60,7 @@ interface SpellData {
 }
 
 const WEAPON_DATA = weaponDataImport as Record<string, WeaponProperties>;
+const ARMOR_DATA = armorDataImport as Record<string, ArmorProperties>;
 const CONDITIONS_DATA = conditionsDataImport as Record<string, Condition>;
 type ClassSpellList = Record<string, SpellData[]> & { cantrips: SpellData[] };
 
@@ -185,6 +214,47 @@ function getSpellData(spellName: string, className: string): SpellData | null {
 }
 
 /**
+ * Get all available items from databases
+ */
+function getAllAvailableItems(): string[] {
+	const weapons = Object.keys(WEAPON_DATA);
+	const armor = Object.keys(ARMOR_DATA);
+	return [...weapons, ...armor].sort();
+}
+
+/**
+ * Look up item data from weapons or armor databases
+ */
+function lookupItemData(itemName: string): InventoryItem | null {
+	// Check weapons first
+	const weaponData = WEAPON_DATA[itemName];
+	if (weaponData) {
+		const weight = parseFloat(weaponData.weight) || 0;
+		return {
+			name: itemName,
+			weight,
+			isCustom: false,
+			weaponData,
+		};
+	}
+
+	// Check armor
+	const armorData = ARMOR_DATA[itemName];
+	if (armorData) {
+		const weight = parseFloat(armorData.weight) || 0;
+		return {
+			name: itemName,
+			weight,
+			isCustom: false,
+			armorData,
+		};
+	}
+
+	// Not found in database
+	return null;
+}
+
+/**
  * CharacterSheet - Full-screen character sheet with BG3-inspired layout
  */
 export default function CharacterSheet({ character }: CharacterSheetProps) {
@@ -215,21 +285,27 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 	const [featuresTab, setFeaturesTab] = useState<
 		"features" | "actions" | "spells" | "inventory" | "notes"
 	>("features");
+	const [featureFilter, setFeatureFilter] = useState<"all" | "species" | "subspecies" | "class">("all");
+	const [actionFilter, setActionFilter] = useState<"all" | "weapons" | "species" | "subspecies" | "class">("all");
 
 	// HP and combat state
 	const [currentHP, setCurrentHP] = useState(currentHitPoints);
-	const [tempHP, setTempHP] = useState(0);
+	const [tempHP, setTempHP] = useState(character.temporaryHitPoints || 0);
 	const [hpAmount, setHpAmount] = useState("");
 
+	// Death saves
+	const [deathSaveSuccesses, setDeathSaveSuccesses] = useState(character.deathSaves?.successes || 0);
+	const [deathSaveFailures, setDeathSaveFailures] = useState(character.deathSaves?.failures || 0);
+
 	// Hit dice tracking (starts at character level)
-	const [currentHitDice, setCurrentHitDice] = useState(level);
+	const [currentHitDice, setCurrentHitDice] = useState(character.currentHitDice || level);
 	const [isShortResting, setIsShortResting] = useState(false);
 	const [hitDiceToSpend, setHitDiceToSpend] = useState(0);
 
 	// Conditions tracking
 	const [activeConditions, setActiveConditions] = useState<
 		Map<string, number | null>
-	>(new Map());
+	>(new Map(character.activeConditions ? Object.entries(character.activeConditions) : []));
 	const [showConditionPicker, setShowConditionPicker] = useState(false);
 
 	// Inspiration
@@ -249,25 +325,206 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 	});
 
 	// Spell management
+	const [characterCantrips, setCharacterCantrips] = useState<string[]>(character.cantrips || []);
+	const [characterSpells, setCharacterSpells] = useState<string[]>(character.spells || []);
 	const [showAddSpell, setShowAddSpell] = useState(false);
 	const [newSpellName, setNewSpellName] = useState("");
 	const [newSpellLevel, setNewSpellLevel] = useState<"cantrip" | 1>(1);
+	const [selectedSpell, setSelectedSpell] = useState<string | null>(null);
+	const [showSpellSuggestions, setShowSpellSuggestions] = useState(false);
+	const [searchAllSpells, setSearchAllSpells] = useState(false);
+
+	// Get filtered spells based on search mode
+	const filteredSpells = newSpellName.trim()
+		? (() => {
+				const query = newSpellName.toLowerCase();
+				const spells: string[] = [];
+
+				if (searchAllSpells) {
+					// Search all classes
+					Object.values(SPELLS_DATA).forEach((classSpells) => {
+						// Search cantrips
+						if (newSpellLevel === "cantrip" && classSpells.cantrips) {
+							classSpells.cantrips.forEach((s) => {
+								if (s.name.toLowerCase().includes(query) && !spells.includes(s.name)) {
+									spells.push(s.name);
+								}
+							});
+						}
+
+						// Search level spells
+						if (newSpellLevel !== "cantrip") {
+							const levelKey = `level${newSpellLevel}`;
+							const levelSpells = classSpells[levelKey];
+							if (Array.isArray(levelSpells)) {
+								levelSpells.forEach((s: SpellData) => {
+									if (s.name.toLowerCase().includes(query) && !spells.includes(s.name)) {
+										spells.push(s.name);
+									}
+								});
+							}
+						}
+					});
+				} else {
+					// Search only character's class
+					const availableSpells = SPELLS_DATA[charClass.name.toLowerCase()];
+					if (availableSpells) {
+						// Search cantrips
+						if (newSpellLevel === "cantrip" && availableSpells.cantrips) {
+							spells.push(...availableSpells.cantrips
+								.filter((s) => s.name.toLowerCase().includes(query))
+								.map((s) => s.name));
+						}
+
+						// Search level spells
+						if (newSpellLevel !== "cantrip") {
+							const levelKey = `level${newSpellLevel}`;
+							const levelSpells = availableSpells[levelKey];
+							if (Array.isArray(levelSpells)) {
+								spells.push(...levelSpells
+									.filter((s: SpellData) => s.name.toLowerCase().includes(query))
+									.map((s: SpellData) => s.name));
+							}
+						}
+					}
+				}
+
+				return spells.sort().slice(0, 10); // Sort and limit to 10 suggestions
+		  })()
+		: [];
 
 	// Inventory management
-	const [inventoryItems, setInventoryItems] = useState(equipment);
-	const [equippedArmor, setEquippedArmor] = useState<string | null>(null);
-	const [equippedShield, setEquippedShield] = useState(false);
+	const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>(() =>
+		equipment.map((itemName) => lookupItemData(itemName)).filter((item): item is InventoryItem => item !== null)
+	);
+	const [equippedArmor, setEquippedArmor] = useState<string | null>(character.equippedArmor || null);
+	const [equippedShield, setEquippedShield] = useState(character.equippedShield || false);
 	const [showAddItem, setShowAddItem] = useState(false);
 	const [newItemName, setNewItemName] = useState("");
+	const [selectedItem, setSelectedItem] = useState<string | null>(null);
+	const [showSuggestions, setShowSuggestions] = useState(false);
+	const [isCustomItem, setIsCustomItem] = useState(false);
+	const [customItemType, setCustomItemType] = useState<"weapon" | "armor" | "shield" | "other">("other");
+	const [customDamage, setCustomDamage] = useState("");
+	const [customDamageType, setCustomDamageType] = useState("");
+	const [customArmorClass, setCustomArmorClass] = useState("");
+	const [customDexModifier, setCustomDexModifier] = useState<"full" | "max2" | "none">("full");
+	const [customWeight, setCustomWeight] = useState("");
+
+	// Get filtered item suggestions
+	const availableItems = getAllAvailableItems();
+	const filteredItems = newItemName.trim()
+		? availableItems.filter((item) =>
+				item.toLowerCase().includes(newItemName.toLowerCase())
+		  ).slice(0, 10) // Limit to 10 suggestions
+		: [];
 
 	// Calculate carrying capacity (STR score × 15)
 	const maxCarryingCapacity = abilityScores.strength * 15;
 
-	// Simplified weight calculation (assuming 1 lb per item for now)
-	const currentWeight = inventoryItems.length;
+	// Calculate total weight from inventory items
+	const currentWeight = inventoryItems.reduce(
+		(total, item) => total + item.weight,
+		0
+	);
 
-	// Extract weapons from equipment
-	const weapons = getWeaponsFromEquipment(equipment);
+	// Calculate AC based on equipped armor
+	const calculateAC = (): number => {
+		let calculatedAC = 10 + dexMod; // Base AC with DEX
+
+		// Find equipped armor
+		if (equippedArmor) {
+			const armorItem = inventoryItems.find((item) => item.name === equippedArmor);
+			if (armorItem) {
+				const armorData = armorItem.armorData || armorItem.customStats;
+				if (armorData) {
+					let baseAC = armorData.armorClass || 10;
+
+					// Apply DEX modifier based on armor type
+					if (armorItem.armorData) {
+						const dexMod = getAbilityModifier(abilityScores.dexterity);
+						if (armorItem.armorData.dexModifier === "full") {
+							// Light armor: full DEX
+							calculatedAC = baseAC + dexMod;
+						} else if (armorItem.armorData.dexModifier === "max2") {
+							// Medium armor: DEX max +2
+							calculatedAC = baseAC + Math.min(dexMod, 2);
+						} else if (armorItem.armorData.dexModifier === "none") {
+							// Heavy armor: no DEX
+							calculatedAC = baseAC;
+						}
+					} else {
+						// Custom armor - use base AC
+						calculatedAC = baseAC;
+					}
+				}
+			}
+		}
+
+		// Add shield bonus
+		if (equippedShield) {
+			calculatedAC += 2;
+		}
+
+		return calculatedAC;
+	};
+
+	const displayAC = calculateAC();
+
+	// Extract weapons from inventory items
+	const weapons = inventoryItems
+		.filter((item) => item.weaponData || item.customStats?.damage)
+		.map((item) => ({
+			name: item.name,
+			properties: item.weaponData || {
+				damage: item.customStats!.damage!,
+				damageType: item.customStats!.damageType!,
+				properties: [],
+				category: "Custom",
+				cost: "",
+				weight: `${item.weight} lb`,
+			},
+			count: 1,
+		}));
+
+	// Auto-save character changes with debounce
+	useEffect(() => {
+		const timeoutId = setTimeout(() => {
+			// Save current state to localStorage
+			updateCharacter(character.id, {
+				currentHitPoints: currentHP,
+				maxHitPoints: maxHitPoints,
+				temporaryHitPoints: tempHP,
+				currentHitDice: currentHitDice,
+				equipment: inventoryItems.map((item) => item.name),
+				cantrips: characterCantrips,
+				spells: characterSpells,
+				deathSaves: {
+					successes: deathSaveSuccesses,
+					failures: deathSaveFailures,
+				},
+				activeConditions: Object.fromEntries(activeConditions),
+				equippedArmor: equippedArmor,
+				equippedShield: equippedShield,
+			});
+		}, 1000); // Debounce for 1 second
+
+		return () => clearTimeout(timeoutId);
+	}, [
+		character.id,
+		currentHP,
+		tempHP,
+		maxHitPoints,
+		currentHitDice,
+		inventoryItems,
+		characterCantrips,
+		characterSpells,
+		deathSaveSuccesses,
+		deathSaveFailures,
+		activeConditions,
+		equippedArmor,
+		equippedShield,
+	]);
 
 	// HP functions
 	const applyHealing = () => {
@@ -275,6 +532,19 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 		if (amount > 0) {
 			setCurrentHP(Math.min(currentHP + amount, maxHitPoints));
 			setHpAmount("");
+			// Reset death saves on healing
+			if (currentHP <= 0 && currentHP + amount > 0) {
+				setDeathSaveSuccesses(0);
+				setDeathSaveFailures(0);
+			}
+		}
+	};
+
+	const toggleDeathSave = (type: "success" | "failure", count: number) => {
+		if (type === "success") {
+			setDeathSaveSuccesses(deathSaveSuccesses === count ? count - 1 : count);
+		} else {
+			setDeathSaveFailures(deathSaveFailures === count ? count - 1 : count);
 		}
 	};
 
@@ -382,23 +652,95 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 	};
 
 	const addSpell = () => {
-		if (newSpellName.trim()) {
-			// Add spell logic here - for now just close the dialog
+		if (selectedSpell) {
+			// Add spell to character's spell list
+			if (newSpellLevel === "cantrip") {
+				const updatedCantrips = [...characterCantrips, selectedSpell];
+				setCharacterCantrips(updatedCantrips);
+			} else {
+				const updatedSpells = [...characterSpells, selectedSpell];
+				setCharacterSpells(updatedSpells);
+			}
+
 			setShowAddSpell(false);
 			setNewSpellName("");
+			setSelectedSpell(null);
+			setShowSpellSuggestions(false);
+			setSearchAllSpells(false);
 		}
+	};
+
+	const selectSpellFromSuggestion = (spellName: string) => {
+		setSelectedSpell(spellName);
+		setNewSpellName(spellName);
+		setShowSpellSuggestions(false);
 	};
 
 	// Inventory management functions
 	const addItem = () => {
-		if (newItemName.trim()) {
-			setInventoryItems([...inventoryItems, newItemName]);
-			setNewItemName("");
-			setShowAddItem(false);
+		if (isCustomItem) {
+			// Create custom item with stats
+			if (!newItemName.trim()) return;
+
+			const customItem: InventoryItem = {
+				name: newItemName,
+				weight: parseFloat(customWeight) || 1,
+				isCustom: true,
+				customStats: {},
+			};
+
+			// Add stats based on item type
+			if (customItemType === "weapon") {
+				customItem.customStats!.damage = customDamage || "1d4";
+				customItem.customStats!.damageType = customDamageType || "Bludgeoning";
+			} else if (customItemType === "armor") {
+				customItem.customStats!.armorClass = parseInt(customArmorClass) || 11;
+				customItem.customStats!.dexModifier = customDexModifier;
+				customItem.customStats!.category = "Light Armor";
+			} else if (customItemType === "shield") {
+				customItem.customStats!.armorClass = 2;
+				customItem.customStats!.category = "Shield";
+			}
+			// "other" type doesn't need special stats
+
+			setInventoryItems([...inventoryItems, customItem]);
+		} else {
+			// Require item selection from dropdown
+			if (!selectedItem) return;
+
+			// Look up item from database
+			const item = lookupItemData(selectedItem);
+			if (item) {
+				setInventoryItems([...inventoryItems, item]);
+			}
 		}
+
+		// Reset form
+		setNewItemName("");
+		setSelectedItem(null);
+		setShowSuggestions(false);
+		setIsCustomItem(false);
+		setCustomItemType("other");
+		setCustomDamage("");
+		setCustomDamageType("");
+		setCustomArmorClass("");
+		setCustomDexModifier("full");
+		setCustomWeight("");
+		setShowAddItem(false);
+	};
+
+	const selectItemFromSuggestion = (itemName: string) => {
+		setSelectedItem(itemName);
+		setNewItemName(itemName);
+		setShowSuggestions(false);
 	};
 
 	const removeItem = (index: number) => {
+		const itemToRemove = inventoryItems[index];
+		// If removing equipped armor, unequip it
+		if (equippedArmor === itemToRemove.name) {
+			setEquippedArmor(null);
+		}
 		setInventoryItems(inventoryItems.filter((_, i) => i !== index));
 	};
 
@@ -691,7 +1033,7 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 										{/* AC Value */}
 										<div className="absolute inset-0 flex items-center justify-center">
 											<span className="text-xl font-bold text-accent-400">
-												{armorClass}
+												{displayAC}
 											</span>
 										</div>
 									</div>
@@ -1278,7 +1620,12 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 											{[1, 2, 3].map((i) => (
 												<button
 													key={i}
-													className="w-6 h-6 rounded-full border-2 border-accent-400/40 hover:bg-accent-400/20 transition-colors"
+													onClick={() => toggleDeathSave("success", i)}
+													className={`w-6 h-6 rounded-full border-2 transition-colors ${
+														deathSaveSuccesses >= i
+															? "bg-accent-400 border-accent-400"
+															: "border-accent-400/40 hover:bg-accent-400/20"
+													}`}
 												>
 												</button>
 											))}
@@ -1293,7 +1640,12 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 											{[1, 2, 3].map((i) => (
 												<button
 													key={i}
-													className="w-6 h-6 rounded-full border-2 border-red-800/40 hover:bg-red-900/20 transition-colors"
+													onClick={() => toggleDeathSave("failure", i)}
+													className={`w-6 h-6 rounded-full border-2 transition-colors ${
+														deathSaveFailures >= i
+															? "bg-red-900/70 border-red-900"
+															: "border-red-900/30 hover:bg-red-900/20"
+													}`}
 												>
 												</button>
 											))}
@@ -1366,8 +1718,55 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 						<div className="flex-1 overflow-y-auto p-4">
 							{featuresTab === "features" && (
 								<div className="space-y-3">
+									{/* Filter Buttons */}
+									<div className="flex gap-2 pb-3 border-b border-accent-400/20">
+										<button
+											onClick={() => setFeatureFilter("all")}
+											className={`px-3 py-1.5 rounded text-xs font-semibold uppercase transition-colors ${
+												featureFilter === "all"
+													? "bg-accent-400 text-background-primary"
+													: "bg-background-tertiary text-parchment-300 hover:bg-accent-400/20"
+											}`}
+										>
+											All
+										</button>
+										<button
+											onClick={() => setFeatureFilter("species")}
+											className={`px-3 py-1.5 rounded text-xs font-semibold uppercase transition-colors ${
+												featureFilter === "species"
+													? "bg-accent-400 text-background-primary"
+													: "bg-background-tertiary text-parchment-300 hover:bg-accent-400/20"
+											}`}
+										>
+											{species.name}
+										</button>
+										{subspecies && (
+											<button
+												onClick={() => setFeatureFilter("subspecies")}
+												className={`px-3 py-1.5 rounded text-xs font-semibold uppercase transition-colors ${
+													featureFilter === "subspecies"
+														? "bg-accent-400 text-background-primary"
+														: "bg-background-tertiary text-parchment-300 hover:bg-accent-400/20"
+												}`}
+											>
+												{subspecies.name}
+											</button>
+										)}
+										<button
+											onClick={() => setFeatureFilter("class")}
+											className={`px-3 py-1.5 rounded text-xs font-semibold uppercase transition-colors ${
+												featureFilter === "class"
+													? "bg-accent-400 text-background-primary"
+													: "bg-background-tertiary text-parchment-300 hover:bg-accent-400/20"
+											}`}
+										>
+											{charClass.name}
+										</button>
+									</div>
+
 									{/* Species Traits */}
-									{species.traits &&
+									{(featureFilter === "all" || featureFilter === "species") &&
+										species.traits &&
 										species.traits.length > 0 && (
 											<>
 												{species.traits.map((trait) => (
@@ -1375,8 +1774,13 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 														key={trait.name}
 														className="bg-background-secondary border border-accent-400/30 rounded-lg p-4"
 													>
-														<div className="font-bold text-accent-400 uppercase text-sm mb-2">
-															{trait.name}
+														<div className="flex items-center gap-2 mb-2">
+															<span className="font-bold text-accent-400 uppercase text-sm">
+																{trait.name}
+															</span>
+															<span className="text-xs uppercase tracking-wider text-parchment-400 bg-background-tertiary px-2 py-0.5 rounded">
+																{species.name} Trait
+															</span>
 														</div>
 														<div className="text-xs text-parchment-300 leading-relaxed">
 															{trait.description}
@@ -1387,7 +1791,8 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 										)}
 
 									{/* Subspecies Traits */}
-									{subspecies?.traits &&
+									{(featureFilter === "all" || featureFilter === "subspecies") &&
+										subspecies?.traits &&
 										subspecies.traits.length > 0 && (
 											<>
 												{subspecies.traits.map(
@@ -1396,8 +1801,13 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 															key={trait.name}
 															className="bg-background-secondary border border-accent-400/30 rounded-lg p-4"
 														>
-															<div className="font-bold text-accent-400 uppercase text-sm mb-2">
-																{trait.name}
+															<div className="flex items-center gap-2 mb-2">
+																<span className="font-bold text-accent-400 uppercase text-sm">
+																	{trait.name}
+																</span>
+																<span className="text-xs uppercase tracking-wider text-parchment-400 bg-background-tertiary px-2 py-0.5 rounded">
+																	{subspecies.name} Trait
+																</span>
 															</div>
 															<div className="text-xs text-parchment-300 leading-relaxed">
 																{
@@ -1411,7 +1821,8 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 										)}
 
 									{/* Class Features */}
-									{charClass.features &&
+									{(featureFilter === "all" || featureFilter === "class") &&
+										charClass.features &&
 										charClass.features.length > 0 && (
 											<>
 												{charClass.features
@@ -1423,8 +1834,13 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 															key={feature.name}
 															className="bg-background-secondary border border-accent-400/30 rounded-lg p-4"
 														>
-															<div className="font-bold text-accent-400 uppercase text-sm mb-2">
-																{feature.name}
+															<div className="flex items-center gap-2 mb-2">
+																<span className="font-bold text-accent-400 uppercase text-sm">
+																	{feature.name}
+																</span>
+																<span className="text-xs uppercase tracking-wider text-parchment-400 bg-background-tertiary px-2 py-0.5 rounded">
+																	{charClass.name} Feature
+																</span>
 															</div>
 															<div className="text-xs text-parchment-300 leading-relaxed">
 																{
@@ -1440,8 +1856,64 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 
 							{featuresTab === "actions" && (
 								<div className="space-y-3">
+									{/* Filter Buttons */}
+									<div className="flex gap-2 pb-3 border-b border-accent-400/20">
+										<button
+											onClick={() => setActionFilter("all")}
+											className={`px-3 py-1.5 rounded text-xs font-semibold uppercase transition-colors ${
+												actionFilter === "all"
+													? "bg-accent-400 text-background-primary"
+													: "bg-background-tertiary text-parchment-300 hover:bg-accent-400/20"
+											}`}
+										>
+											All
+										</button>
+										<button
+											onClick={() => setActionFilter("weapons")}
+											className={`px-3 py-1.5 rounded text-xs font-semibold uppercase transition-colors ${
+												actionFilter === "weapons"
+													? "bg-accent-400 text-background-primary"
+													: "bg-background-tertiary text-parchment-300 hover:bg-accent-400/20"
+											}`}
+										>
+											Weapons
+										</button>
+										<button
+											onClick={() => setActionFilter("species")}
+											className={`px-3 py-1.5 rounded text-xs font-semibold uppercase transition-colors ${
+												actionFilter === "species"
+													? "bg-accent-400 text-background-primary"
+													: "bg-background-tertiary text-parchment-300 hover:bg-accent-400/20"
+											}`}
+										>
+											{species.name}
+										</button>
+										{subspecies && (
+											<button
+												onClick={() => setActionFilter("subspecies")}
+												className={`px-3 py-1.5 rounded text-xs font-semibold uppercase transition-colors ${
+													actionFilter === "subspecies"
+														? "bg-accent-400 text-background-primary"
+														: "bg-background-tertiary text-parchment-300 hover:bg-accent-400/20"
+												}`}
+											>
+												{subspecies.name}
+											</button>
+										)}
+										<button
+											onClick={() => setActionFilter("class")}
+											className={`px-3 py-1.5 rounded text-xs font-semibold uppercase transition-colors ${
+												actionFilter === "class"
+													? "bg-accent-400 text-background-primary"
+													: "bg-background-tertiary text-parchment-300 hover:bg-accent-400/20"
+											}`}
+										>
+											{charClass.name}
+										</button>
+									</div>
+
 									{/* Weapons */}
-									{weapons.map((weapon, idx) => {
+									{(actionFilter === "all" || actionFilter === "weapons") && weapons.map((weapon, idx) => {
 										const attackData = calculateAttackBonus(
 											weapon.name,
 											weapon.properties,
@@ -1500,7 +1972,8 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 									})}
 
 									{/* Non-passive Species Traits */}
-									{species.traits &&
+									{(actionFilter === "all" || actionFilter === "species") &&
+										species.traits &&
 										species.traits.filter((trait) => !trait.isPassive).length > 0 && (
 											<>
 												{species.traits
@@ -1515,7 +1988,7 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 																	{trait.name}
 																</span>
 																<span className="text-xs uppercase tracking-wider text-parchment-400 bg-background-tertiary px-2 py-0.5 rounded">
-																	Species Trait
+																	{species.name} Trait
 																</span>
 															</div>
 															<div className="text-xs text-parchment-300 leading-relaxed">
@@ -1527,7 +2000,8 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 										)}
 
 									{/* Non-passive Subspecies Traits */}
-									{subspecies?.traits &&
+									{(actionFilter === "all" || actionFilter === "subspecies") &&
+										subspecies?.traits &&
 										subspecies.traits.filter((trait) => !trait.isPassive).length > 0 && (
 											<>
 												{subspecies.traits
@@ -1554,7 +2028,8 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 										)}
 
 									{/* Non-passive Class Features */}
-									{charClass.features &&
+									{(actionFilter === "all" || actionFilter === "class") &&
+										charClass.features &&
 										charClass.features
 											.filter((f) => f.level <= level && !f.isPassive)
 											.length > 0 && (
@@ -1571,7 +2046,7 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 																	{feature.name}
 																</span>
 																<span className="text-xs uppercase tracking-wider text-parchment-400 bg-background-tertiary px-2 py-0.5 rounded">
-																	Class Feature
+																	{charClass.name} Feature
 																</span>
 															</div>
 															<div className="text-xs text-parchment-300 leading-relaxed">
@@ -1603,34 +2078,97 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 											<div className="space-y-3">
 												<div>
 													<label className="text-xs text-parchment-400 uppercase tracking-wider block mb-1">
-														Spell Name
-													</label>
-													<input
-														type="text"
-														value={newSpellName}
-														onChange={(e) => setNewSpellName(e.target.value)}
-														className="w-full bg-background-tertiary border border-accent-400/30 rounded px-3 py-2 text-sm text-parchment-100 focus:outline-none focus:border-accent-400"
-														placeholder="Enter spell name..."
-													/>
-												</div>
-												<div>
-													<label className="text-xs text-parchment-400 uppercase tracking-wider block mb-1">
 														Level
 													</label>
 													<select
 														value={newSpellLevel}
-														onChange={(e) => setNewSpellLevel(e.target.value === "cantrip" ? "cantrip" : parseInt(e.target.value) as 1)}
+														onChange={(e) => {
+															setNewSpellLevel(e.target.value === "cantrip" ? "cantrip" : parseInt(e.target.value) as 1);
+															setNewSpellName("");
+															setSelectedSpell(null);
+															setShowSpellSuggestions(false);
+														}}
 														className="w-full bg-background-tertiary border border-accent-400/30 rounded px-3 py-2 text-sm text-parchment-100 focus:outline-none focus:border-accent-400"
 													>
 														<option value="cantrip">Cantrip</option>
 														<option value="1">Level 1</option>
 													</select>
 												</div>
+
+												{/* Search All Spells Toggle */}
+												<div className="flex items-center gap-2">
+													<input
+														type="checkbox"
+														id="searchAllSpells"
+														checked={searchAllSpells}
+														onChange={(e) => {
+															setSearchAllSpells(e.target.checked);
+															setNewSpellName("");
+															setSelectedSpell(null);
+															setShowSpellSuggestions(false);
+														}}
+														className="w-4 h-4 rounded border-accent-400/30 bg-background-tertiary"
+													/>
+													<label htmlFor="searchAllSpells" className="text-xs text-parchment-300">
+														Search all spells (not just {charClass.name})
+													</label>
+												</div>
+
+												<div className="relative">
+													<label className="text-xs text-parchment-400 uppercase tracking-wider block mb-1">
+														Search Spells
+													</label>
+													<input
+														type="text"
+														value={newSpellName}
+														onChange={(e) => {
+															setNewSpellName(e.target.value);
+															setSelectedSpell(null);
+															setShowSpellSuggestions(true);
+														}}
+														onFocus={() => setShowSpellSuggestions(true)}
+														className="w-full bg-background-tertiary border border-accent-400/30 rounded px-3 py-2 text-sm text-parchment-100 focus:outline-none focus:border-accent-400"
+														placeholder="Type to search spells..."
+													/>
+
+													{/* Autocomplete Dropdown */}
+													{showSpellSuggestions && filteredSpells.length > 0 && (
+														<div className="absolute z-10 w-full mt-1 bg-background-secondary border border-accent-400/40 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+															{filteredSpells.map((spell) => (
+																<button
+																	key={spell}
+																	onClick={() => selectSpellFromSuggestion(spell)}
+																	className="w-full text-left px-3 py-2 text-sm text-parchment-200 hover:bg-accent-400/20 transition-colors"
+																>
+																	{spell}
+																</button>
+															))}
+														</div>
+													)}
+
+													{/* No matches message */}
+													{showSpellSuggestions && newSpellName.trim() && filteredSpells.length === 0 && (
+														<div className="absolute z-10 w-full mt-1 bg-background-secondary border border-accent-400/40 rounded-lg shadow-lg p-3">
+															<p className="text-xs text-parchment-400">
+																No spells found matching "{newSpellName}" for {charClass.name}
+															</p>
+														</div>
+													)}
+
+													{selectedSpell && (
+														<div className="text-xs text-accent-400 mt-1">
+															✓ Selected: {selectedSpell}
+														</div>
+													)}
+												</div>
 												<div className="flex gap-2">
 													<button
 														onClick={() => {
 															setShowAddSpell(false);
 															setNewSpellName("");
+															setSelectedSpell(null);
+															setShowSpellSuggestions(false);
+															setSearchAllSpells(false);
 														}}
 														className="flex-1 px-4 py-2 rounded bg-background-tertiary hover:bg-background-tertiary/70 text-parchment-300 text-xs font-semibold transition-colors"
 													>
@@ -1638,7 +2176,12 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 													</button>
 													<button
 														onClick={addSpell}
-														className="flex-1 px-4 py-2 rounded bg-accent-400 hover:bg-accent-400/80 text-background-primary text-xs font-semibold transition-colors"
+														disabled={!selectedSpell}
+														className={`flex-1 px-4 py-2 rounded text-xs font-semibold transition-colors ${
+															selectedSpell
+																? "bg-accent-400 hover:bg-accent-400/80 text-background-primary"
+																: "bg-background-tertiary/30 text-parchment-400 cursor-not-allowed border border-accent-400/10"
+														}`}
 													>
 														Add Spell
 													</button>
@@ -1648,14 +2191,14 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 									)}
 
 									{/* Cantrips */}
-									{character.cantrips &&
-										character.cantrips.length > 0 && (
+									{characterCantrips &&
+										characterCantrips.length > 0 && (
 											<div>
 												<div className="text-sm text-accent-400 uppercase tracking-wider mb-3 font-semibold">
 													Cantrips
 												</div>
 												<div className="space-y-3">
-													{character.cantrips.map((cantripName) => {
+													{characterCantrips.map((cantripName) => {
 														const spellData = getSpellData(cantripName, charClass.name);
 														return (
 															<div
@@ -1729,7 +2272,7 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 													</div>
 												</div>
 												<div className="space-y-3">
-													{character.spells.map((spellName) => {
+													{characterSpells.map((spellName) => {
 														const spellData = getSpellData(spellName, charClass.name);
 														const canCast = currentSpellSlots[1] > 0;
 														return (
@@ -1790,10 +2333,10 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 											</div>
 										)}
 
-									{(!character.cantrips ||
-										character.cantrips.length === 0) &&
-										(!character.spells ||
-											character.spells.length === 0) && (
+									{(!characterCantrips ||
+										characterCantrips.length === 0) &&
+										(!characterSpells ||
+											characterSpells.length === 0) && (
 											<div className="text-center py-8 text-parchment-400 text-sm">
 												No spells available
 											</div>
@@ -1845,23 +2388,223 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 												Add New Item
 											</div>
 											<div className="space-y-3">
-												<div>
-													<label className="text-xs text-parchment-400 uppercase tracking-wider block mb-1">
-														Item Name
-													</label>
-													<input
-														type="text"
-														value={newItemName}
-														onChange={(e) => setNewItemName(e.target.value)}
-														className="w-full bg-background-tertiary border border-accent-400/30 rounded px-3 py-2 text-sm text-parchment-100 focus:outline-none focus:border-accent-400"
-														placeholder="Enter item name..."
-													/>
-												</div>
-												<div className="flex gap-2">
+												{!isCustomItem && (
+													<div className="relative">
+														<label className="text-xs text-parchment-400 uppercase tracking-wider block mb-1">
+															Search Items
+														</label>
+														<input
+															type="text"
+															value={newItemName}
+															onChange={(e) => {
+																setNewItemName(e.target.value);
+																setSelectedItem(null);
+																setShowSuggestions(true);
+															}}
+															onFocus={() => setShowSuggestions(true)}
+															className="w-full bg-background-tertiary border border-accent-400/30 rounded px-3 py-2 text-sm text-parchment-100 focus:outline-none focus:border-accent-400"
+															placeholder="Type to search items..."
+														/>
+
+														{/* Autocomplete Dropdown */}
+														{showSuggestions && filteredItems.length > 0 && (
+															<div className="absolute z-10 w-full mt-1 bg-background-secondary border border-accent-400/40 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+																{filteredItems.map((item) => (
+																	<button
+																		key={item}
+																		onClick={() => selectItemFromSuggestion(item)}
+																		className="w-full text-left px-3 py-2 text-sm text-parchment-200 hover:bg-accent-400/20 transition-colors"
+																	>
+																		{item}
+																	</button>
+																))}
+															</div>
+														)}
+
+														{/* No matches - show "Add Custom" button */}
+														{showSuggestions && newItemName.trim() && filteredItems.length === 0 && (
+															<div className="absolute z-10 w-full mt-1 bg-background-secondary border border-accent-400/40 rounded-lg shadow-lg p-3">
+																<p className="text-xs text-parchment-400 mb-2">
+																	No items found matching "{newItemName}"
+																</p>
+																<button
+																	onClick={() => {
+																		setIsCustomItem(true);
+																		setShowSuggestions(false);
+																	}}
+																	className="w-full px-3 py-2 rounded bg-accent-400/20 hover:bg-accent-400/30 border border-accent-400/40 text-accent-400 text-xs font-semibold transition-colors"
+																>
+																	+ Add as Custom Item
+																</button>
+															</div>
+														)}
+
+														{selectedItem && (
+															<div className="text-xs text-accent-400 mt-1">
+																✓ Selected: {selectedItem}
+															</div>
+														)}
+													</div>
+												)}
+
+												{/* Show custom item toggle if already in custom mode */}
+												{isCustomItem && (
+													<div className="flex items-center justify-between">
+														<div className="text-xs text-accent-400 uppercase tracking-wider font-semibold">
+															Custom Item
+														</div>
+														<button
+															onClick={() => {
+																setIsCustomItem(false);
+																setNewItemName("");
+															}}
+															className="text-xs text-parchment-400 hover:text-accent-400 transition-colors"
+														>
+															← Back to Search
+														</button>
+													</div>
+												)}
+
+												{/* Custom Item Fields */}
+												{isCustomItem && (
+													<>
+														<div>
+															<label className="text-xs text-parchment-400 uppercase tracking-wider block mb-1">
+																Item Name
+															</label>
+															<input
+																type="text"
+																value={newItemName}
+																onChange={(e) => setNewItemName(e.target.value)}
+																className="w-full bg-background-tertiary border border-accent-400/30 rounded px-3 py-2 text-sm text-parchment-100 focus:outline-none focus:border-accent-400"
+																placeholder="Enter custom item name..."
+															/>
+														</div>
+
+														{/* Item Type Selector */}
+														<div>
+															<label className="text-xs text-parchment-400 uppercase tracking-wider block mb-1">
+																Item Type
+															</label>
+															<select
+																value={customItemType}
+																onChange={(e) => setCustomItemType(e.target.value as "weapon" | "armor" | "shield" | "other")}
+																className="w-full bg-background-tertiary border border-accent-400/30 rounded px-3 py-2 text-sm text-parchment-100 focus:outline-none focus:border-accent-400"
+															>
+																<option value="other">Other (Generic Item)</option>
+																<option value="weapon">Weapon</option>
+																<option value="armor">Armor</option>
+																<option value="shield">Shield</option>
+															</select>
+														</div>
+
+														<div>
+															<label className="text-xs text-parchment-400 uppercase tracking-wider block mb-1">
+																Weight (lbs)
+															</label>
+															<input
+																type="number"
+																value={customWeight}
+																onChange={(e) => setCustomWeight(e.target.value)}
+																className="w-full bg-background-tertiary border border-accent-400/30 rounded px-3 py-2 text-sm text-parchment-100 focus:outline-none focus:border-accent-400"
+																placeholder="1"
+																step="0.1"
+															/>
+														</div>
+
+														{/* Weapon-specific fields */}
+														{customItemType === "weapon" && (
+															<>
+																<div className="text-xs text-accent-400 uppercase tracking-wider font-semibold mt-2">
+																	Weapon Properties
+																</div>
+																<div className="grid grid-cols-2 gap-2">
+																	<div>
+																		<label className="text-xs text-parchment-400 block mb-1">
+																			Damage
+																		</label>
+																		<input
+																			type="text"
+																			value={customDamage}
+																			onChange={(e) => setCustomDamage(e.target.value)}
+																			className="w-full bg-background-tertiary border border-accent-400/30 rounded px-3 py-2 text-sm text-parchment-100 focus:outline-none focus:border-accent-400"
+																			placeholder="1d8"
+																		/>
+																	</div>
+																	<div>
+																		<label className="text-xs text-parchment-400 block mb-1">
+																			Damage Type
+																		</label>
+																		<input
+																			type="text"
+																			value={customDamageType}
+																			onChange={(e) => setCustomDamageType(e.target.value)}
+																			className="w-full bg-background-tertiary border border-accent-400/30 rounded px-3 py-2 text-sm text-parchment-100 focus:outline-none focus:border-accent-400"
+																			placeholder="Slashing"
+																		/>
+																	</div>
+																</div>
+															</>
+														)}
+
+														{/* Armor-specific fields */}
+														{customItemType === "armor" && (
+															<>
+																<div className="text-xs text-accent-400 uppercase tracking-wider font-semibold mt-2">
+																	Armor Properties
+																</div>
+																<div>
+																	<label className="text-xs text-parchment-400 block mb-1">
+																		Armor Class (AC)
+																	</label>
+																	<input
+																		type="number"
+																		value={customArmorClass}
+																		onChange={(e) => setCustomArmorClass(e.target.value)}
+																		className="w-full bg-background-tertiary border border-accent-400/30 rounded px-3 py-2 text-sm text-parchment-100 focus:outline-none focus:border-accent-400"
+																		placeholder="14"
+																	/>
+																</div>
+																<div>
+																	<label className="text-xs text-parchment-400 block mb-1">
+																		DEX Modifier
+																	</label>
+																	<select
+																		value={customDexModifier}
+																		onChange={(e) => setCustomDexModifier(e.target.value as "full" | "max2" | "none")}
+																		className="w-full bg-background-tertiary border border-accent-400/30 rounded px-3 py-2 text-sm text-parchment-100 focus:outline-none focus:border-accent-400"
+																	>
+																		<option value="full">Full (Light Armor)</option>
+																		<option value="max2">Max +2 (Medium Armor)</option>
+																		<option value="none">None (Heavy Armor)</option>
+																	</select>
+																</div>
+															</>
+														)}
+
+														{/* Shield info */}
+														{customItemType === "shield" && (
+															<div className="bg-background-tertiary/30 border border-accent-400/20 rounded p-2">
+																<p className="text-xs text-parchment-400">
+																	Shield will automatically add +2 to AC when equipped.
+																</p>
+															</div>
+														)}
+													</>
+												)}
+
+												<div className="flex gap-2 mt-4">
 													<button
 														onClick={() => {
 															setShowAddItem(false);
 															setNewItemName("");
+															setSelectedItem(null);
+															setShowSuggestions(false);
+															setIsCustomItem(false);
+															setCustomDamage("");
+															setCustomDamageType("");
+															setCustomArmorClass("");
+															setCustomWeight("");
 														}}
 														className="flex-1 px-4 py-2 rounded bg-background-tertiary hover:bg-background-tertiary/70 text-parchment-300 text-xs font-semibold transition-colors"
 													>
@@ -1869,7 +2612,12 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 													</button>
 													<button
 														onClick={addItem}
-														className="flex-1 px-4 py-2 rounded bg-accent-400 hover:bg-accent-400/80 text-background-primary text-xs font-semibold transition-colors"
+														disabled={isCustomItem ? !newItemName.trim() : !selectedItem}
+														className={`flex-1 px-4 py-2 rounded text-xs font-semibold transition-colors ${
+															(isCustomItem ? newItemName.trim() : selectedItem)
+																? "bg-accent-400 hover:bg-accent-400/80 text-background-primary"
+																: "bg-background-tertiary/30 text-parchment-400 cursor-not-allowed border border-accent-400/10"
+														}`}
 													>
 														Add Item
 													</button>
@@ -1882,9 +2630,15 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 									<div className="space-y-2">
 										{inventoryItems && inventoryItems.length > 0 ? (
 											inventoryItems.map((item, idx) => {
-												const isArmor = item.toLowerCase().includes("armor") || item.toLowerCase().includes("leather") || item.toLowerCase().includes("chain");
-												const isShield = item.toLowerCase().includes("shield");
-												const isEquipped = equippedArmor === item || (isShield && equippedShield);
+												const isShield = item.armorData?.category === "Shield" || item.name.toLowerCase().includes("shield");
+												const isArmor = (item.armorData !== undefined && !isShield) ||
+																(item.customStats?.armorClass !== undefined && !isShield) ||
+																(!isShield && (item.name.toLowerCase().includes("armor") ||
+																	item.name.toLowerCase().includes("leather") ||
+																	item.name.toLowerCase().includes("chain") ||
+																	item.name.toLowerCase().includes("plate")));
+												const isWeapon = item.weaponData !== undefined || (item.customStats?.damage !== undefined);
+												const isEquipped = equippedArmor === item.name || (isShield && equippedShield);
 
 												return (
 													<div
@@ -1898,7 +2652,7 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 														<div className="flex items-center justify-between">
 															<div className="flex items-center gap-2 flex-1 min-w-0">
 																<span className="font-semibold text-parchment-100 text-sm truncate">
-																	{item}
+																	{item.name}
 																</span>
 																{isEquipped && (
 																	<span className="text-xs uppercase tracking-wider text-accent-400 bg-accent-400/20 px-1.5 py-0.5 rounded flex-shrink-0">
@@ -1907,16 +2661,26 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 																)}
 																{isArmor && !isShield && (
 																	<span className="text-xs text-parchment-400 flex-shrink-0">
-																		(Armor)
+																		(Armor, AC {item.armorData?.armorClass || item.customStats?.armorClass})
 																	</span>
 																)}
 																{isShield && (
 																	<span className="text-xs text-parchment-400 flex-shrink-0">
-																		(Shield)
+																		(Shield, +{item.armorData?.armorClass || 2})
+																	</span>
+																)}
+																{isWeapon && !isArmor && (
+																	<span className="text-xs text-parchment-400 flex-shrink-0">
+																		(Weapon, {item.weaponData?.damage || item.customStats?.damage})
+																	</span>
+																)}
+																{item.isCustom && (
+																	<span className="text-xs text-parchment-400 bg-background-tertiary px-1.5 py-0.5 rounded flex-shrink-0">
+																		Custom
 																	</span>
 																)}
 																<span className="text-xs text-parchment-400 flex-shrink-0">
-																	1 lb
+																	{item.weight} lb
 																</span>
 															</div>
 															<div className="flex gap-1 ml-2">
@@ -1925,7 +2689,7 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 																		onClick={() =>
 																			isShield
 																				? toggleEquipShield()
-																				: toggleEquipArmor(item)
+																				: toggleEquipArmor(item.name)
 																		}
 																		className={`px-2 py-1 rounded text-xs font-semibold transition-colors ${
 																			isEquipped
