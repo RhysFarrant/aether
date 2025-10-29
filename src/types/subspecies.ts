@@ -39,4 +39,5 @@ export interface Subspecies {
 export interface SubspeciesTrait {
   name: string;
   description: string;
+  isPassive?: boolean; // Default false - passive features don't show in Actions
 }

@@ -59,4 +59,5 @@ export interface ClassFeature {
   name: string;
   level: number;
   description: string;
+  isPassive?: boolean; // Default false - passive features don't show in Actions
 }

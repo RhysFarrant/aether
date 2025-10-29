@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { Character } from "../types/character";
 import weaponDataImport from "../data/weapons.json";
 import conditionsDataImport from "../data/conditions.json";
+import spellsDataImport from "../data/spells.json";
 
 interface WeaponProperties {
 	damage: string;
@@ -18,8 +19,21 @@ interface Condition {
 	levels?: Record<string, string>;
 }
 
+interface SpellData {
+	name: string;
+	description: string;
+	school: string;
+	castingTime: string;
+	range: string;
+	components: string[];
+	duration: string;
+	concentration?: boolean;
+	ritual?: boolean;
+}
+
 const WEAPON_DATA = weaponDataImport as Record<string, WeaponProperties>;
 const CONDITIONS_DATA = conditionsDataImport as Record<string, Condition>;
+const SPELLS_DATA = spellsDataImport as Record<string, { cantrips: SpellData[], spells: Record<string, SpellData[]> }>;
 
 interface CharacterSheetProps {
 	character: Character;
@@ -147,6 +161,28 @@ function getWeaponsFromEquipment(
 }
 
 /**
+ * Get spell data from spells database
+ */
+function getSpellData(spellName: string, className: string): SpellData | null {
+	const classSpells = SPELLS_DATA[className.toLowerCase()];
+	if (!classSpells) return null;
+
+	// Check cantrips
+	const cantrip = classSpells.cantrips?.find((s) => s.name === spellName);
+	if (cantrip) return cantrip;
+
+	// Check all spell levels (level1, level2, etc.)
+	for (const [key, levelSpells] of Object.entries(classSpells)) {
+		if (key.startsWith('level') && Array.isArray(levelSpells)) {
+			const spell = levelSpells.find((s: SpellData) => s.name === spellName);
+			if (spell) return spell;
+		}
+	}
+
+	return null;
+}
+
+/**
  * CharacterSheet - Full-screen character sheet with BG3-inspired layout
  */
 export default function CharacterSheet({ character }: CharacterSheetProps) {
@@ -207,6 +243,38 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 
 	// Inspiration
 	const [hasInspiration, setHasInspiration] = useState(false);
+
+	// Spell slots tracking - based on class level (simplified for now)
+	// For a level 1 character with spellcasting, typically 2 level 1 spell slots
+	const maxSpellSlots = {
+		1: 2,
+		2: 0,
+		3: 0,
+	};
+	const [currentSpellSlots, setCurrentSpellSlots] = useState({
+		1: maxSpellSlots[1],
+		2: maxSpellSlots[2],
+		3: maxSpellSlots[3],
+	});
+
+	// Spell management
+	const [showAddSpell, setShowAddSpell] = useState(false);
+	const [newSpellName, setNewSpellName] = useState("");
+	const [newSpellLevel, setNewSpellLevel] = useState<"cantrip" | 1>(1);
+
+	// Inventory management
+	const [inventoryItems, setInventoryItems] = useState(equipment);
+	const [equippedArmor, setEquippedArmor] = useState<string | null>(null);
+	const [equippedShield, setEquippedShield] = useState(false);
+	const [showAddItem, setShowAddItem] = useState(false);
+	const [newItemName, setNewItemName] = useState("");
+	const [newItemWeight, setNewItemWeight] = useState("");
+
+	// Calculate carrying capacity (STR score × 15)
+	const maxCarryingCapacity = abilityScores.strength * 15;
+
+	// Simplified weight calculation (assuming 1 lb per item for now)
+	const currentWeight = inventoryItems.length;
 
 	// Extract weapons from equipment
 	const weapons = getWeaponsFromEquipment(equipment);
@@ -349,6 +417,50 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 		});
 	};
 
+	// Spell management functions
+	const castSpell = (spellLevel: number) => {
+		if (spellLevel > 0 && currentSpellSlots[spellLevel as keyof typeof currentSpellSlots] > 0) {
+			setCurrentSpellSlots(prev => ({
+				...prev,
+				[spellLevel]: prev[spellLevel as keyof typeof prev] - 1
+			}));
+		}
+	};
+
+	const addSpell = () => {
+		if (newSpellName.trim()) {
+			// Add spell logic here - for now just close the dialog
+			setShowAddSpell(false);
+			setNewSpellName("");
+		}
+	};
+
+	// Inventory management functions
+	const addItem = () => {
+		if (newItemName.trim()) {
+			setInventoryItems([...inventoryItems, newItemName]);
+			setNewItemName("");
+			setNewItemWeight("");
+			setShowAddItem(false);
+		}
+	};
+
+	const removeItem = (index: number) => {
+		setInventoryItems(inventoryItems.filter((_, i) => i !== index));
+	};
+
+	const toggleEquipArmor = (itemName: string) => {
+		if (equippedArmor === itemName) {
+			setEquippedArmor(null);
+		} else {
+			setEquippedArmor(itemName);
+		}
+	};
+
+	const toggleEquipShield = () => {
+		setEquippedShield(!equippedShield);
+	};
+
 	// All D&D 5e skills with their associated abilities
 	const allSkills = [
 		{ name: "Acrobatics", ability: "DEX", modifier: dexMod },
@@ -441,15 +553,23 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 				{/* Top Header Bar */}
 				<div className="bg-background-secondary border-b border-accent-400/20 px-6 py-3 flex-shrink-0">
 					<div className="flex items-center justify-between">
-						{/* Left: Character Name & Info */}
-						<div>
-							<h1 className="text-2xl font-bold text-accent-400 uppercase tracking-wide">
-								{name || "Unnamed Character"}
-							</h1>
-							<p className="text-parchment-300 text-sm">
-								{subspecies ? subspecies.name : species.name} -{" "}
-								{charClass.name} {level}
-							</p>
+						{/* Left: Back Button & Character Name & Info */}
+						<div className="flex items-center gap-4">
+							<button
+								onClick={() => window.location.href = "/"}
+								className="px-3 py-2 rounded-lg transition-colors text-sm font-semibold bg-background-tertiary hover:bg-accent-400/20 text-parchment-300 hover:text-accent-400 border border-accent-400/20"
+							>
+								← Back
+							</button>
+							<div>
+								<h1 className="text-2xl font-bold text-accent-400 uppercase tracking-wide">
+									{name || "Unnamed Character"}
+								</h1>
+								<p className="text-parchment-300 text-sm">
+									{subspecies ? subspecies.name : species.name} -{" "}
+									{charClass.name} {level}
+								</p>
+							</div>
 						</div>
 
 						{/* Right: Rest Buttons */}
@@ -1381,25 +1501,30 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 										return (
 											<div
 												key={idx}
-												className="bg-background-tertiary/50 border border-accent-400/20 rounded-lg p-3"
+												className="bg-background-secondary border border-accent-400/30 rounded-lg p-4"
 											>
-												<div className="flex items-center justify-between">
-													<div className="font-semibold text-parchment-100">
-														{weapon.name}
+												<div className="flex items-center justify-between mb-2">
+													<div className="flex items-center gap-2">
+														<span className="font-bold text-accent-400 uppercase text-sm">
+															{weapon.name}
+														</span>
+														<span className="text-xs uppercase tracking-wider text-parchment-400 bg-background-tertiary px-2 py-0.5 rounded">
+															Weapon Attack
+														</span>
 														{weapon.count > 1 && (
-															<span className="ml-2 text-accent-400 text-xs">
+															<span className="text-accent-400 text-xs">
 																×{weapon.count}
 															</span>
 														)}
 													</div>
-													<div className="text-sm text-accent-400">
+													<div className="text-sm text-accent-400 font-semibold">
 														{formatModifier(
 															attackData.attackBonus
 														)}{" "}
 														to hit
 													</div>
 												</div>
-												<div className="text-xs text-parchment-400 mt-1">
+												<div className="text-xs text-parchment-300 leading-relaxed">
 													{weapon.properties.damage}
 													{attackData.damageBonus !==
 														0 &&
@@ -1409,7 +1534,7 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 													{
 														weapon.properties
 															.damageType
-													}
+													} damage
 													{weapon.properties
 														.properties.length >
 														0 &&
@@ -1420,53 +1545,296 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 											</div>
 										);
 									})}
+
+									{/* Non-passive Species Traits */}
+									{species.traits &&
+										species.traits.filter((trait) => !trait.isPassive).length > 0 && (
+											<>
+												{species.traits
+													.filter((trait) => !trait.isPassive)
+													.map((trait) => (
+														<div
+															key={trait.name}
+															className="bg-background-secondary border border-accent-400/30 rounded-lg p-4"
+														>
+															<div className="flex items-center gap-2 mb-2">
+																<span className="font-bold text-accent-400 uppercase text-sm">
+																	{trait.name}
+																</span>
+																<span className="text-xs uppercase tracking-wider text-parchment-400 bg-background-tertiary px-2 py-0.5 rounded">
+																	Species Trait
+																</span>
+															</div>
+															<div className="text-xs text-parchment-300 leading-relaxed">
+																{trait.description}
+															</div>
+														</div>
+													))}
+											</>
+										)}
+
+									{/* Non-passive Subspecies Traits */}
+									{subspecies?.traits &&
+										subspecies.traits.filter((trait) => !trait.isPassive).length > 0 && (
+											<>
+												{subspecies.traits
+													.filter((trait) => !trait.isPassive)
+													.map((trait) => (
+														<div
+															key={trait.name}
+															className="bg-background-secondary border border-accent-400/30 rounded-lg p-4"
+														>
+															<div className="flex items-center gap-2 mb-2">
+																<span className="font-bold text-accent-400 uppercase text-sm">
+																	{trait.name}
+																</span>
+																<span className="text-xs uppercase tracking-wider text-parchment-400 bg-background-tertiary px-2 py-0.5 rounded">
+																	{subspecies.name} Trait
+																</span>
+															</div>
+															<div className="text-xs text-parchment-300 leading-relaxed">
+																{trait.description}
+															</div>
+														</div>
+													))}
+											</>
+										)}
+
+									{/* Non-passive Class Features */}
+									{charClass.features &&
+										charClass.features
+											.filter((f) => f.level <= level && !f.isPassive)
+											.length > 0 && (
+											<>
+												{charClass.features
+													.filter((f) => f.level <= level && !f.isPassive)
+													.map((feature) => (
+														<div
+															key={feature.name}
+															className="bg-background-secondary border border-accent-400/30 rounded-lg p-4"
+														>
+															<div className="flex items-center gap-2 mb-2">
+																<span className="font-bold text-accent-400 uppercase text-sm">
+																	{feature.name}
+																</span>
+																<span className="text-xs uppercase tracking-wider text-parchment-400 bg-background-tertiary px-2 py-0.5 rounded">
+																	Class Feature
+																</span>
+															</div>
+															<div className="text-xs text-parchment-300 leading-relaxed">
+																{feature.description}
+															</div>
+														</div>
+													))}
+											</>
+										)}
 								</div>
 							)}
 
 							{featuresTab === "spells" && (
-								<div className="space-y-3">
+								<div className="space-y-4">
+									{/* Add Spell Button */}
+									<button
+										onClick={() => setShowAddSpell(true)}
+										className="w-full py-2 px-3 rounded bg-accent-400/20 hover:bg-accent-400/30 border border-accent-400/40 text-accent-400 text-xs font-semibold transition-colors"
+									>
+										+ Add Spell
+									</button>
+
+									{/* Add Spell Dialog */}
+									{showAddSpell && (
+										<div className="bg-background-secondary/50 border border-accent-400/20 rounded-lg p-4">
+											<div className="text-sm text-accent-400 uppercase tracking-wider mb-3 font-semibold">
+												Add New Spell
+											</div>
+											<div className="space-y-3">
+												<div>
+													<label className="text-xs text-parchment-400 uppercase tracking-wider block mb-1">
+														Spell Name
+													</label>
+													<input
+														type="text"
+														value={newSpellName}
+														onChange={(e) => setNewSpellName(e.target.value)}
+														className="w-full bg-background-tertiary border border-accent-400/30 rounded px-3 py-2 text-sm text-parchment-100 focus:outline-none focus:border-accent-400"
+														placeholder="Enter spell name..."
+													/>
+												</div>
+												<div>
+													<label className="text-xs text-parchment-400 uppercase tracking-wider block mb-1">
+														Level
+													</label>
+													<select
+														value={newSpellLevel}
+														onChange={(e) => setNewSpellLevel(e.target.value === "cantrip" ? "cantrip" : parseInt(e.target.value) as 1)}
+														className="w-full bg-background-tertiary border border-accent-400/30 rounded px-3 py-2 text-sm text-parchment-100 focus:outline-none focus:border-accent-400"
+													>
+														<option value="cantrip">Cantrip</option>
+														<option value="1">Level 1</option>
+													</select>
+												</div>
+												<div className="flex gap-2">
+													<button
+														onClick={() => {
+															setShowAddSpell(false);
+															setNewSpellName("");
+														}}
+														className="flex-1 px-4 py-2 rounded bg-background-tertiary hover:bg-background-tertiary/70 text-parchment-300 text-xs font-semibold transition-colors"
+													>
+														Cancel
+													</button>
+													<button
+														onClick={addSpell}
+														className="flex-1 px-4 py-2 rounded bg-accent-400 hover:bg-accent-400/80 text-background-primary text-xs font-semibold transition-colors"
+													>
+														Add Spell
+													</button>
+												</div>
+											</div>
+										</div>
+									)}
+
 									{/* Cantrips */}
 									{character.cantrips &&
 										character.cantrips.length > 0 && (
-											<>
-												<div className="text-xs text-parchment-400 uppercase mb-2">
+											<div>
+												<div className="text-sm text-accent-400 uppercase tracking-wider mb-3 font-semibold">
 													Cantrips
 												</div>
-												{character.cantrips.map(
-													(cantrip) => (
-														<div
-															key={cantrip}
-															className="bg-background-secondary border border-accent-400/30 rounded-lg p-3"
-														>
-															<div className="text-sm font-semibold text-parchment-100">
-																{cantrip}
+												<div className="space-y-3">
+													{character.cantrips.map((cantripName) => {
+														const spellData = getSpellData(cantripName, charClass.name);
+														return (
+															<div
+																key={cantripName}
+																className="bg-background-secondary border border-accent-400/30 rounded-lg p-4"
+															>
+																<div className="flex items-center justify-between mb-2">
+																	<div className="flex items-center gap-2">
+																		<span className="font-bold text-accent-400 uppercase text-sm">
+																			{cantripName}
+																		</span>
+																		<span className="text-xs uppercase tracking-wider text-parchment-400 bg-background-tertiary px-2 py-0.5 rounded">
+																			Cantrip
+																		</span>
+																	</div>
+																	<button
+																		className="px-3 py-1 rounded bg-accent-400/20 hover:bg-accent-400/30 border border-accent-400/40 text-accent-400 text-xs font-semibold transition-colors"
+																	>
+																		Cast
+																	</button>
+																</div>
+																{spellData && (
+																	<>
+																		<div className="text-xs text-parchment-300 leading-relaxed mb-2">
+																			{spellData.description}
+																		</div>
+																		<div className="flex flex-wrap gap-3 text-xs text-parchment-400">
+																			<span><strong>Casting Time:</strong> {spellData.castingTime}</span>
+																			<span><strong>Range:</strong> {spellData.range}</span>
+																			<span><strong>Components:</strong> {spellData.components.join(", ")}</span>
+																			<span><strong>Duration:</strong> {spellData.duration}</span>
+																		</div>
+																	</>
+																)}
 															</div>
-														</div>
-													)
-												)}
-											</>
+														);
+													})}
+												</div>
+											</div>
 										)}
 
 									{/* Level 1 Spells */}
 									{character.spells &&
 										character.spells.length > 0 && (
-											<>
-												<div className="text-xs text-parchment-400 uppercase mb-2 mt-4">
-													Level 1 Spells
-												</div>
-												{character.spells.map(
-													(spell) => (
-														<div
-															key={spell}
-															className="bg-background-secondary border border-accent-400/30 rounded-lg p-3"
-														>
-															<div className="text-sm font-semibold text-parchment-100">
-																{spell}
-															</div>
+											<div>
+												<div className="flex items-center justify-between mb-3">
+													<div className="text-sm text-accent-400 uppercase tracking-wider font-semibold">
+														Level 1 Spells
+													</div>
+													{/* Spell Slots */}
+													<div className="flex items-center gap-2">
+														<span className="text-xs text-parchment-400">Spell Slots:</span>
+														<div className="flex gap-1">
+															{Array.from({ length: maxSpellSlots[1] }).map((_, i) => (
+																<button
+																	key={i}
+																	onClick={() => {
+																		setCurrentSpellSlots(prev => ({
+																			...prev,
+																			1: prev[1] === i ? i + 1 : i
+																		}));
+																	}}
+																	className={`w-6 h-6 rounded border-2 transition-colors ${
+																		i < currentSpellSlots[1]
+																			? "bg-accent-400 border-accent-400"
+																			: "border-accent-400/40 hover:bg-accent-400/20"
+																	}`}
+																/>
+															))}
 														</div>
-													)
-												)}
-											</>
+													</div>
+												</div>
+												<div className="space-y-3">
+													{character.spells.map((spellName) => {
+														const spellData = getSpellData(spellName, charClass.name);
+														const canCast = currentSpellSlots[1] > 0;
+														return (
+															<div
+																key={spellName}
+																className={`bg-background-secondary border border-accent-400/30 rounded-lg p-4 transition-opacity ${
+																	!canCast ? "opacity-60" : ""
+																}`}
+															>
+																<div className="flex items-center justify-between mb-2">
+																	<div className="flex items-center gap-2">
+																		<span className="font-bold text-accent-400 uppercase text-sm">
+																			{spellName}
+																		</span>
+																		<span className="text-xs uppercase tracking-wider text-parchment-400 bg-background-tertiary px-2 py-0.5 rounded">
+																			Level 1
+																		</span>
+																		{spellData?.concentration && (
+																			<span className="text-xs uppercase tracking-wider text-parchment-400 bg-background-tertiary px-2 py-0.5 rounded">
+																				Concentration
+																			</span>
+																		)}
+																		{spellData?.ritual && (
+																			<span className="text-xs uppercase tracking-wider text-parchment-400 bg-background-tertiary px-2 py-0.5 rounded">
+																				Ritual
+																			</span>
+																		)}
+																	</div>
+																	<button
+																		onClick={() => castSpell(1)}
+																		disabled={!canCast}
+																		className={`px-3 py-1 rounded border text-xs font-semibold transition-colors ${
+																			canCast
+																				? "bg-accent-400/20 hover:bg-accent-400/30 border-accent-400/40 text-accent-400"
+																				: "bg-background-tertiary/30 border-accent-400/10 text-parchment-400 cursor-not-allowed"
+																		}`}
+																	>
+																		Cast
+																	</button>
+																</div>
+																{spellData && (
+																	<>
+																		<div className="text-xs text-parchment-300 leading-relaxed mb-2">
+																			{spellData.description}
+																		</div>
+																		<div className="flex flex-wrap gap-3 text-xs text-parchment-400">
+																			<span><strong>Casting Time:</strong> {spellData.castingTime}</span>
+																			<span><strong>Range:</strong> {spellData.range}</span>
+																			<span><strong>Components:</strong> {spellData.components.join(", ")}</span>
+																			<span><strong>Duration:</strong> {spellData.duration}</span>
+																		</div>
+																	</>
+																)}
+															</div>
+														);
+													})}
+												</div>
+											</div>
 										)}
 
 									{(!character.cantrips ||
@@ -1481,23 +1849,157 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 							)}
 
 							{featuresTab === "inventory" && (
-								<div className="space-y-2">
-									{equipment && equipment.length > 0 ? (
-										equipment.map((item, idx) => (
+								<div className="space-y-4">
+									{/* Carrying Capacity */}
+									<div className="bg-background-secondary/50 border border-accent-400/20 rounded-lg p-3">
+										<div className="flex items-center justify-between mb-2">
+											<span className="text-xs text-parchment-400 uppercase tracking-wider">
+												Carrying Capacity
+											</span>
+											<span className="text-sm font-semibold text-accent-400">
+												{currentWeight} / {maxCarryingCapacity} lbs
+											</span>
+										</div>
+										<div className="w-full bg-background-tertiary rounded-full h-2">
 											<div
-												key={idx}
-												className="bg-background-secondary border border-accent-400/30 rounded-lg p-3"
-											>
-												<div className="text-sm text-parchment-200">
-													{item}
+												className={`h-2 rounded-full transition-all ${
+													currentWeight > maxCarryingCapacity
+														? "bg-red-500"
+														: "bg-accent-400"
+												}`}
+												style={{
+													width: `${Math.min(
+														(currentWeight / maxCarryingCapacity) * 100,
+														100
+													)}%`,
+												}}
+											/>
+										</div>
+									</div>
+
+									{/* Add Item Button */}
+									<button
+										onClick={() => setShowAddItem(true)}
+										className="w-full py-2 px-3 rounded bg-accent-400/20 hover:bg-accent-400/30 border border-accent-400/40 text-accent-400 text-xs font-semibold transition-colors"
+									>
+										+ Add Item
+									</button>
+
+									{/* Add Item Dialog */}
+									{showAddItem && (
+										<div className="bg-background-secondary/50 border border-accent-400/20 rounded-lg p-4">
+											<div className="text-sm text-accent-400 uppercase tracking-wider mb-3 font-semibold">
+												Add New Item
+											</div>
+											<div className="space-y-3">
+												<div>
+													<label className="text-xs text-parchment-400 uppercase tracking-wider block mb-1">
+														Item Name
+													</label>
+													<input
+														type="text"
+														value={newItemName}
+														onChange={(e) => setNewItemName(e.target.value)}
+														className="w-full bg-background-tertiary border border-accent-400/30 rounded px-3 py-2 text-sm text-parchment-100 focus:outline-none focus:border-accent-400"
+														placeholder="Enter item name..."
+													/>
+												</div>
+												<div className="flex gap-2">
+													<button
+														onClick={() => {
+															setShowAddItem(false);
+															setNewItemName("");
+														}}
+														className="flex-1 px-4 py-2 rounded bg-background-tertiary hover:bg-background-tertiary/70 text-parchment-300 text-xs font-semibold transition-colors"
+													>
+														Cancel
+													</button>
+													<button
+														onClick={addItem}
+														className="flex-1 px-4 py-2 rounded bg-accent-400 hover:bg-accent-400/80 text-background-primary text-xs font-semibold transition-colors"
+													>
+														Add Item
+													</button>
 												</div>
 											</div>
-										))
-									) : (
-										<div className="text-center py-8 text-parchment-400 text-sm">
-											No equipment
 										</div>
 									)}
+
+									{/* Inventory Items */}
+									<div className="space-y-2">
+										{inventoryItems && inventoryItems.length > 0 ? (
+											inventoryItems.map((item, idx) => {
+												const isArmor = item.toLowerCase().includes("armor") || item.toLowerCase().includes("leather") || item.toLowerCase().includes("chain");
+												const isShield = item.toLowerCase().includes("shield");
+												const isEquipped = equippedArmor === item || (isShield && equippedShield);
+
+												return (
+													<div
+														key={idx}
+														className={`bg-background-secondary border rounded-lg p-2 ${
+															isEquipped
+																? "border-accent-400 bg-accent-400/10"
+																: "border-accent-400/30"
+														}`}
+													>
+														<div className="flex items-center justify-between">
+															<div className="flex items-center gap-2 flex-1 min-w-0">
+																<span className="font-semibold text-parchment-100 text-sm truncate">
+																	{item}
+																</span>
+																{isEquipped && (
+																	<span className="text-xs uppercase tracking-wider text-accent-400 bg-accent-400/20 px-1.5 py-0.5 rounded flex-shrink-0">
+																		Equipped
+																	</span>
+																)}
+																{isArmor && !isShield && (
+																	<span className="text-xs text-parchment-400 flex-shrink-0">
+																		(Armor)
+																	</span>
+																)}
+																{isShield && (
+																	<span className="text-xs text-parchment-400 flex-shrink-0">
+																		(Shield)
+																	</span>
+																)}
+																<span className="text-xs text-parchment-400 flex-shrink-0">
+																	1 lb
+																</span>
+															</div>
+															<div className="flex gap-1 ml-2">
+																{(isArmor || isShield) && (
+																	<button
+																		onClick={() =>
+																			isShield
+																				? toggleEquipShield()
+																				: toggleEquipArmor(item)
+																		}
+																		className={`px-2 py-1 rounded text-xs font-semibold transition-colors ${
+																			isEquipped
+																				? "bg-background-tertiary hover:bg-background-tertiary/70 text-parchment-300"
+																				: "bg-accent-400/20 hover:bg-accent-400/30 text-accent-400"
+																		}`}
+																	>
+																		{isEquipped ? "Unequip" : "Equip"}
+																	</button>
+																)}
+																<button
+																	onClick={() => removeItem(idx)}
+																	className="px-2 py-1 rounded bg-red-900/20 hover:bg-red-900/30 text-red-400 text-xs font-semibold transition-colors"
+																>
+																	×
+																</button>
+															</div>
+														</div>
+													</div>
+												);
+											})
+										) : (
+											<div className="text-center py-8 text-parchment-400 text-sm">
+												No equipment
+											</div>
+										)}
+									</div>
 								</div>
 							)}
 
