@@ -182,8 +182,10 @@ function getSpellData(spellName: string, className: string): SpellData | null {
 
 	// Check all spell levels (level1, level2, etc.)
 	for (const [key, levelSpells] of Object.entries(classSpells)) {
-		if (key.startsWith('level') && Array.isArray(levelSpells)) {
-			const spell = levelSpells.find((s: SpellData) => s.name === spellName);
+		if (key.startsWith("level") && Array.isArray(levelSpells)) {
+			const spell = levelSpells.find(
+				(s: SpellData) => s.name === spellName
+			);
 			if (spell) return spell;
 		}
 	}
@@ -262,8 +264,12 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 	const [featuresTab, setFeaturesTab] = useState<
 		"features" | "actions" | "spells" | "inventory" | "notes"
 	>("features");
-	const [featureFilter, setFeatureFilter] = useState<"all" | "species" | "subspecies" | "class">("all");
-	const [actionFilter, setActionFilter] = useState<"all" | "weapons" | "species" | "subspecies" | "class">("all");
+	const [featureFilter, setFeatureFilter] = useState<
+		"all" | "species" | "subspecies" | "class"
+	>("all");
+	const [actionFilter, setActionFilter] = useState<
+		"all" | "weapons" | "species" | "subspecies" | "class"
+	>("all");
 
 	// HP and combat state
 	const [currentHP, setCurrentHP] = useState(currentHitPoints);
@@ -271,22 +277,37 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 	const [hpAmount, setHpAmount] = useState("");
 
 	// Death saves
-	const [deathSaveSuccesses, setDeathSaveSuccesses] = useState(character.deathSaves?.successes || 0);
-	const [deathSaveFailures, setDeathSaveFailures] = useState(character.deathSaves?.failures || 0);
+	const [deathSaveSuccesses, setDeathSaveSuccesses] = useState(
+		character.deathSaves?.successes || 0
+	);
+	const [deathSaveFailures, setDeathSaveFailures] = useState(
+		character.deathSaves?.failures || 0
+	);
 
 	// Hit dice tracking (starts at character level)
-	const [currentHitDice, setCurrentHitDice] = useState(character.currentHitDice || level);
+	const [currentHitDice, setCurrentHitDice] = useState(
+		character.currentHitDice || level
+	);
 	const [isShortResting, setIsShortResting] = useState(false);
 	const [hitDiceToSpend, setHitDiceToSpend] = useState(0);
 
 	// Conditions tracking
 	const [activeConditions, setActiveConditions] = useState<
 		Map<string, number | null>
-	>(new Map(character.activeConditions ? Object.entries(character.activeConditions) : []));
+	>(
+		new Map(
+			character.activeConditions
+				? Object.entries(character.activeConditions)
+				: []
+		)
+	);
 	const [showConditionPicker, setShowConditionPicker] = useState(false);
 
 	// Inspiration
 	const [hasInspiration, setHasInspiration] = useState(false);
+
+	// Zoom state for responsive scaling
+	const [zoom, setZoom] = useState(100);
 
 	// Calculate max spell slots based on class and level
 	const maxSpellSlots = (() => {
@@ -317,8 +338,12 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 	});
 
 	// Spell management
-	const [characterCantrips, setCharacterCantrips] = useState<string[]>(character.cantrips || []);
-	const [characterSpells, setCharacterSpells] = useState<string[]>(character.spells || []);
+	const [characterCantrips, setCharacterCantrips] = useState<string[]>(
+		character.cantrips || []
+	);
+	const [characterSpells, setCharacterSpells] = useState<string[]>(
+		character.spells || []
+	);
 	const [showAddSpell, setShowAddSpell] = useState(false);
 	const [newSpellName, setNewSpellName] = useState("");
 	const [newSpellLevel, setNewSpellLevel] = useState<"cantrip" | 1>(1);
@@ -336,9 +361,15 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 					// Search all classes
 					Object.values(SPELLS_DATA).forEach((classSpells) => {
 						// Search cantrips
-						if (newSpellLevel === "cantrip" && classSpells.cantrips) {
+						if (
+							newSpellLevel === "cantrip" &&
+							classSpells.cantrips
+						) {
 							classSpells.cantrips.forEach((s) => {
-								if (s.name.toLowerCase().includes(query) && !spells.includes(s.name)) {
+								if (
+									s.name.toLowerCase().includes(query) &&
+									!spells.includes(s.name)
+								) {
 									spells.push(s.name);
 								}
 							});
@@ -350,7 +381,10 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 							const levelSpells = classSpells[levelKey];
 							if (Array.isArray(levelSpells)) {
 								levelSpells.forEach((s: SpellData) => {
-									if (s.name.toLowerCase().includes(query) && !spells.includes(s.name)) {
+									if (
+										s.name.toLowerCase().includes(query) &&
+										!spells.includes(s.name)
+									) {
 										spells.push(s.name);
 									}
 								});
@@ -359,13 +393,21 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 					});
 				} else {
 					// Search only character's class
-					const availableSpells = SPELLS_DATA[charClass.name.toLowerCase()];
+					const availableSpells =
+						SPELLS_DATA[charClass.name.toLowerCase()];
 					if (availableSpells) {
 						// Search cantrips
-						if (newSpellLevel === "cantrip" && availableSpells.cantrips) {
-							spells.push(...availableSpells.cantrips
-								.filter((s) => s.name.toLowerCase().includes(query))
-								.map((s) => s.name));
+						if (
+							newSpellLevel === "cantrip" &&
+							availableSpells.cantrips
+						) {
+							spells.push(
+								...availableSpells.cantrips
+									.filter((s) =>
+										s.name.toLowerCase().includes(query)
+									)
+									.map((s) => s.name)
+							);
 						}
 
 						// Search level spells
@@ -373,9 +415,13 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 							const levelKey = `level${newSpellLevel}`;
 							const levelSpells = availableSpells[levelKey];
 							if (Array.isArray(levelSpells)) {
-								spells.push(...levelSpells
-									.filter((s: SpellData) => s.name.toLowerCase().includes(query))
-									.map((s: SpellData) => s.name));
+								spells.push(
+									...levelSpells
+										.filter((s: SpellData) =>
+											s.name.toLowerCase().includes(query)
+										)
+										.map((s: SpellData) => s.name)
+								);
 							}
 						}
 					}
@@ -387,28 +433,40 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 
 	// Inventory management
 	const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>(() =>
-		equipment.map((itemName) => lookupItemData(itemName)).filter((item): item is InventoryItem => item !== null)
+		equipment
+			.map((itemName) => lookupItemData(itemName))
+			.filter((item): item is InventoryItem => item !== null)
 	);
-	const [equippedArmor, setEquippedArmor] = useState<string | null>(character.equippedArmor || null);
-	const [equippedShield, setEquippedShield] = useState(character.equippedShield || false);
+	const [equippedArmor, setEquippedArmor] = useState<string | null>(
+		character.equippedArmor || null
+	);
+	const [equippedShield, setEquippedShield] = useState(
+		character.equippedShield || false
+	);
 	const [showAddItem, setShowAddItem] = useState(false);
 	const [newItemName, setNewItemName] = useState("");
 	const [selectedItem, setSelectedItem] = useState<string | null>(null);
 	const [showSuggestions, setShowSuggestions] = useState(false);
 	const [isCustomItem, setIsCustomItem] = useState(false);
-	const [customItemType, setCustomItemType] = useState<"weapon" | "armor" | "shield" | "other">("other");
+	const [customItemType, setCustomItemType] = useState<
+		"weapon" | "armor" | "shield" | "other"
+	>("other");
 	const [customDamage, setCustomDamage] = useState("");
 	const [customDamageType, setCustomDamageType] = useState("");
 	const [customArmorClass, setCustomArmorClass] = useState("");
-	const [customDexModifier, setCustomDexModifier] = useState<"full" | "max2" | "none">("full");
+	const [customDexModifier, setCustomDexModifier] = useState<
+		"full" | "max2" | "none"
+	>("full");
 	const [customWeight, setCustomWeight] = useState("");
 
 	// Get filtered item suggestions
 	const availableItems = getAllAvailableItems();
 	const filteredItems = newItemName.trim()
-		? availableItems.filter((item) =>
-				item.toLowerCase().includes(newItemName.toLowerCase())
-		  ).slice(0, 10) // Limit to 10 suggestions
+		? availableItems
+				.filter((item) =>
+					item.toLowerCase().includes(newItemName.toLowerCase())
+				)
+				.slice(0, 10) // Limit to 10 suggestions
 		: [];
 
 	// Calculate carrying capacity (STR score × 15)
@@ -426,7 +484,9 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 
 		// Find equipped armor
 		if (equippedArmor) {
-			const armorItem = inventoryItems.find((item) => item.name === equippedArmor);
+			const armorItem = inventoryItems.find(
+				(item) => item.name === equippedArmor
+			);
 			if (armorItem) {
 				const armorData = armorItem.armorData || armorItem.customStats;
 				if (armorData) {
@@ -434,7 +494,9 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 
 					// Apply DEX modifier based on armor type
 					if (armorItem.armorData) {
-						const dexMod = getAbilityModifier(abilityScores.dexterity);
+						const dexMod = getAbilityModifier(
+							abilityScores.dexterity
+						);
 						if (armorItem.armorData.dexModifier === "full") {
 							// Light armor: full DEX
 							calculatedAC = baseAC + dexMod;
@@ -518,6 +580,28 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 		equippedShield,
 	]);
 
+	// Update zoom based on viewport width
+	useEffect(() => {
+		const updateZoom = () => {
+			const width = window.innerWidth;
+			let newZoom = 100;
+
+			if (width >= 3840) {
+				newZoom = 130; // 4K or larger
+			} else if (width > 1920) {
+				newZoom = 100; // Between 1080p and 4K
+			} else {
+				newZoom = 70; // 1080p or less
+			}
+
+			setZoom(newZoom);
+		};
+
+		updateZoom();
+		window.addEventListener("resize", updateZoom);
+		return () => window.removeEventListener("resize", updateZoom);
+	}, []);
+
 	// HP functions
 	const applyHealing = () => {
 		const amount = parseInt(hpAmount) || 0;
@@ -534,9 +618,13 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 
 	const toggleDeathSave = (type: "success" | "failure", count: number) => {
 		if (type === "success") {
-			setDeathSaveSuccesses(deathSaveSuccesses === count ? count - 1 : count);
+			setDeathSaveSuccesses(
+				deathSaveSuccesses === count ? count - 1 : count
+			);
 		} else {
-			setDeathSaveFailures(deathSaveFailures === count ? count - 1 : count);
+			setDeathSaveFailures(
+				deathSaveFailures === count ? count - 1 : count
+			);
 		}
 	};
 
@@ -588,10 +676,17 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 	};
 
 	const longRest = () => {
-		// On long rest: restore HP to max and restore up to half of total hit dice (minimum 1)
+		// On long rest: restore HP to max, restore up to half of total hit dice (minimum 1), and restore all spell slots
 		setCurrentHP(maxHitPoints);
 		const restoredAmount = Math.max(1, Math.floor(level / 2));
 		setCurrentHitDice(Math.min(currentHitDice + restoredAmount, level));
+
+		// Restore all spell slots
+		setCurrentSpellSlots({
+			1: maxSpellSlots[1],
+			2: maxSpellSlots[2],
+			3: maxSpellSlots[3],
+		});
 	};
 
 	// Conditions functions
@@ -635,10 +730,13 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 
 	// Spell management functions
 	const castSpell = (spellLevel: number) => {
-		if (spellLevel > 0 && currentSpellSlots[spellLevel as keyof typeof currentSpellSlots] > 0) {
-			setCurrentSpellSlots(prev => ({
+		if (
+			spellLevel > 0 &&
+			currentSpellSlots[spellLevel as keyof typeof currentSpellSlots] > 0
+		) {
+			setCurrentSpellSlots((prev) => ({
 				...prev,
-				[spellLevel]: prev[spellLevel as keyof typeof prev] - 1
+				[spellLevel]: prev[spellLevel as keyof typeof prev] - 1,
 			}));
 		}
 	};
@@ -684,9 +782,11 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 			// Add stats based on item type
 			if (customItemType === "weapon") {
 				customItem.customStats!.damage = customDamage || "1d4";
-				customItem.customStats!.damageType = customDamageType || "Bludgeoning";
+				customItem.customStats!.damageType =
+					customDamageType || "Bludgeoning";
 			} else if (customItemType === "armor") {
-				customItem.customStats!.armorClass = parseInt(customArmorClass) || 11;
+				customItem.customStats!.armorClass =
+					parseInt(customArmorClass) || 11;
 				customItem.customStats!.dexModifier = customDexModifier;
 				customItem.customStats!.category = "Light Armor";
 			} else if (customItemType === "shield") {
@@ -772,7 +872,15 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 
 	return (
 		<div className="h-screen bg-background-primary text-parchment-100 flex justify-center overflow-hidden">
-			<div className="h-screen max-w-[1600px] w-full flex flex-col overflow-hidden">
+			<div
+				className="w-full flex flex-col overflow-hidden"
+				style={{
+					zoom: `${zoom}%`,
+					minWidth: `1600px`,
+					maxWidth: `1600px`,
+					height: `${100 / (zoom / 100)}vh`,
+				}}
+			>
 				{/* Short Rest Modal */}
 				{isShortResting && (
 					<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
@@ -781,7 +889,8 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 								Short Rest
 							</h2>
 							<p className="text-parchment-300 text-sm mb-4">
-								Spend hit dice to recover hit points. You have {currentHitDice} hit dice available.
+								Spend hit dice to recover hit points. You have{" "}
+								{currentHitDice} hit dice available.
 							</p>
 
 							{/* Hit Dice Selector */}
@@ -791,7 +900,11 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 								</label>
 								<div className="flex items-center gap-3">
 									<button
-										onClick={() => setHitDiceToSpend(Math.max(0, hitDiceToSpend - 1))}
+										onClick={() =>
+											setHitDiceToSpend(
+												Math.max(0, hitDiceToSpend - 1)
+											)
+										}
 										className="w-10 h-10 rounded bg-background-tertiary hover:bg-accent-400/20 border border-accent-400/40 text-accent-400 font-bold transition-colors"
 									>
 										-
@@ -805,7 +918,14 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 										</div>
 									</div>
 									<button
-										onClick={() => setHitDiceToSpend(Math.min(currentHitDice, hitDiceToSpend + 1))}
+										onClick={() =>
+											setHitDiceToSpend(
+												Math.min(
+													currentHitDice,
+													hitDiceToSpend + 1
+												)
+											)
+										}
 										className="w-10 h-10 rounded bg-background-tertiary hover:bg-accent-400/20 border border-accent-400/40 text-accent-400 font-bold transition-colors"
 									>
 										+
@@ -843,7 +963,7 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 						{/* Left: Back Button & Character Name & Info */}
 						<div className="flex items-center gap-4">
 							<button
-								onClick={() => window.location.href = "/"}
+								onClick={() => (window.location.href = "/")}
 								className="px-3 py-2 rounded-lg transition-colors text-sm font-semibold bg-background-tertiary hover:bg-accent-400/20 text-parchment-300 hover:text-accent-400 border border-accent-400/20"
 							>
 								← Back
@@ -853,8 +973,10 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 									{name || "Unnamed Character"}
 								</h1>
 								<p className="text-parchment-300 text-sm">
-									{subspecies ? subspecies.name : species.name} -{" "}
-									{charClass.name} {level}
+									{subspecies
+										? subspecies.name
+										: species.name}{" "}
+									- {charClass.name} {level}
 								</p>
 							</div>
 						</div>
@@ -1178,7 +1300,9 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 										<span className="text-2xl font-bold text-accent-400">
 											{currentHitDice}
 										</span>
-										<span className="text-lg font-bold text-parchment-400">/</span>
+										<span className="text-lg font-bold text-parchment-400">
+											/
+										</span>
 										<span className="text-2xl font-bold text-parchment-100">
 											{level}
 										</span>
@@ -1209,7 +1333,13 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 											Perception
 										</span>
 										<span className="text-accent-400 font-semibold min-w-[2rem] text-right text-sm">
-											{10 + (skillProficiencies.includes("Perception") ? proficiencyBonus : 0) + wisMod}
+											{10 +
+												(skillProficiencies.includes(
+													"Perception"
+												)
+													? proficiencyBonus
+													: 0) +
+												wisMod}
 										</span>
 									</div>
 									<div className="flex items-center justify-between py-1 px-3 hover:bg-background-secondary/50 rounded transition-colors">
@@ -1217,7 +1347,13 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 											Investigation
 										</span>
 										<span className="text-accent-400 font-semibold min-w-[2rem] text-right text-sm">
-											{10 + (skillProficiencies.includes("Investigation") ? proficiencyBonus : 0) + intMod}
+											{10 +
+												(skillProficiencies.includes(
+													"Investigation"
+												)
+													? proficiencyBonus
+													: 0) +
+												intMod}
 										</span>
 									</div>
 									<div className="flex items-center justify-between py-1 px-3 hover:bg-background-secondary/50 rounded transition-colors">
@@ -1225,7 +1361,13 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 											Insight
 										</span>
 										<span className="text-accent-400 font-semibold min-w-[2rem] text-right text-sm">
-											{10 + (skillProficiencies.includes("Insight") ? proficiencyBonus : 0) + wisMod}
+											{10 +
+												(skillProficiencies.includes(
+													"Insight"
+												)
+													? proficiencyBonus
+													: 0) +
+												wisMod}
 										</span>
 									</div>
 								</div>
@@ -1241,17 +1383,24 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 									<div>
 										<div className="flex flex-wrap gap-2">
 											{activeConditions.size > 0 ? (
-												Array.from(activeConditions.entries()).map(([name, level]) => (
+												Array.from(
+													activeConditions.entries()
+												).map(([name, level]) => (
 													<div
 														key={name}
 														className="bg-background-secondary/50 border border-accent-400/20 rounded px-2 py-1 text-xs text-parchment-200 flex items-center gap-2"
 													>
 														<span>
 															{name}
-															{level !== null && ` ${level}`}
+															{level !== null &&
+																` ${level}`}
 														</span>
 														<button
-															onClick={() => removeCondition(name)}
+															onClick={() =>
+																removeCondition(
+																	name
+																)
+															}
 															className="text-parchment-300 hover:text-red-400 transition-colors"
 														>
 															✕
@@ -1273,19 +1422,27 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 												Exhaustion Level:
 											</div>
 											<div className="flex gap-1">
-												{[1, 2, 3, 4, 5, 6].map((lvl) => (
-													<button
-														key={lvl}
-														onClick={() => setExhaustionLevel(lvl)}
-														className={`flex-1 px-2 py-1 rounded text-xs font-semibold transition-colors ${
-															activeConditions.get("Exhaustion") === lvl
-																? "bg-accent-400 text-background-primary"
-																: "bg-background-tertiary/50 text-parchment-300 hover:bg-accent-400/20"
-														}`}
-													>
-														{lvl}
-													</button>
-												))}
+												{[1, 2, 3, 4, 5, 6].map(
+													(lvl) => (
+														<button
+															key={lvl}
+															onClick={() =>
+																setExhaustionLevel(
+																	lvl
+																)
+															}
+															className={`flex-1 px-2 py-1 rounded text-xs font-semibold transition-colors ${
+																activeConditions.get(
+																	"Exhaustion"
+																) === lvl
+																	? "bg-accent-400 text-background-primary"
+																	: "bg-background-tertiary/50 text-parchment-300 hover:bg-accent-400/20"
+															}`}
+														>
+															{lvl}
+														</button>
+													)
+												)}
 											</div>
 										</div>
 									)}
@@ -1294,7 +1451,12 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 									{showConditionPicker && (
 										<div className="overflow-y-auto space-y-2 pr-1 max-h-96">
 											{Object.entries(CONDITIONS_DATA)
-												.filter(([name]) => !activeConditions.has(name))
+												.filter(
+													([name]) =>
+														!activeConditions.has(
+															name
+														)
+												)
 												.map(([name, condition]) => (
 													<div
 														key={name}
@@ -1307,11 +1469,17 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 																	{name}
 																</div>
 																<div className="text-xs text-parchment-400 mt-1">
-																	{condition.description}
+																	{
+																		condition.description
+																	}
 																</div>
 															</div>
 															<button
-																onClick={() => toggleCondition(name)}
+																onClick={() =>
+																	toggleCondition(
+																		name
+																	)
+																}
 																className="ml-2 px-3 py-1 rounded text-xs font-semibold transition-colors flex-shrink-0 bg-background-tertiary text-parchment-300 hover:bg-accent-400/20"
 															>
 																Add
@@ -1319,17 +1487,31 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 														</div>
 
 														{/* Condition Effects */}
-														{condition.effects.length > 0 && (
+														{condition.effects
+															.length > 0 && (
 															<div className="mt-2 space-y-1">
-																{condition.effects.map((effect, idx) => (
-																	<div
-																		key={idx}
-																		className="text-xs text-parchment-300 flex items-start"
-																	>
-																		<span className="text-accent-400 mr-2">•</span>
-																		<span>{effect}</span>
-																	</div>
-																))}
+																{condition.effects.map(
+																	(
+																		effect,
+																		idx
+																	) => (
+																		<div
+																			key={
+																				idx
+																			}
+																			className="text-xs text-parchment-300 flex items-start"
+																		>
+																			<span className="text-accent-400 mr-2">
+																				•
+																			</span>
+																			<span>
+																				{
+																					effect
+																				}
+																			</span>
+																		</div>
+																	)
+																)}
 															</div>
 														)}
 													</div>
@@ -1339,10 +1521,16 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 
 									{/* Add/Hide Condition Button */}
 									<button
-										onClick={() => setShowConditionPicker(!showConditionPicker)}
+										onClick={() =>
+											setShowConditionPicker(
+												!showConditionPicker
+											)
+										}
 										className="w-full py-2 px-3 rounded bg-accent-400/20 hover:bg-accent-400/30 border border-accent-400/40 text-accent-400 text-xs font-semibold transition-colors"
 									>
-										{showConditionPicker ? "Hide Conditions" : "+ Add Condition"}
+										{showConditionPicker
+											? "Hide Conditions"
+											: "+ Add Condition"}
 									</button>
 								</div>
 							</div>
@@ -1356,7 +1544,9 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 									<div className="space-y-3">
 										{/* Armor Proficiencies */}
 										<div>
-											<div className="text-xs text-parchment-400 uppercase mb-1">Armor</div>
+											<div className="text-xs text-parchment-400 uppercase mb-1">
+												Armor
+											</div>
 											<div className="flex flex-wrap gap-2">
 												<div className="bg-background-secondary/50 border border-accent-400/20 rounded px-2 py-1 text-xs text-parchment-200">
 													Light Armor
@@ -1365,7 +1555,9 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 										</div>
 										{/* Weapon Proficiencies */}
 										<div>
-											<div className="text-xs text-parchment-400 uppercase mb-1">Weapons</div>
+											<div className="text-xs text-parchment-400 uppercase mb-1">
+												Weapons
+											</div>
 											<div className="flex flex-wrap gap-2">
 												<div className="bg-background-secondary/50 border border-accent-400/20 rounded px-2 py-1 text-xs text-parchment-200">
 													Simple Weapons
@@ -1386,7 +1578,9 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 										</div>
 										{/* Tool Proficiencies */}
 										<div>
-											<div className="text-xs text-parchment-400 uppercase mb-1">Tools</div>
+											<div className="text-xs text-parchment-400 uppercase mb-1">
+												Tools
+											</div>
 											<div className="flex flex-wrap gap-2">
 												<div className="bg-background-secondary/50 border border-accent-400/20 rounded px-2 py-1 text-xs text-parchment-200">
 													Musical Instruments
@@ -1395,7 +1589,9 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 										</div>
 										{/* Languages */}
 										<div>
-											<div className="text-xs text-parchment-400 uppercase mb-1">Languages</div>
+											<div className="text-xs text-parchment-400 uppercase mb-1">
+												Languages
+											</div>
 											<div className="flex flex-wrap gap-2">
 												<div className="bg-background-secondary/50 border border-accent-400/20 rounded px-2 py-1 text-xs text-parchment-200">
 													Common
@@ -1418,7 +1614,9 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 									<div className="space-y-3">
 										{/* Vulnerabilities */}
 										<div>
-											<div className="text-xs text-parchment-400 uppercase mb-1">Vulnerabilities</div>
+											<div className="text-xs text-parchment-400 uppercase mb-1">
+												Vulnerabilities
+											</div>
 											<div className="flex flex-wrap gap-2">
 												<div className="bg-background-secondary/50 border border-accent-400/20 rounded px-2 py-1 text-xs text-parchment-200">
 													None
@@ -1427,7 +1625,9 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 										</div>
 										{/* Resistances */}
 										<div>
-											<div className="text-xs text-parchment-400 uppercase mb-1">Resistances</div>
+											<div className="text-xs text-parchment-400 uppercase mb-1">
+												Resistances
+											</div>
 											<div className="flex flex-wrap gap-2">
 												<div className="bg-background-secondary/50 border border-accent-400/20 rounded px-2 py-1 text-xs text-parchment-200">
 													None
@@ -1436,7 +1636,9 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 										</div>
 										{/* Immunities */}
 										<div>
-											<div className="text-xs text-parchment-400 uppercase mb-1">Immunities</div>
+											<div className="text-xs text-parchment-400 uppercase mb-1">
+												Immunities
+											</div>
 											<div className="flex flex-wrap gap-2">
 												<div className="bg-background-secondary/50 border border-accent-400/20 rounded px-2 py-1 text-xs text-parchment-200">
 													None
@@ -1612,14 +1814,18 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 											{[1, 2, 3].map((i) => (
 												<button
 													key={i}
-													onClick={() => toggleDeathSave("success", i)}
+													onClick={() =>
+														toggleDeathSave(
+															"success",
+															i
+														)
+													}
 													className={`w-6 h-6 rounded-full border-2 transition-colors ${
 														deathSaveSuccesses >= i
 															? "bg-accent-400 border-accent-400"
 															: "border-accent-400/40 hover:bg-accent-400/20"
 													}`}
-												>
-												</button>
+												></button>
 											))}
 										</div>
 									</div>
@@ -1632,14 +1838,18 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 											{[1, 2, 3].map((i) => (
 												<button
 													key={i}
-													onClick={() => toggleDeathSave("failure", i)}
+													onClick={() =>
+														toggleDeathSave(
+															"failure",
+															i
+														)
+													}
 													className={`w-6 h-6 rounded-full border-2 transition-colors ${
 														deathSaveFailures >= i
 															? "bg-red-900/70 border-red-900"
 															: "border-red-900/30 hover:bg-red-900/20"
 													}`}
-												>
-												</button>
+												></button>
 											))}
 										</div>
 									</div>
@@ -1713,7 +1923,9 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 									{/* Filter Buttons */}
 									<div className="flex gap-2 pb-3 border-b border-accent-400/20">
 										<button
-											onClick={() => setFeatureFilter("all")}
+											onClick={() =>
+												setFeatureFilter("all")
+											}
 											className={`px-3 py-1.5 rounded text-xs font-semibold uppercase transition-colors ${
 												featureFilter === "all"
 													? "bg-accent-400 text-background-primary"
@@ -1723,7 +1935,9 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 											All
 										</button>
 										<button
-											onClick={() => setFeatureFilter("species")}
+											onClick={() =>
+												setFeatureFilter("species")
+											}
 											className={`px-3 py-1.5 rounded text-xs font-semibold uppercase transition-colors ${
 												featureFilter === "species"
 													? "bg-accent-400 text-background-primary"
@@ -1734,9 +1948,14 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 										</button>
 										{subspecies && (
 											<button
-												onClick={() => setFeatureFilter("subspecies")}
+												onClick={() =>
+													setFeatureFilter(
+														"subspecies"
+													)
+												}
 												className={`px-3 py-1.5 rounded text-xs font-semibold uppercase transition-colors ${
-													featureFilter === "subspecies"
+													featureFilter ===
+													"subspecies"
 														? "bg-accent-400 text-background-primary"
 														: "bg-background-tertiary text-parchment-300 hover:bg-accent-400/20"
 												}`}
@@ -1745,7 +1964,9 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 											</button>
 										)}
 										<button
-											onClick={() => setFeatureFilter("class")}
+											onClick={() =>
+												setFeatureFilter("class")
+											}
 											className={`px-3 py-1.5 rounded text-xs font-semibold uppercase transition-colors ${
 												featureFilter === "class"
 													? "bg-accent-400 text-background-primary"
@@ -1757,7 +1978,8 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 									</div>
 
 									{/* Species Traits */}
-									{(featureFilter === "all" || featureFilter === "species") &&
+									{(featureFilter === "all" ||
+										featureFilter === "species") &&
 										species.traits &&
 										species.traits.length > 0 && (
 											<>
@@ -1771,7 +1993,8 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 																{trait.name}
 															</span>
 															<span className="text-xs uppercase tracking-wider text-parchment-400 bg-background-tertiary px-2 py-0.5 rounded">
-																{species.name} Trait
+																{species.name}{" "}
+																Trait
 															</span>
 														</div>
 														<div className="text-xs text-parchment-300 leading-relaxed">
@@ -1783,7 +2006,8 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 										)}
 
 									{/* Subspecies Traits */}
-									{(featureFilter === "all" || featureFilter === "subspecies") &&
+									{(featureFilter === "all" ||
+										featureFilter === "subspecies") &&
 										subspecies?.traits &&
 										subspecies.traits.length > 0 && (
 											<>
@@ -1798,7 +2022,10 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 																	{trait.name}
 																</span>
 																<span className="text-xs uppercase tracking-wider text-parchment-400 bg-background-tertiary px-2 py-0.5 rounded">
-																	{subspecies.name} Trait
+																	{
+																		subspecies.name
+																	}{" "}
+																	Trait
 																</span>
 															</div>
 															<div className="text-xs text-parchment-300 leading-relaxed">
@@ -1813,7 +2040,8 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 										)}
 
 									{/* Class Features */}
-									{(featureFilter === "all" || featureFilter === "class") &&
+									{(featureFilter === "all" ||
+										featureFilter === "class") &&
 										charClass.features &&
 										charClass.features.length > 0 && (
 											<>
@@ -1828,10 +2056,15 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 														>
 															<div className="flex items-center gap-2 mb-2">
 																<span className="font-bold text-accent-400 uppercase text-sm">
-																	{feature.name}
+																	{
+																		feature.name
+																	}
 																</span>
 																<span className="text-xs uppercase tracking-wider text-parchment-400 bg-background-tertiary px-2 py-0.5 rounded">
-																	{charClass.name} Feature
+																	{
+																		charClass.name
+																	}{" "}
+																	Feature
 																</span>
 															</div>
 															<div className="text-xs text-parchment-300 leading-relaxed">
@@ -1851,7 +2084,9 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 									{/* Filter Buttons */}
 									<div className="flex gap-2 pb-3 border-b border-accent-400/20">
 										<button
-											onClick={() => setActionFilter("all")}
+											onClick={() =>
+												setActionFilter("all")
+											}
 											className={`px-3 py-1.5 rounded text-xs font-semibold uppercase transition-colors ${
 												actionFilter === "all"
 													? "bg-accent-400 text-background-primary"
@@ -1861,7 +2096,9 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 											All
 										</button>
 										<button
-											onClick={() => setActionFilter("weapons")}
+											onClick={() =>
+												setActionFilter("weapons")
+											}
 											className={`px-3 py-1.5 rounded text-xs font-semibold uppercase transition-colors ${
 												actionFilter === "weapons"
 													? "bg-accent-400 text-background-primary"
@@ -1871,7 +2108,9 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 											Weapons
 										</button>
 										<button
-											onClick={() => setActionFilter("species")}
+											onClick={() =>
+												setActionFilter("species")
+											}
 											className={`px-3 py-1.5 rounded text-xs font-semibold uppercase transition-colors ${
 												actionFilter === "species"
 													? "bg-accent-400 text-background-primary"
@@ -1882,9 +2121,14 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 										</button>
 										{subspecies && (
 											<button
-												onClick={() => setActionFilter("subspecies")}
+												onClick={() =>
+													setActionFilter(
+														"subspecies"
+													)
+												}
 												className={`px-3 py-1.5 rounded text-xs font-semibold uppercase transition-colors ${
-													actionFilter === "subspecies"
+													actionFilter ===
+													"subspecies"
 														? "bg-accent-400 text-background-primary"
 														: "bg-background-tertiary text-parchment-300 hover:bg-accent-400/20"
 												}`}
@@ -1893,7 +2137,9 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 											</button>
 										)}
 										<button
-											onClick={() => setActionFilter("class")}
+											onClick={() =>
+												setActionFilter("class")
+											}
 											className={`px-3 py-1.5 rounded text-xs font-semibold uppercase transition-colors ${
 												actionFilter === "class"
 													? "bg-accent-400 text-background-primary"
@@ -1905,71 +2151,88 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 									</div>
 
 									{/* Weapons */}
-									{(actionFilter === "all" || actionFilter === "weapons") && weapons.map((weapon, idx) => {
-										const attackData = calculateAttackBonus(
-											weapon.name,
-											weapon.properties,
-											strMod,
-											dexMod,
-											proficiencyBonus,
-											charClass
-										);
+									{(actionFilter === "all" ||
+										actionFilter === "weapons") &&
+										weapons.map((weapon, idx) => {
+											const attackData =
+												calculateAttackBonus(
+													weapon.name,
+													weapon.properties,
+													strMod,
+													dexMod,
+													proficiencyBonus,
+													charClass
+												);
 
-										return (
-											<div
-												key={idx}
-												className="bg-background-secondary border border-accent-400/30 rounded-lg p-4"
-											>
-												<div className="flex items-center justify-between mb-2">
-													<div className="flex items-center gap-2">
-														<span className="font-bold text-accent-400 uppercase text-sm">
-															{weapon.name}
-														</span>
-														<span className="text-xs uppercase tracking-wider text-parchment-400 bg-background-tertiary px-2 py-0.5 rounded">
-															Weapon Attack
-														</span>
-														{weapon.count > 1 && (
-															<span className="text-accent-400 text-xs">
-																×{weapon.count}
+											return (
+												<div
+													key={idx}
+													className="bg-background-secondary border border-accent-400/30 rounded-lg p-4"
+												>
+													<div className="flex items-center justify-between mb-2">
+														<div className="flex items-center gap-2">
+															<span className="font-bold text-accent-400 uppercase text-sm">
+																{weapon.name}
 															</span>
-														)}
+															<span className="text-xs uppercase tracking-wider text-parchment-400 bg-background-tertiary px-2 py-0.5 rounded">
+																Weapon Attack
+															</span>
+															{weapon.count >
+																1 && (
+																<span className="text-accent-400 text-xs">
+																	×
+																	{
+																		weapon.count
+																	}
+																</span>
+															)}
+														</div>
+														<div className="text-sm text-accent-400 font-semibold">
+															{formatModifier(
+																attackData.attackBonus
+															)}{" "}
+															to hit
+														</div>
 													</div>
-													<div className="text-sm text-accent-400 font-semibold">
-														{formatModifier(
-															attackData.attackBonus
-														)}{" "}
-														to hit
+													<div className="text-xs text-parchment-300 leading-relaxed">
+														{
+															weapon.properties
+																.damage
+														}
+														{attackData.damageBonus !==
+															0 &&
+															formatModifier(
+																attackData.damageBonus
+															)}{" "}
+														{
+															weapon.properties
+																.damageType
+														}{" "}
+														damage
+														{weapon.properties
+															.properties.length >
+															0 &&
+															` - ${weapon.properties.properties.join(
+																", "
+															)}`}
 													</div>
 												</div>
-												<div className="text-xs text-parchment-300 leading-relaxed">
-													{weapon.properties.damage}
-													{attackData.damageBonus !==
-														0 &&
-														formatModifier(
-															attackData.damageBonus
-														)}{" "}
-													{
-														weapon.properties
-															.damageType
-													} damage
-													{weapon.properties
-														.properties.length >
-														0 &&
-														` - ${weapon.properties.properties.join(
-															", "
-														)}`}
-												</div>
-											</div>
-										);
-									})}
+											);
+										})}
 
 									{/* Non-passive Species Traits */}
-									{(actionFilter === "all" || actionFilter === "species") &&
+									{(actionFilter === "all" ||
+										actionFilter === "species") &&
 										species.traits &&
-										species.traits.filter((trait) => !trait.isPassive).length > 0 && (
+										species.traits.filter(
+											(trait) => !trait.isPassive
+										).length > 0 && (
 											<>
 												{species.traits
-													.filter((trait) => !trait.isPassive)
+													.filter(
+														(trait) =>
+															!trait.isPassive
+													)
 													.map((trait) => (
 														<div
 															key={trait.name}
@@ -1980,11 +2243,16 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 																	{trait.name}
 																</span>
 																<span className="text-xs uppercase tracking-wider text-parchment-400 bg-background-tertiary px-2 py-0.5 rounded">
-																	{species.name} Trait
+																	{
+																		species.name
+																	}{" "}
+																	Trait
 																</span>
 															</div>
 															<div className="text-xs text-parchment-300 leading-relaxed">
-																{trait.description}
+																{
+																	trait.description
+																}
 															</div>
 														</div>
 													))}
@@ -1992,12 +2260,18 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 										)}
 
 									{/* Non-passive Subspecies Traits */}
-									{(actionFilter === "all" || actionFilter === "subspecies") &&
+									{(actionFilter === "all" ||
+										actionFilter === "subspecies") &&
 										subspecies?.traits &&
-										subspecies.traits.filter((trait) => !trait.isPassive).length > 0 && (
+										subspecies.traits.filter(
+											(trait) => !trait.isPassive
+										).length > 0 && (
 											<>
 												{subspecies.traits
-													.filter((trait) => !trait.isPassive)
+													.filter(
+														(trait) =>
+															!trait.isPassive
+													)
 													.map((trait) => (
 														<div
 															key={trait.name}
@@ -2008,11 +2282,16 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 																	{trait.name}
 																</span>
 																<span className="text-xs uppercase tracking-wider text-parchment-400 bg-background-tertiary px-2 py-0.5 rounded">
-																	{subspecies.name} Trait
+																	{
+																		subspecies.name
+																	}{" "}
+																	Trait
 																</span>
 															</div>
 															<div className="text-xs text-parchment-300 leading-relaxed">
-																{trait.description}
+																{
+																	trait.description
+																}
 															</div>
 														</div>
 													))}
@@ -2020,14 +2299,20 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 										)}
 
 									{/* Non-passive Class Features */}
-									{(actionFilter === "all" || actionFilter === "class") &&
+									{(actionFilter === "all" ||
+										actionFilter === "class") &&
 										charClass.features &&
-										charClass.features
-											.filter((f) => f.level <= level && !f.isPassive)
-											.length > 0 && (
+										charClass.features.filter(
+											(f) =>
+												f.level <= level && !f.isPassive
+										).length > 0 && (
 											<>
 												{charClass.features
-													.filter((f) => f.level <= level && !f.isPassive)
+													.filter(
+														(f) =>
+															f.level <= level &&
+															!f.isPassive
+													)
 													.map((feature) => (
 														<div
 															key={feature.name}
@@ -2035,14 +2320,21 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 														>
 															<div className="flex items-center gap-2 mb-2">
 																<span className="font-bold text-accent-400 uppercase text-sm">
-																	{feature.name}
+																	{
+																		feature.name
+																	}
 																</span>
 																<span className="text-xs uppercase tracking-wider text-parchment-400 bg-background-tertiary px-2 py-0.5 rounded">
-																	{charClass.name} Feature
+																	{
+																		charClass.name
+																	}{" "}
+																	Feature
 																</span>
 															</div>
 															<div className="text-xs text-parchment-300 leading-relaxed">
-																{feature.description}
+																{
+																	feature.description
+																}
 															</div>
 														</div>
 													))}
@@ -2075,15 +2367,33 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 													<select
 														value={newSpellLevel}
 														onChange={(e) => {
-															setNewSpellLevel(e.target.value === "cantrip" ? "cantrip" : parseInt(e.target.value) as 1);
+															setNewSpellLevel(
+																e.target
+																	.value ===
+																	"cantrip"
+																	? "cantrip"
+																	: (parseInt(
+																			e
+																				.target
+																				.value
+																	  ) as 1)
+															);
 															setNewSpellName("");
-															setSelectedSpell(null);
-															setShowSpellSuggestions(false);
+															setSelectedSpell(
+																null
+															);
+															setShowSpellSuggestions(
+																false
+															);
 														}}
 														className="w-full bg-background-tertiary border border-accent-400/30 rounded px-3 py-2 text-sm text-parchment-100 focus:outline-none focus:border-accent-400"
 													>
-														<option value="cantrip">Cantrip</option>
-														<option value="1">Level 1</option>
+														<option value="cantrip">
+															Cantrip
+														</option>
+														<option value="1">
+															Level 1
+														</option>
 													</select>
 												</div>
 
@@ -2092,17 +2402,29 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 													<input
 														type="checkbox"
 														id="searchAllSpells"
-														checked={searchAllSpells}
+														checked={
+															searchAllSpells
+														}
 														onChange={(e) => {
-															setSearchAllSpells(e.target.checked);
+															setSearchAllSpells(
+																e.target.checked
+															);
 															setNewSpellName("");
-															setSelectedSpell(null);
-															setShowSpellSuggestions(false);
+															setSelectedSpell(
+																null
+															);
+															setShowSpellSuggestions(
+																false
+															);
 														}}
 														className="w-4 h-4 rounded border-accent-400/30 bg-background-tertiary"
 													/>
-													<label htmlFor="searchAllSpells" className="text-xs text-parchment-300">
-														Search all spells (not just {charClass.name})
+													<label
+														htmlFor="searchAllSpells"
+														className="text-xs text-parchment-300"
+													>
+														Search all spells (not
+														just {charClass.name})
 													</label>
 												</div>
 
@@ -2114,53 +2436,96 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 														type="text"
 														value={newSpellName}
 														onChange={(e) => {
-															setNewSpellName(e.target.value);
-															setSelectedSpell(null);
-															setShowSpellSuggestions(true);
+															setNewSpellName(
+																e.target.value
+															);
+															setSelectedSpell(
+																null
+															);
+															setShowSpellSuggestions(
+																true
+															);
 														}}
-														onFocus={() => setShowSpellSuggestions(true)}
+														onFocus={() =>
+															setShowSpellSuggestions(
+																true
+															)
+														}
 														className="w-full bg-background-tertiary border border-accent-400/30 rounded px-3 py-2 text-sm text-parchment-100 focus:outline-none focus:border-accent-400"
 														placeholder="Type to search spells..."
 													/>
 
 													{/* Autocomplete Dropdown */}
-													{showSpellSuggestions && filteredSpells.length > 0 && (
-														<div className="absolute z-10 w-full mt-1 bg-background-secondary border border-accent-400/40 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-															{filteredSpells.map((spell) => (
-																<button
-																	key={spell}
-																	onClick={() => selectSpellFromSuggestion(spell)}
-																	className="w-full text-left px-3 py-2 text-sm text-parchment-200 hover:bg-accent-400/20 transition-colors"
-																>
-																	{spell}
-																</button>
-															))}
-														</div>
-													)}
+													{showSpellSuggestions &&
+														filteredSpells.length >
+															0 && (
+															<div className="absolute z-10 w-full mt-1 bg-background-secondary border border-accent-400/40 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+																{filteredSpells.map(
+																	(spell) => (
+																		<button
+																			key={
+																				spell
+																			}
+																			onClick={() =>
+																				selectSpellFromSuggestion(
+																					spell
+																				)
+																			}
+																			className="w-full text-left px-3 py-2 text-sm text-parchment-200 hover:bg-accent-400/20 transition-colors"
+																		>
+																			{
+																				spell
+																			}
+																		</button>
+																	)
+																)}
+															</div>
+														)}
 
 													{/* No matches message */}
-													{showSpellSuggestions && newSpellName.trim() && filteredSpells.length === 0 && (
-														<div className="absolute z-10 w-full mt-1 bg-background-secondary border border-accent-400/40 rounded-lg shadow-lg p-3">
-															<p className="text-xs text-parchment-400">
-																No spells found matching "{newSpellName}" for {charClass.name}
-															</p>
-														</div>
-													)}
+													{showSpellSuggestions &&
+														newSpellName.trim() &&
+														filteredSpells.length ===
+															0 && (
+															<div className="absolute z-10 w-full mt-1 bg-background-secondary border border-accent-400/40 rounded-lg shadow-lg p-3">
+																<p className="text-xs text-parchment-400">
+																	No spells
+																	found
+																	matching "
+																	{
+																		newSpellName
+																	}
+																	" for{" "}
+																	{
+																		charClass.name
+																	}
+																</p>
+															</div>
+														)}
 
 													{selectedSpell && (
 														<div className="text-xs text-accent-400 mt-1">
-															✓ Selected: {selectedSpell}
+															✓ Selected:{" "}
+															{selectedSpell}
 														</div>
 													)}
 												</div>
 												<div className="flex gap-2">
 													<button
 														onClick={() => {
-															setShowAddSpell(false);
+															setShowAddSpell(
+																false
+															);
 															setNewSpellName("");
-															setSelectedSpell(null);
-															setShowSpellSuggestions(false);
-															setSearchAllSpells(false);
+															setSelectedSpell(
+																null
+															);
+															setShowSpellSuggestions(
+																false
+															);
+															setSearchAllSpells(
+																false
+															);
 														}}
 														className="flex-1 px-4 py-2 rounded bg-background-tertiary hover:bg-background-tertiary/70 text-parchment-300 text-xs font-semibold transition-colors"
 													>
@@ -2168,7 +2533,9 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 													</button>
 													<button
 														onClick={addSpell}
-														disabled={!selectedSpell}
+														disabled={
+															!selectedSpell
+														}
 														className={`flex-1 px-4 py-2 rounded text-xs font-semibold transition-colors ${
 															selectedSpell
 																? "bg-accent-400 hover:bg-accent-400/80 text-background-primary"
@@ -2190,149 +2557,369 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 													Cantrips
 												</div>
 												<div className="space-y-3">
-													{characterCantrips.map((cantripName) => {
-														const spellData = getSpellData(cantripName, charClass.name);
-														return (
-															<div
-																key={cantripName}
-																className="bg-background-secondary border border-accent-400/30 rounded-lg p-4"
-															>
-																<div className="flex items-center justify-between mb-2">
-																	<div className="flex items-center gap-2">
-																		<span className="font-bold text-accent-400 uppercase text-sm">
-																			{cantripName}
-																		</span>
-																		<span className="text-xs uppercase tracking-wider text-parchment-400 bg-background-tertiary px-2 py-0.5 rounded">
-																			Cantrip
-																		</span>
+													{characterCantrips.map(
+														(cantripName) => {
+															const spellData =
+																getSpellData(
+																	cantripName,
+																	charClass.name
+																);
+															return (
+																<div
+																	key={
+																		cantripName
+																	}
+																	className="bg-background-secondary border border-accent-400/30 rounded-lg p-4"
+																>
+																	<div className="flex items-center justify-between mb-2">
+																		<div className="flex items-center gap-2">
+																			<span className="font-bold text-accent-400 uppercase text-sm">
+																				{
+																					cantripName
+																				}
+																			</span>
+																			<span className="text-xs uppercase tracking-wider text-parchment-400 bg-background-tertiary px-2 py-0.5 rounded">
+																				Cantrip
+																			</span>
+																		</div>
+																		<button className="px-3 py-1 rounded bg-accent-400/20 hover:bg-accent-400/30 border border-accent-400/40 text-accent-400 text-xs font-semibold transition-colors">
+																			Cast
+																		</button>
 																	</div>
-																	<button
-																		className="px-3 py-1 rounded bg-accent-400/20 hover:bg-accent-400/30 border border-accent-400/40 text-accent-400 text-xs font-semibold transition-colors"
-																	>
-																		Cast
-																	</button>
+																	{spellData && (
+																		<>
+																			<div className="text-xs text-parchment-300 leading-relaxed mb-2">
+																				{
+																					spellData.description
+																				}
+																			</div>
+																			<div className="flex flex-wrap gap-3 text-xs text-parchment-400">
+																				<span>
+																					<strong>
+																						Casting
+																						Time:
+																					</strong>{" "}
+																					{
+																						spellData.castingTime
+																					}
+																				</span>
+																				<span>
+																					<strong>
+																						Range:
+																					</strong>{" "}
+																					{
+																						spellData.range
+																					}
+																				</span>
+																				<span>
+																					<strong>
+																						Components:
+																					</strong>{" "}
+																					{spellData.components.join(
+																						", "
+																					)}
+																				</span>
+																				<span>
+																					<strong>
+																						Duration:
+																					</strong>{" "}
+																					{
+																						spellData.duration
+																					}
+																				</span>
+																			</div>
+																		</>
+																	)}
 																</div>
-																{spellData && (
-																	<>
-																		<div className="text-xs text-parchment-300 leading-relaxed mb-2">
-																			{spellData.description}
-																		</div>
-																		<div className="flex flex-wrap gap-3 text-xs text-parchment-400">
-																			<span><strong>Casting Time:</strong> {spellData.castingTime}</span>
-																			<span><strong>Range:</strong> {spellData.range}</span>
-																			<span><strong>Components:</strong> {spellData.components.join(", ")}</span>
-																			<span><strong>Duration:</strong> {spellData.duration}</span>
-																		</div>
-																	</>
-																)}
-															</div>
-														);
-													})}
+															);
+														}
+													)}
 												</div>
 											</div>
 										)}
 
 									{/* Level 1 Spells */}
-									{characterSpells &&
-										characterSpells.length > 0 && (
-											<div>
-												<div className="flex items-center justify-between mb-3">
-													<div className="text-sm text-accent-400 uppercase tracking-wider font-semibold">
-														Level 1 Spells
-													</div>
-													{/* Spell Slots */}
-													<div className="flex items-center gap-2">
-														<span className="text-xs text-parchment-400 uppercase">Spell Slots</span>
-														<div className="flex gap-1">
-															{maxSpellSlots[1] > 0 ? (
-																Array.from({ length: maxSpellSlots[1] }).map((_, i) => (
-																	<button
-																		key={i}
-																		onClick={() => {
-																			setCurrentSpellSlots(prev => ({
-																				...prev,
-																				1: prev[1] === i ? i + 1 : i
-																			}));
-																		}}
-																		className={`w-6 h-6 rounded border-2 transition-colors ${
-																			i < currentSpellSlots[1]
-																				? "bg-accent-400 border-accent-400"
-																				: "border-accent-400/40 hover:bg-accent-400/20"
-																		}`}
-																	/>
-																))
-															) : (
-																<span className="text-xs text-parchment-400 bg-background-tertiary px-2 py-1 rounded">0</span>
-															)}
-														</div>
-													</div>
+									{(maxSpellSlots[1] > 0 ||
+										(characterSpells &&
+											characterSpells.length > 0)) && (
+										<div>
+											<div className="flex items-center justify-between mb-3">
+												<div className="text-sm text-accent-400 uppercase tracking-wider font-semibold">
+													Level 1 Spells
 												</div>
-												<div className="space-y-3">
-													{characterSpells.map((spellName) => {
-														const spellData = getSpellData(spellName, charClass.name);
-														const canCast = currentSpellSlots[1] > 0;
-														return (
-															<div
-																key={spellName}
-																className={`bg-background-secondary border border-accent-400/30 rounded-lg p-4 transition-opacity ${
-																	!canCast ? "opacity-60" : ""
-																}`}
-															>
-																<div className="flex items-center justify-between mb-2">
-																	<div className="flex items-center gap-2">
-																		<span className="font-bold text-accent-400 uppercase text-sm">
-																			{spellName}
-																		</span>
-																		<span className="text-xs uppercase tracking-wider text-parchment-400 bg-background-tertiary px-2 py-0.5 rounded">
-																			Level 1
-																		</span>
-																		{spellData?.concentration && (
-																			<span className="text-xs uppercase tracking-wider text-parchment-400 bg-background-tertiary px-2 py-0.5 rounded">
-																				Concentration
-																			</span>
-																		)}
-																		{spellData?.ritual && (
-																			<span className="text-xs uppercase tracking-wider text-parchment-400 bg-background-tertiary px-2 py-0.5 rounded">
-																				Ritual
-																			</span>
-																		)}
-																	</div>
-																	<button
-																		onClick={() => castSpell(1)}
-																		disabled={!canCast}
-																		className={`px-3 py-1 rounded border text-xs font-semibold transition-colors ${
-																			canCast
-																				? "bg-accent-400/20 hover:bg-accent-400/30 border-accent-400/40 text-accent-400"
-																				: "bg-background-tertiary/30 border-accent-400/10 text-parchment-400 cursor-not-allowed"
-																		}`}
-																	>
-																		Cast
-																	</button>
-																</div>
-																{spellData && (
-																	<>
-																		<div className="text-xs text-parchment-300 leading-relaxed mb-2">
-																			{spellData.description}
-																		</div>
-																		<div className="flex flex-wrap gap-3 text-xs text-parchment-400">
-																			<span><strong>Casting Time:</strong> {spellData.castingTime}</span>
-																			<span><strong>Range:</strong> {spellData.range}</span>
-																			<span><strong>Components:</strong> {spellData.components.join(", ")}</span>
-																			<span><strong>Duration:</strong> {spellData.duration}</span>
-																		</div>
-																	</>
-																)}
-															</div>
-														);
-													})}
+												{/* Spell Slots */}
+												<div className="flex items-center gap-2">
+													<span className="text-xs text-parchment-400 uppercase">
+														Spell Slots
+													</span>
+													<div className="flex gap-1">
+														{maxSpellSlots[1] >
+														0 ? (
+															Array.from({
+																length: maxSpellSlots[1],
+															}).map((_, i) => (
+																<button
+																	key={i}
+																	onClick={() => {
+																		setCurrentSpellSlots(
+																			(
+																				prev
+																			) => ({
+																				...prev,
+																				1:
+																					prev[1] ===
+																					i
+																						? i +
+																						  1
+																						: i,
+																			})
+																		);
+																	}}
+																	className={`w-6 h-6 rounded border-2 transition-colors ${
+																		i <
+																		currentSpellSlots[1]
+																			? "bg-accent-400 border-accent-400"
+																			: "border-accent-400/40 hover:bg-accent-400/20"
+																	}`}
+																/>
+															))
+														) : (
+															<span className="text-xs text-parchment-400 bg-background-tertiary px-2 py-1 rounded">
+																0
+															</span>
+														)}
+													</div>
 												</div>
 											</div>
-										)}
+											{characterSpells &&
+											characterSpells.length > 0 ? (
+												<div className="space-y-3">
+													{characterSpells.map(
+														(spellName) => {
+															const spellData =
+																getSpellData(
+																	spellName,
+																	charClass.name
+																);
+															const canCast =
+																currentSpellSlots[1] >
+																0;
+															return (
+																<div
+																	key={
+																		spellName
+																	}
+																	className={`bg-background-secondary border border-accent-400/30 rounded-lg p-4 transition-opacity ${
+																		!canCast
+																			? "opacity-60"
+																			: ""
+																	}`}
+																>
+																	<div className="flex items-center justify-between mb-2">
+																		<div className="flex items-center gap-2">
+																			<span className="font-bold text-accent-400 uppercase text-sm">
+																				{
+																					spellName
+																				}
+																			</span>
+																			<span className="text-xs uppercase tracking-wider text-parchment-400 bg-background-tertiary px-2 py-0.5 rounded">
+																				Level
+																				1
+																			</span>
+																			{spellData?.concentration && (
+																				<span className="text-xs uppercase tracking-wider text-parchment-400 bg-background-tertiary px-2 py-0.5 rounded">
+																					Concentration
+																				</span>
+																			)}
+																			{spellData?.ritual && (
+																				<span className="text-xs uppercase tracking-wider text-parchment-400 bg-background-tertiary px-2 py-0.5 rounded">
+																					Ritual
+																				</span>
+																			)}
+																		</div>
+																		<button
+																			onClick={() =>
+																				castSpell(
+																					1
+																				)
+																			}
+																			disabled={
+																				!canCast
+																			}
+																			className={`px-3 py-1 rounded border text-xs font-semibold transition-colors ${
+																				canCast
+																					? "bg-accent-400/20 hover:bg-accent-400/30 border-accent-400/40 text-accent-400"
+																					: "bg-background-tertiary/30 border-accent-400/10 text-parchment-400 cursor-not-allowed"
+																			}`}
+																		>
+																			Cast
+																		</button>
+																	</div>
+																	{spellData && (
+																		<>
+																			<div className="text-xs text-parchment-300 leading-relaxed mb-2">
+																				{
+																					spellData.description
+																				}
+																			</div>
+																			<div className="flex flex-wrap gap-3 text-xs text-parchment-400">
+																				<span>
+																					<strong>
+																						Casting
+																						Time:
+																					</strong>{" "}
+																					{
+																						spellData.castingTime
+																					}
+																				</span>
+																				<span>
+																					<strong>
+																						Range:
+																					</strong>{" "}
+																					{
+																						spellData.range
+																					}
+																				</span>
+																				<span>
+																					<strong>
+																						Components:
+																					</strong>{" "}
+																					{spellData.components.join(
+																						", "
+																					)}
+																				</span>
+																				<span>
+																					<strong>
+																						Duration:
+																					</strong>{" "}
+																					{
+																						spellData.duration
+																					}
+																				</span>
+																			</div>
+																		</>
+																	)}
+																</div>
+															);
+														}
+													)}
+												</div>
+											) : (
+												<div className="text-center py-4 text-parchment-400 text-xs">
+													No level 1 spells learned
+													yet
+												</div>
+											)}
+										</div>
+									)}
+
+									{/* Level 2 Spells */}
+									{maxSpellSlots[2] > 0 && (
+										<div>
+											<div className="flex items-center justify-between mb-3">
+												<div className="text-sm text-accent-400 uppercase tracking-wider font-semibold">
+													Level 2 Spells
+												</div>
+												{/* Spell Slots */}
+												<div className="flex items-center gap-2">
+													<span className="text-xs text-parchment-400 uppercase">
+														Spell Slots
+													</span>
+													<div className="flex gap-1">
+														{Array.from({
+															length: maxSpellSlots[2],
+														}).map((_, i) => (
+															<button
+																key={i}
+																onClick={() => {
+																	setCurrentSpellSlots(
+																		(
+																			prev
+																		) => ({
+																			...prev,
+																			2:
+																				prev[2] ===
+																				i
+																					? i +
+																					  1
+																					: i,
+																		})
+																	);
+																}}
+																className={`w-6 h-6 rounded border-2 transition-colors ${
+																	i <
+																	currentSpellSlots[2]
+																		? "bg-accent-400 border-accent-400"
+																		: "border-accent-400/40 hover:bg-accent-400/20"
+																}`}
+															/>
+														))}
+													</div>
+												</div>
+											</div>
+											<div className="text-center py-4 text-parchment-400 text-xs">
+												No level 2 spells learned yet
+											</div>
+										</div>
+									)}
+
+									{/* Level 3 Spells */}
+									{maxSpellSlots[3] > 0 && (
+										<div>
+											<div className="flex items-center justify-between mb-3">
+												<div className="text-sm text-accent-400 uppercase tracking-wider font-semibold">
+													Level 3 Spells
+												</div>
+												{/* Spell Slots */}
+												<div className="flex items-center gap-2">
+													<span className="text-xs text-parchment-400 uppercase">
+														Spell Slots
+													</span>
+													<div className="flex gap-1">
+														{Array.from({
+															length: maxSpellSlots[3],
+														}).map((_, i) => (
+															<button
+																key={i}
+																onClick={() => {
+																	setCurrentSpellSlots(
+																		(
+																			prev
+																		) => ({
+																			...prev,
+																			3:
+																				prev[3] ===
+																				i
+																					? i +
+																					  1
+																					: i,
+																		})
+																	);
+																}}
+																className={`w-6 h-6 rounded border-2 transition-colors ${
+																	i <
+																	currentSpellSlots[3]
+																		? "bg-accent-400 border-accent-400"
+																		: "border-accent-400/40 hover:bg-accent-400/20"
+																}`}
+															/>
+														))}
+													</div>
+												</div>
+											</div>
+											<div className="text-center py-4 text-parchment-400 text-xs">
+												No level 3 spells learned yet
+											</div>
+										</div>
+									)}
 
 									{(!characterCantrips ||
 										characterCantrips.length === 0) &&
 										(!characterSpells ||
-											characterSpells.length === 0) && (
+											characterSpells.length === 0) &&
+										maxSpellSlots[1] === 0 &&
+										maxSpellSlots[2] === 0 &&
+										maxSpellSlots[3] === 0 && (
 											<div className="text-center py-8 text-parchment-400 text-sm">
 												No spells available
 											</div>
@@ -2349,19 +2936,23 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 												Carrying Capacity
 											</span>
 											<span className="text-sm font-semibold text-accent-400">
-												{currentWeight} / {maxCarryingCapacity} lbs
+												{currentWeight} /{" "}
+												{maxCarryingCapacity} lbs
 											</span>
 										</div>
 										<div className="w-full bg-background-tertiary rounded-full h-2">
 											<div
 												className={`h-2 rounded-full transition-all ${
-													currentWeight > maxCarryingCapacity
+													currentWeight >
+													maxCarryingCapacity
 														? "bg-red-500"
 														: "bg-accent-400"
 												}`}
 												style={{
 													width: `${Math.min(
-														(currentWeight / maxCarryingCapacity) * 100,
+														(currentWeight /
+															maxCarryingCapacity) *
+															100,
 														100
 													)}%`,
 												}}
@@ -2393,51 +2984,93 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 															type="text"
 															value={newItemName}
 															onChange={(e) => {
-																setNewItemName(e.target.value);
-																setSelectedItem(null);
-																setShowSuggestions(true);
+																setNewItemName(
+																	e.target
+																		.value
+																);
+																setSelectedItem(
+																	null
+																);
+																setShowSuggestions(
+																	true
+																);
 															}}
-															onFocus={() => setShowSuggestions(true)}
+															onFocus={() =>
+																setShowSuggestions(
+																	true
+																)
+															}
 															className="w-full bg-background-tertiary border border-accent-400/30 rounded px-3 py-2 text-sm text-parchment-100 focus:outline-none focus:border-accent-400"
 															placeholder="Type to search items..."
 														/>
 
 														{/* Autocomplete Dropdown */}
-														{showSuggestions && filteredItems.length > 0 && (
-															<div className="absolute z-10 w-full mt-1 bg-background-secondary border border-accent-400/40 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-																{filteredItems.map((item) => (
-																	<button
-																		key={item}
-																		onClick={() => selectItemFromSuggestion(item)}
-																		className="w-full text-left px-3 py-2 text-sm text-parchment-200 hover:bg-accent-400/20 transition-colors"
-																	>
-																		{item}
-																	</button>
-																))}
-															</div>
-														)}
+														{showSuggestions &&
+															filteredItems.length >
+																0 && (
+																<div className="absolute z-10 w-full mt-1 bg-background-secondary border border-accent-400/40 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+																	{filteredItems.map(
+																		(
+																			item
+																		) => (
+																			<button
+																				key={
+																					item
+																				}
+																				onClick={() =>
+																					selectItemFromSuggestion(
+																						item
+																					)
+																				}
+																				className="w-full text-left px-3 py-2 text-sm text-parchment-200 hover:bg-accent-400/20 transition-colors"
+																			>
+																				{
+																					item
+																				}
+																			</button>
+																		)
+																	)}
+																</div>
+															)}
 
 														{/* No matches - show "Add Custom" button */}
-														{showSuggestions && newItemName.trim() && filteredItems.length === 0 && (
-															<div className="absolute z-10 w-full mt-1 bg-background-secondary border border-accent-400/40 rounded-lg shadow-lg p-3">
-																<p className="text-xs text-parchment-400 mb-2">
-																	No items found matching "{newItemName}"
-																</p>
-																<button
-																	onClick={() => {
-																		setIsCustomItem(true);
-																		setShowSuggestions(false);
-																	}}
-																	className="w-full px-3 py-2 rounded bg-accent-400/20 hover:bg-accent-400/30 border border-accent-400/40 text-accent-400 text-xs font-semibold transition-colors"
-																>
-																	+ Add as Custom Item
-																</button>
-															</div>
-														)}
+														{showSuggestions &&
+															newItemName.trim() &&
+															filteredItems.length ===
+																0 && (
+																<div className="absolute z-10 w-full mt-1 bg-background-secondary border border-accent-400/40 rounded-lg shadow-lg p-3">
+																	<p className="text-xs text-parchment-400 mb-2">
+																		No items
+																		found
+																		matching
+																		"
+																		{
+																			newItemName
+																		}
+																		"
+																	</p>
+																	<button
+																		onClick={() => {
+																			setIsCustomItem(
+																				true
+																			);
+																			setShowSuggestions(
+																				false
+																			);
+																		}}
+																		className="w-full px-3 py-2 rounded bg-accent-400/20 hover:bg-accent-400/30 border border-accent-400/40 text-accent-400 text-xs font-semibold transition-colors"
+																	>
+																		+ Add as
+																		Custom
+																		Item
+																	</button>
+																</div>
+															)}
 
 														{selectedItem && (
 															<div className="text-xs text-accent-400 mt-1">
-																✓ Selected: {selectedItem}
+																✓ Selected:{" "}
+																{selectedItem}
 															</div>
 														)}
 													</div>
@@ -2451,8 +3084,12 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 														</div>
 														<button
 															onClick={() => {
-																setIsCustomItem(false);
-																setNewItemName("");
+																setIsCustomItem(
+																	false
+																);
+																setNewItemName(
+																	""
+																);
 															}}
 															className="text-xs text-parchment-400 hover:text-accent-400 transition-colors"
 														>
@@ -2470,8 +3107,15 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 															</label>
 															<input
 																type="text"
-																value={newItemName}
-																onChange={(e) => setNewItemName(e.target.value)}
+																value={
+																	newItemName
+																}
+																onChange={(e) =>
+																	setNewItemName(
+																		e.target
+																			.value
+																	)
+																}
 																className="w-full bg-background-tertiary border border-accent-400/30 rounded px-3 py-2 text-sm text-parchment-100 focus:outline-none focus:border-accent-400"
 																placeholder="Enter custom item name..."
 															/>
@@ -2483,14 +3127,35 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 																Item Type
 															</label>
 															<select
-																value={customItemType}
-																onChange={(e) => setCustomItemType(e.target.value as "weapon" | "armor" | "shield" | "other")}
+																value={
+																	customItemType
+																}
+																onChange={(e) =>
+																	setCustomItemType(
+																		e.target
+																			.value as
+																			| "weapon"
+																			| "armor"
+																			| "shield"
+																			| "other"
+																	)
+																}
 																className="w-full bg-background-tertiary border border-accent-400/30 rounded px-3 py-2 text-sm text-parchment-100 focus:outline-none focus:border-accent-400"
 															>
-																<option value="other">Other (Generic Item)</option>
-																<option value="weapon">Weapon</option>
-																<option value="armor">Armor</option>
-																<option value="shield">Shield</option>
+																<option value="other">
+																	Other
+																	(Generic
+																	Item)
+																</option>
+																<option value="weapon">
+																	Weapon
+																</option>
+																<option value="armor">
+																	Armor
+																</option>
+																<option value="shield">
+																	Shield
+																</option>
 															</select>
 														</div>
 
@@ -2500,8 +3165,15 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 															</label>
 															<input
 																type="number"
-																value={customWeight}
-																onChange={(e) => setCustomWeight(e.target.value)}
+																value={
+																	customWeight
+																}
+																onChange={(e) =>
+																	setCustomWeight(
+																		e.target
+																			.value
+																	)
+																}
 																className="w-full bg-background-tertiary border border-accent-400/30 rounded px-3 py-2 text-sm text-parchment-100 focus:outline-none focus:border-accent-400"
 																placeholder="1"
 																step="0.1"
@@ -2509,10 +3181,12 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 														</div>
 
 														{/* Weapon-specific fields */}
-														{customItemType === "weapon" && (
+														{customItemType ===
+															"weapon" && (
 															<>
 																<div className="text-xs text-accent-400 uppercase tracking-wider font-semibold mt-2">
-																	Weapon Properties
+																	Weapon
+																	Properties
 																</div>
 																<div className="grid grid-cols-2 gap-2">
 																	<div>
@@ -2521,20 +3195,41 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 																		</label>
 																		<input
 																			type="text"
-																			value={customDamage}
-																			onChange={(e) => setCustomDamage(e.target.value)}
+																			value={
+																				customDamage
+																			}
+																			onChange={(
+																				e
+																			) =>
+																				setCustomDamage(
+																					e
+																						.target
+																						.value
+																				)
+																			}
 																			className="w-full bg-background-tertiary border border-accent-400/30 rounded px-3 py-2 text-sm text-parchment-100 focus:outline-none focus:border-accent-400"
 																			placeholder="1d8"
 																		/>
 																	</div>
 																	<div>
 																		<label className="text-xs text-parchment-400 block mb-1">
-																			Damage Type
+																			Damage
+																			Type
 																		</label>
 																		<input
 																			type="text"
-																			value={customDamageType}
-																			onChange={(e) => setCustomDamageType(e.target.value)}
+																			value={
+																				customDamageType
+																			}
+																			onChange={(
+																				e
+																			) =>
+																				setCustomDamageType(
+																					e
+																						.target
+																						.value
+																				)
+																			}
 																			className="w-full bg-background-tertiary border border-accent-400/30 rounded px-3 py-2 text-sm text-parchment-100 focus:outline-none focus:border-accent-400"
 																			placeholder="Slashing"
 																		/>
@@ -2544,45 +3239,91 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 														)}
 
 														{/* Armor-specific fields */}
-														{customItemType === "armor" && (
+														{customItemType ===
+															"armor" && (
 															<>
 																<div className="text-xs text-accent-400 uppercase tracking-wider font-semibold mt-2">
-																	Armor Properties
+																	Armor
+																	Properties
 																</div>
 																<div>
 																	<label className="text-xs text-parchment-400 block mb-1">
-																		Armor Class (AC)
+																		Armor
+																		Class
+																		(AC)
 																	</label>
 																	<input
 																		type="number"
-																		value={customArmorClass}
-																		onChange={(e) => setCustomArmorClass(e.target.value)}
+																		value={
+																			customArmorClass
+																		}
+																		onChange={(
+																			e
+																		) =>
+																			setCustomArmorClass(
+																				e
+																					.target
+																					.value
+																			)
+																		}
 																		className="w-full bg-background-tertiary border border-accent-400/30 rounded px-3 py-2 text-sm text-parchment-100 focus:outline-none focus:border-accent-400"
 																		placeholder="14"
 																	/>
 																</div>
 																<div>
 																	<label className="text-xs text-parchment-400 block mb-1">
-																		DEX Modifier
+																		DEX
+																		Modifier
 																	</label>
 																	<select
-																		value={customDexModifier}
-																		onChange={(e) => setCustomDexModifier(e.target.value as "full" | "max2" | "none")}
+																		value={
+																			customDexModifier
+																		}
+																		onChange={(
+																			e
+																		) =>
+																			setCustomDexModifier(
+																				e
+																					.target
+																					.value as
+																					| "full"
+																					| "max2"
+																					| "none"
+																			)
+																		}
 																		className="w-full bg-background-tertiary border border-accent-400/30 rounded px-3 py-2 text-sm text-parchment-100 focus:outline-none focus:border-accent-400"
 																	>
-																		<option value="full">Full (Light Armor)</option>
-																		<option value="max2">Max +2 (Medium Armor)</option>
-																		<option value="none">None (Heavy Armor)</option>
+																		<option value="full">
+																			Full
+																			(Light
+																			Armor)
+																		</option>
+																		<option value="max2">
+																			Max
+																			+2
+																			(Medium
+																			Armor)
+																		</option>
+																		<option value="none">
+																			None
+																			(Heavy
+																			Armor)
+																		</option>
 																	</select>
 																</div>
 															</>
 														)}
 
 														{/* Shield info */}
-														{customItemType === "shield" && (
+														{customItemType ===
+															"shield" && (
 															<div className="bg-background-tertiary/30 border border-accent-400/20 rounded p-2">
 																<p className="text-xs text-parchment-400">
-																	Shield will automatically add +2 to AC when equipped.
+																	Shield will
+																	automatically
+																	add +2 to AC
+																	when
+																	equipped.
 																</p>
 															</div>
 														)}
@@ -2592,14 +3333,26 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 												<div className="flex gap-2 mt-4">
 													<button
 														onClick={() => {
-															setShowAddItem(false);
+															setShowAddItem(
+																false
+															);
 															setNewItemName("");
-															setSelectedItem(null);
-															setShowSuggestions(false);
-															setIsCustomItem(false);
+															setSelectedItem(
+																null
+															);
+															setShowSuggestions(
+																false
+															);
+															setIsCustomItem(
+																false
+															);
 															setCustomDamage("");
-															setCustomDamageType("");
-															setCustomArmorClass("");
+															setCustomDamageType(
+																""
+															);
+															setCustomArmorClass(
+																""
+															);
 															setCustomWeight("");
 														}}
 														className="flex-1 px-4 py-2 rounded bg-background-tertiary hover:bg-background-tertiary/70 text-parchment-300 text-xs font-semibold transition-colors"
@@ -2608,9 +3361,17 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 													</button>
 													<button
 														onClick={addItem}
-														disabled={isCustomItem ? !newItemName.trim() : !selectedItem}
+														disabled={
+															isCustomItem
+																? !newItemName.trim()
+																: !selectedItem
+														}
 														className={`flex-1 px-4 py-2 rounded text-xs font-semibold transition-colors ${
-															(isCustomItem ? newItemName.trim() : selectedItem)
+															(
+																isCustomItem
+																	? newItemName.trim()
+																	: selectedItem
+															)
 																? "bg-accent-400 hover:bg-accent-400/80 text-background-primary"
 																: "bg-background-tertiary/30 text-parchment-400 cursor-not-allowed border border-accent-400/10"
 														}`}
@@ -2624,17 +3385,54 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 
 									{/* Inventory Items */}
 									<div className="space-y-2">
-										{inventoryItems && inventoryItems.length > 0 ? (
+										{inventoryItems &&
+										inventoryItems.length > 0 ? (
 											inventoryItems.map((item, idx) => {
-												const isShield = item.armorData?.category === "Shield" || item.name.toLowerCase().includes("shield");
-												const isArmor = (item.armorData !== undefined && !isShield) ||
-																(item.customStats?.armorClass !== undefined && !isShield) ||
-																(!isShield && (item.name.toLowerCase().includes("armor") ||
-																	item.name.toLowerCase().includes("leather") ||
-																	item.name.toLowerCase().includes("chain") ||
-																	item.name.toLowerCase().includes("plate")));
-												const isWeapon = item.weaponData !== undefined || (item.customStats?.damage !== undefined);
-												const isEquipped = equippedArmor === item.name || (isShield && equippedShield);
+												const isShield =
+													item.armorData?.category ===
+														"Shield" ||
+													item.name
+														.toLowerCase()
+														.includes("shield");
+												const isArmor =
+													(item.armorData !==
+														undefined &&
+														!isShield) ||
+													(item.customStats
+														?.armorClass !==
+														undefined &&
+														!isShield) ||
+													(!isShield &&
+														(item.name
+															.toLowerCase()
+															.includes(
+																"armor"
+															) ||
+															item.name
+																.toLowerCase()
+																.includes(
+																	"leather"
+																) ||
+															item.name
+																.toLowerCase()
+																.includes(
+																	"chain"
+																) ||
+															item.name
+																.toLowerCase()
+																.includes(
+																	"plate"
+																)));
+												const isWeapon =
+													item.weaponData !==
+														undefined ||
+													item.customStats?.damage !==
+														undefined;
+												const isEquipped =
+													equippedArmor ===
+														item.name ||
+													(isShield &&
+														equippedShield);
 
 												return (
 													<div
@@ -2655,37 +3453,66 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 																		Equipped
 																	</span>
 																)}
-																{isArmor && !isShield && (
-																	<span className="text-xs text-parchment-400 flex-shrink-0">
-																		(Armor, AC {item.armorData?.armorClass || item.customStats?.armorClass})
-																	</span>
-																)}
+																{isArmor &&
+																	!isShield && (
+																		<span className="text-xs text-parchment-400 flex-shrink-0">
+																			(Armor,
+																			AC{" "}
+																			{item
+																				.armorData
+																				?.armorClass ||
+																				item
+																					.customStats
+																					?.armorClass}
+																			)
+																		</span>
+																	)}
 																{isShield && (
 																	<span className="text-xs text-parchment-400 flex-shrink-0">
-																		(Shield, +{item.armorData?.armorClass || 2})
+																		(Shield,
+																		+
+																		{item
+																			.armorData
+																			?.armorClass ||
+																			2}
+																		)
 																	</span>
 																)}
-																{isWeapon && !isArmor && (
-																	<span className="text-xs text-parchment-400 flex-shrink-0">
-																		(Weapon, {item.weaponData?.damage || item.customStats?.damage})
-																	</span>
-																)}
+																{isWeapon &&
+																	!isArmor && (
+																		<span className="text-xs text-parchment-400 flex-shrink-0">
+																			(Weapon,{" "}
+																			{item
+																				.weaponData
+																				?.damage ||
+																				item
+																					.customStats
+																					?.damage}
+																			)
+																		</span>
+																	)}
 																{item.isCustom && (
 																	<span className="text-xs text-parchment-400 bg-background-tertiary px-1.5 py-0.5 rounded flex-shrink-0">
 																		Custom
 																	</span>
 																)}
 																<span className="text-xs text-parchment-400 flex-shrink-0">
-																	{item.weight} lb
+																	{
+																		item.weight
+																	}{" "}
+																	lb
 																</span>
 															</div>
 															<div className="flex gap-1 ml-2">
-																{(isArmor || isShield) && (
+																{(isArmor ||
+																	isShield) && (
 																	<button
 																		onClick={() =>
 																			isShield
 																				? toggleEquipShield()
-																				: toggleEquipArmor(item.name)
+																				: toggleEquipArmor(
+																						item.name
+																				  )
 																		}
 																		className={`px-2 py-1 rounded text-xs font-semibold transition-colors ${
 																			isEquipped
@@ -2693,11 +3520,17 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 																				: "bg-accent-400/20 hover:bg-accent-400/30 text-accent-400"
 																		}`}
 																	>
-																		{isEquipped ? "Unequip" : "Equip"}
+																		{isEquipped
+																			? "Unequip"
+																			: "Equip"}
 																	</button>
 																)}
 																<button
-																	onClick={() => removeItem(idx)}
+																	onClick={() =>
+																		removeItem(
+																			idx
+																		)
+																	}
 																	className="px-2 py-1 rounded bg-red-900/20 hover:bg-red-900/30 text-red-400 text-xs font-semibold transition-colors"
 																>
 																	×

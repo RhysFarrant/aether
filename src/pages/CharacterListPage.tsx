@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { useCharacters } from "../store";
 import CharacterCard from "../components/CharacterCard";
+import { useResponsiveZoom } from "../hooks/useResponsiveZoom";
 
 /**
  * CharacterListPage - Display all saved characters
@@ -10,22 +11,33 @@ export default function CharacterListPage() {
 	// Get characters from Context!
 	const { characters, isLoading } = useCharacters();
 	const hasCharacters = characters.length > 0;
+	const zoom = useResponsiveZoom();
 
 	if (isLoading) {
 		return (
 			<div className="min-h-screen bg-background-primary flex items-center justify-center">
-				<p className="text-parchment-300 text-xl">Loading characters...</p>
+				<p className="text-parchment-300 text-xl">
+					Loading characters...
+				</p>
 			</div>
 		);
 	}
 
 	return (
-		<div className="min-h-screen bg-background-primary p-6">
+		<div
+			className="bg-background-primary p-6 overflow-auto"
+			style={{
+				zoom: `${zoom}%`,
+				height: `${100 / (zoom / 100)}vh`,
+			}}
+		>
 			<div className="max-w-6xl mx-auto">
 				{/* Page Header */}
 				<div className="flex items-center justify-between mb-8">
 					<div>
-						<h1 className="text-4xl font-bold text-accent-400">My Characters</h1>
+						<h1 className="text-4xl font-bold text-accent-400">
+							My Characters
+						</h1>
 						<p className="text-parchment-300 mt-2">
 							Manage your D&D 5e character roster
 						</p>
@@ -58,7 +70,10 @@ export default function CharacterListPage() {
 				) : (
 					<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 						{characters.map((character) => (
-							<CharacterCard key={character.id} character={character} />
+							<CharacterCard
+								key={character.id}
+								character={character}
+							/>
 						))}
 					</div>
 				)}

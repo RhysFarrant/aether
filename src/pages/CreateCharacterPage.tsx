@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { useCharacterBuilder, wizardSteps } from "../hooks/useCharacterBuilder";
 import { useClass } from "../hooks/useSRD";
+import { useResponsiveZoom } from "../hooks/useResponsiveZoom";
 import Step1Class from "../components/CharacterBuilder/Step1Class";
 import Step2Species from "../components/CharacterBuilder/Step2Species";
 import Step3Origin from "../components/CharacterBuilder/Step3Origin";
@@ -21,6 +22,7 @@ export default function CreateCharacterPage() {
 		useCharacterBuilder();
 
 	const selectedClass = useClass(state.classId || undefined);
+	const zoom = useResponsiveZoom();
 
 	// Check if a step is completed
 	const isStepComplete = (stepNumber: number): boolean => {
@@ -35,7 +37,8 @@ export default function CreateCharacterPage() {
 				return !!state.abilityScores;
 			case 5: // Skills
 				return state.selectedSkills.length > 0;
-			case 6: { // Spells
+			case 6: {
+				// Spells
 				// Check if this class is a spellcaster
 				const hasSpellcasting = selectedClass?.spellcasting;
 				const isPaladin = selectedClass?.id === "class_paladin_srd";
@@ -46,11 +49,16 @@ export default function CreateCharacterPage() {
 				}
 
 				// For spellcasters, only complete if they've selected spells/cantrips
-				const hasSelections = state.selectedCantrips.length > 0 || state.selectedSpells.length > 0;
+				const hasSelections =
+					state.selectedCantrips.length > 0 ||
+					state.selectedSpells.length > 0;
 				return hasSelections;
 			}
 			case 7: // Equipment
-				return state.selectedEquipment.length > 0 || Object.keys(state.equipmentChoices).length > 0;
+				return (
+					state.selectedEquipment.length > 0 ||
+					Object.keys(state.equipmentChoices).length > 0
+				);
 			case 8: // Details
 				return state.name.trim().length > 0;
 			case 9: // Review
@@ -154,12 +162,18 @@ export default function CreateCharacterPage() {
 	};
 
 	return (
-		<div className="h-screen max-h-screen bg-background-primary grid grid-cols-[288px_1fr]">
+		<div
+			className="bg-background-primary grid grid-cols-[288px_1fr]"
+			style={{
+				zoom: `${zoom}%`,
+				height: `${100 / (zoom / 100)}vh`,
+			}}
+		>
 			{/* Persistent Sidebar */}
 			<CharacterSidebar state={state} />
 
 			{/* Main Content Area */}
-			<div className="flex flex-col h-screen max-h-screen overflow-hidden">
+			<div className="flex flex-col h-full overflow-hidden">
 				{/* Top Navigation Bar */}
 				<div className="bg-background-secondary border-b border-accent-400/20 px-6 py-3 flex-shrink-0">
 					<div className="flex items-center justify-between">
@@ -167,8 +181,11 @@ export default function CreateCharacterPage() {
 							{/* Tab Navigation */}
 							{wizardSteps.map((step) => {
 								const isComplete = isStepComplete(step.number);
-								const isCurrent = step.number === state.currentStep;
-								const isVisited = step.number <= (state.furthestStep ?? state.currentStep);
+								const isCurrent =
+									step.number === state.currentStep;
+								const isVisited =
+									step.number <=
+									(state.furthestStep ?? state.currentStep);
 
 								return (
 									<button
@@ -186,7 +203,9 @@ export default function CreateCharacterPage() {
 									>
 										{step.title}
 										{isComplete && !isCurrent && (
-											<span className="text-accent-400 font-bold">✓</span>
+											<span className="text-accent-400 font-bold">
+												✓
+											</span>
 										)}
 									</button>
 								);
@@ -203,9 +222,7 @@ export default function CreateCharacterPage() {
 
 				{/* Step Content - Scrollable Container */}
 				<div className="flex-1 overflow-y-auto bg-background-primary">
-					<div className="p-8 pb-6">
-						{renderStep()}
-					</div>
+					<div className="p-8 pb-6">{renderStep()}</div>
 				</div>
 
 				{/* Bottom Navigation */}
