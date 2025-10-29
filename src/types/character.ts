@@ -18,8 +18,23 @@ export interface Character {
 
   currentHitPoints: number;
   maxHitPoints: number;
+  temporaryHitPoints?: number;
+  currentHitDice?: number;
 
   armorClass: number;
+
+  /** Death saves tracking */
+  deathSaves?: {
+    successes: number;
+    failures: number;
+  };
+
+  /** Active conditions with optional levels (exhaustion) */
+  activeConditions?: Record<string, number | null>;
+
+  /** Equipped armor and shield */
+  equippedArmor?: string | null;
+  equippedShield?: boolean;
 
   proficiencyBonus: number;
 
