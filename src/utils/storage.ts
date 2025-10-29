@@ -1,4 +1,5 @@
 import type { Character } from "../types";
+import { getClassById, getSpeciesById, getSubspeciesById, getOriginById } from "../data";
 
 /**
  * LocalStorage utility for saving/loading D&D characters
@@ -6,6 +7,40 @@ import type { Character } from "../types";
  */
 
 const STORAGE_KEY = "aether_characters";
+
+/**
+ * Hydrate a character with fresh data from JSON files
+ * This ensures characters have the latest class/species/subspecies definitions
+ */
+function hydrateCharacter(char: Character): Character {
+	// Refresh class data with latest from JSON
+	const freshClass = getClassById(char.class.id);
+	if (freshClass) {
+		char.class = freshClass;
+	}
+
+	// Refresh species data
+	const freshSpecies = getSpeciesById(char.species.id);
+	if (freshSpecies) {
+		char.species = freshSpecies;
+	}
+
+	// Refresh subspecies data if character has one
+	if (char.subspecies) {
+		const freshSubspecies = getSubspeciesById(char.subspecies.id);
+		if (freshSubspecies) {
+			char.subspecies = freshSubspecies;
+		}
+	}
+
+	// Refresh origin data
+	const freshOrigin = getOriginById(char.origin.id);
+	if (freshOrigin) {
+		char.origin = freshOrigin;
+	}
+
+	return char;
+}
 
 /**
  * Get all characters from localStorage
@@ -17,8 +52,8 @@ export function getCharacters(): Character[] {
 
 		const characters = JSON.parse(stored) as Character[];
 
-		// Convert date strings back to Date objects
-		return characters.map((char) => ({
+		// Convert date strings back to Date objects and hydrate with fresh data
+		return characters.map((char) => hydrateCharacter({
 			...char,
 			createdAt: new Date(char.createdAt),
 			updatedAt: new Date(char.updatedAt),

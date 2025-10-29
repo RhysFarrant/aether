@@ -311,13 +311,28 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 	// Inspiration
 	const [hasInspiration, setHasInspiration] = useState(false);
 
-	// Spell slots tracking - based on class level (simplified for now)
-	// For a level 1 character with spellcasting, typically 2 level 1 spell slots
-	const maxSpellSlots = {
-		1: 2,
-		2: 0,
-		3: 0,
-	};
+	// Calculate max spell slots based on class and level
+	const maxSpellSlots = (() => {
+		const spellcasting = charClass.spellcasting;
+
+		// No spellcasting ability = no spell slots
+		if (!spellcasting || !spellcasting.spellSlotsByLevel) {
+			return { 1: 0, 2: 0, 3: 0 };
+		}
+
+		// Get spell slots for current character level
+		const slotsForLevel = spellcasting.spellSlotsByLevel[character.level];
+
+		if (!slotsForLevel) {
+			return { 1: 0, 2: 0, 3: 0 };
+		}
+
+		return {
+			1: slotsForLevel[1] || 0,
+			2: slotsForLevel[2] || 0,
+			3: slotsForLevel[3] || 0,
+		};
+	})();
 	const [currentSpellSlots, setCurrentSpellSlots] = useState({
 		1: maxSpellSlots[1],
 		2: maxSpellSlots[2],
@@ -2241,8 +2256,8 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 										)}
 
 									{/* Level 1 Spells */}
-									{character.spells &&
-										character.spells.length > 0 && (
+									{characterSpells &&
+										characterSpells.length > 0 && (
 											<div>
 												<div className="flex items-center justify-between mb-3">
 													<div className="text-sm text-accent-400 uppercase tracking-wider font-semibold">
@@ -2250,24 +2265,28 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 													</div>
 													{/* Spell Slots */}
 													<div className="flex items-center gap-2">
-														<span className="text-xs text-parchment-400">Spell Slots:</span>
+														<span className="text-xs text-parchment-400 uppercase">Spell Slots</span>
 														<div className="flex gap-1">
-															{Array.from({ length: maxSpellSlots[1] }).map((_, i) => (
-																<button
-																	key={i}
-																	onClick={() => {
-																		setCurrentSpellSlots(prev => ({
-																			...prev,
-																			1: prev[1] === i ? i + 1 : i
-																		}));
-																	}}
-																	className={`w-6 h-6 rounded border-2 transition-colors ${
-																		i < currentSpellSlots[1]
-																			? "bg-accent-400 border-accent-400"
-																			: "border-accent-400/40 hover:bg-accent-400/20"
-																	}`}
-																/>
-															))}
+															{maxSpellSlots[1] > 0 ? (
+																Array.from({ length: maxSpellSlots[1] }).map((_, i) => (
+																	<button
+																		key={i}
+																		onClick={() => {
+																			setCurrentSpellSlots(prev => ({
+																				...prev,
+																				1: prev[1] === i ? i + 1 : i
+																			}));
+																		}}
+																		className={`w-6 h-6 rounded border-2 transition-colors ${
+																			i < currentSpellSlots[1]
+																				? "bg-accent-400 border-accent-400"
+																				: "border-accent-400/40 hover:bg-accent-400/20"
+																		}`}
+																	/>
+																))
+															) : (
+																<span className="text-xs text-parchment-400 bg-background-tertiary px-2 py-1 rounded">0</span>
+															)}
 														</div>
 													</div>
 												</div>
