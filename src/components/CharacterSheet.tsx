@@ -374,6 +374,70 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 	return (
 		<div className="h-screen bg-background-primary text-parchment-100 flex justify-center overflow-hidden">
 			<div className="h-screen max-w-[1600px] w-full flex flex-col overflow-hidden">
+				{/* Short Rest Modal */}
+				{isShortResting && (
+					<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+						<div className="bg-background-secondary border-2 border-accent-400/40 rounded-lg p-6 max-w-md w-full mx-4">
+							<h2 className="text-xl font-bold text-accent-400 uppercase tracking-wide mb-4">
+								Short Rest
+							</h2>
+							<p className="text-parchment-300 text-sm mb-4">
+								Spend hit dice to recover hit points. You have {currentHitDice} hit dice available.
+							</p>
+
+							{/* Hit Dice Selector */}
+							<div className="mb-6">
+								<label className="text-xs text-parchment-400 uppercase tracking-wider mb-2 block">
+									Hit Dice to Spend
+								</label>
+								<div className="flex items-center gap-3">
+									<button
+										onClick={() => setHitDiceToSpend(Math.max(0, hitDiceToSpend - 1))}
+										className="w-10 h-10 rounded bg-background-tertiary hover:bg-accent-400/20 border border-accent-400/40 text-accent-400 font-bold transition-colors"
+									>
+										-
+									</button>
+									<div className="flex-1 text-center">
+										<div className="text-3xl font-bold text-accent-400">
+											{hitDiceToSpend}
+										</div>
+										<div className="text-xs text-parchment-400">
+											d{charClass.hitDie} each
+										</div>
+									</div>
+									<button
+										onClick={() => setHitDiceToSpend(Math.min(currentHitDice, hitDiceToSpend + 1))}
+										className="w-10 h-10 rounded bg-background-tertiary hover:bg-accent-400/20 border border-accent-400/40 text-accent-400 font-bold transition-colors"
+									>
+										+
+									</button>
+								</div>
+							</div>
+
+							{/* Action Buttons */}
+							<div className="flex gap-3">
+								<button
+									onClick={cancelShortRest}
+									className="flex-1 px-4 py-2 rounded-lg transition-colors text-sm font-semibold bg-background-tertiary hover:bg-background-tertiary/70 text-parchment-300 border border-accent-400/20"
+								>
+									Cancel
+								</button>
+								<button
+									onClick={confirmShortRest}
+									disabled={hitDiceToSpend === 0}
+									className={`flex-1 px-4 py-2 rounded-lg transition-colors text-sm font-semibold ${
+										hitDiceToSpend > 0
+											? "bg-accent-400 hover:bg-accent-400/80 text-background-primary"
+											: "bg-background-tertiary/30 text-parchment-400 cursor-not-allowed border border-accent-400/10"
+									}`}
+								>
+									Rest
+								</button>
+							</div>
+						</div>
+					</div>
+				)}
+
 				{/* Top Header Bar */}
 				<div className="bg-background-secondary border-b border-accent-400/20 px-6 py-3 flex-shrink-0">
 					<div className="flex items-center justify-between">
@@ -465,8 +529,21 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 							))}
 						</div>
 
-						{/* Middle Group: Proficiency, Inspiration, Speed */}
+						{/* Middle Group: Initiative, Proficiency, Inspiration, Speed */}
 						<div className="flex items-center gap-3">
+							{/* Initiative */}
+							<div className="bg-background-secondary/50 border border-accent-400/30 rounded-lg px-4 py-2 text-center min-w-[80px]">
+								<div className="text-xs text-parchment-400 uppercase tracking-wider mb-1">
+									Initiative
+								</div>
+								<div className="text-xl font-bold text-accent-400">
+									{formatModifier(dexMod)}
+								</div>
+							</div>
+
+							{/* Divider */}
+							<div className="h-16 w-px bg-accent-400/20"></div>
+
 							{/* Proficiency Bonus */}
 							<div className="bg-background-secondary/50 border border-accent-400/30 rounded-lg px-4 py-2 text-center min-w-[80px]">
 								<div className="text-xs text-parchment-400 uppercase tracking-wider mb-1">
@@ -683,16 +760,291 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 									</div>
 								</div>
 							</div>
+
+							{/* Hit Dice */}
+							<div className="bg-background-secondary/50 border border-accent-400/30 rounded-lg px-4 py-2">
+								<div className="flex flex-col items-center gap-1">
+									<div className="text-xs text-parchment-400 uppercase tracking-wider">
+										Hit Dice
+									</div>
+									<div className="flex items-baseline gap-1">
+										<span className="text-2xl font-bold text-accent-400">
+											{currentHitDice}
+										</span>
+										<span className="text-lg font-bold text-parchment-400">/</span>
+										<span className="text-2xl font-bold text-parchment-100">
+											{level}
+										</span>
+									</div>
+									<div className="text-sm text-parchment-300 font-semibold">
+										d{charClass.hitDie}
+									</div>
+								</div>
+							</div>
 						</div>
 					</div>
 				</div>
 
 				{/* Main Content - 3 Column Grid */}
 				<div className="flex-1 grid grid-cols-[400px_450px_1fr] gap-0 overflow-hidden">
-					{/* LEFT COLUMN - Skills & Saves */}
+					{/* LEFT COLUMN - Passive Skills, Conditions, Proficiencies, Defenses */}
 					<div className="bg-background-primary border-r border-accent-400/20 flex flex-col overflow-hidden">
-						{/* Skills & Saving Throws */}
+						{/* Passive Skills & Conditions & Proficiencies & Defenses */}
 						<div className="flex-1 overflow-y-auto p-4 space-y-4">
+							{/* Passive Skills */}
+							<div>
+								<div className="text-xs text-accent-400 uppercase tracking-wider mb-3 text-center">
+									Passive Skills
+								</div>
+								<div className="space-y-0.5">
+									<div className="flex items-center justify-between py-1 px-3 hover:bg-background-secondary/50 rounded transition-colors">
+										<span className="text-sm text-parchment-100">
+											Perception
+										</span>
+										<span className="text-accent-400 font-semibold min-w-[2rem] text-right text-sm">
+											{10 + (skillProficiencies.includes("Perception") ? proficiencyBonus : 0) + wisMod}
+										</span>
+									</div>
+									<div className="flex items-center justify-between py-1 px-3 hover:bg-background-secondary/50 rounded transition-colors">
+										<span className="text-sm text-parchment-100">
+											Investigation
+										</span>
+										<span className="text-accent-400 font-semibold min-w-[2rem] text-right text-sm">
+											{10 + (skillProficiencies.includes("Investigation") ? proficiencyBonus : 0) + intMod}
+										</span>
+									</div>
+									<div className="flex items-center justify-between py-1 px-3 hover:bg-background-secondary/50 rounded transition-colors">
+										<span className="text-sm text-parchment-100">
+											Insight
+										</span>
+										<span className="text-accent-400 font-semibold min-w-[2rem] text-right text-sm">
+											{10 + (skillProficiencies.includes("Insight") ? proficiencyBonus : 0) + wisMod}
+										</span>
+									</div>
+								</div>
+							</div>
+
+							{/* Conditions */}
+							<div>
+								<div className="text-xs text-accent-400 uppercase tracking-wider mb-3 text-center">
+									Conditions
+								</div>
+								<div className="space-y-3">
+									{/* Active Conditions as Tags - Always visible */}
+									<div>
+										<div className="flex flex-wrap gap-2">
+											{activeConditions.size > 0 ? (
+												Array.from(activeConditions.entries()).map(([name, level]) => (
+													<div
+														key={name}
+														className="bg-background-secondary/50 border border-accent-400/20 rounded px-2 py-1 text-xs text-parchment-200 flex items-center gap-2"
+													>
+														<span>
+															{name}
+															{level !== null && ` ${level}`}
+														</span>
+														<button
+															onClick={() => removeCondition(name)}
+															className="text-parchment-300 hover:text-red-400 transition-colors"
+														>
+															✕
+														</button>
+													</div>
+												))
+											) : (
+												<div className="bg-background-secondary/50 border border-accent-400/20 rounded px-2 py-1 text-xs text-parchment-200">
+													None
+												</div>
+											)}
+										</div>
+									</div>
+
+									{/* Exhaustion Level Selector - Always visible when exhaustion is active */}
+									{activeConditions.has("Exhaustion") && (
+										<div className="bg-background-secondary/50 border border-accent-400/20 rounded-lg p-3">
+											<div className="text-xs text-parchment-400 mb-2">
+												Exhaustion Level:
+											</div>
+											<div className="flex gap-1">
+												{[1, 2, 3, 4, 5, 6].map((lvl) => (
+													<button
+														key={lvl}
+														onClick={() => setExhaustionLevel(lvl)}
+														className={`flex-1 px-2 py-1 rounded text-xs font-semibold transition-colors ${
+															activeConditions.get("Exhaustion") === lvl
+																? "bg-accent-400 text-background-primary"
+																: "bg-background-tertiary/50 text-parchment-300 hover:bg-accent-400/20"
+														}`}
+													>
+														{lvl}
+													</button>
+												))}
+											</div>
+										</div>
+									)}
+
+									{/* Condition Picker - Show when picker is open */}
+									{showConditionPicker && (
+										<div className="overflow-y-auto space-y-2 pr-1 max-h-96">
+											{Object.entries(CONDITIONS_DATA)
+												.filter(([name]) => !activeConditions.has(name))
+												.map(([name, condition]) => (
+													<div
+														key={name}
+														className="border border-accent-400/20 bg-background-secondary/50 rounded-lg p-3"
+													>
+														{/* Condition Header */}
+														<div className="flex items-start justify-between mb-2">
+															<div className="flex-1">
+																<div className="font-semibold text-parchment-100">
+																	{name}
+																</div>
+																<div className="text-xs text-parchment-400 mt-1">
+																	{condition.description}
+																</div>
+															</div>
+															<button
+																onClick={() => toggleCondition(name)}
+																className="ml-2 px-3 py-1 rounded text-xs font-semibold transition-colors flex-shrink-0 bg-background-tertiary text-parchment-300 hover:bg-accent-400/20"
+															>
+																Add
+															</button>
+														</div>
+
+														{/* Condition Effects */}
+														{condition.effects.length > 0 && (
+															<div className="mt-2 space-y-1">
+																{condition.effects.map((effect, idx) => (
+																	<div
+																		key={idx}
+																		className="text-xs text-parchment-300 flex items-start"
+																	>
+																		<span className="text-accent-400 mr-2">•</span>
+																		<span>{effect}</span>
+																	</div>
+																))}
+															</div>
+														)}
+													</div>
+												))}
+										</div>
+									)}
+
+									{/* Add/Hide Condition Button */}
+									<button
+										onClick={() => setShowConditionPicker(!showConditionPicker)}
+										className="w-full py-2 px-3 rounded bg-accent-400/20 hover:bg-accent-400/30 border border-accent-400/40 text-accent-400 text-xs font-semibold transition-colors"
+									>
+										{showConditionPicker ? "Hide Conditions" : "+ Add Condition"}
+									</button>
+								</div>
+							</div>
+
+							{/* Proficiencies - Hide when showing condition picker */}
+							{!showConditionPicker && (
+								<div>
+									<div className="text-xs text-accent-400 uppercase tracking-wider mb-3 text-center">
+										Proficiencies
+									</div>
+									<div className="space-y-3">
+										{/* Armor Proficiencies */}
+										<div>
+											<div className="text-xs text-parchment-400 uppercase mb-1">Armor</div>
+											<div className="flex flex-wrap gap-2">
+												<div className="bg-background-secondary/50 border border-accent-400/20 rounded px-2 py-1 text-xs text-parchment-200">
+													Light Armor
+												</div>
+											</div>
+										</div>
+										{/* Weapon Proficiencies */}
+										<div>
+											<div className="text-xs text-parchment-400 uppercase mb-1">Weapons</div>
+											<div className="flex flex-wrap gap-2">
+												<div className="bg-background-secondary/50 border border-accent-400/20 rounded px-2 py-1 text-xs text-parchment-200">
+													Simple Weapons
+												</div>
+												<div className="bg-background-secondary/50 border border-accent-400/20 rounded px-2 py-1 text-xs text-parchment-200">
+													Crossbow, Hand
+												</div>
+												<div className="bg-background-secondary/50 border border-accent-400/20 rounded px-2 py-1 text-xs text-parchment-200">
+													Longsword
+												</div>
+												<div className="bg-background-secondary/50 border border-accent-400/20 rounded px-2 py-1 text-xs text-parchment-200">
+													Rapier
+												</div>
+												<div className="bg-background-secondary/50 border border-accent-400/20 rounded px-2 py-1 text-xs text-parchment-200">
+													Shortsword
+												</div>
+											</div>
+										</div>
+										{/* Tool Proficiencies */}
+										<div>
+											<div className="text-xs text-parchment-400 uppercase mb-1">Tools</div>
+											<div className="flex flex-wrap gap-2">
+												<div className="bg-background-secondary/50 border border-accent-400/20 rounded px-2 py-1 text-xs text-parchment-200">
+													Musical Instruments
+												</div>
+											</div>
+										</div>
+										{/* Languages */}
+										<div>
+											<div className="text-xs text-parchment-400 uppercase mb-1">Languages</div>
+											<div className="flex flex-wrap gap-2">
+												<div className="bg-background-secondary/50 border border-accent-400/20 rounded px-2 py-1 text-xs text-parchment-200">
+													Common
+												</div>
+												<div className="bg-background-secondary/50 border border-accent-400/20 rounded px-2 py-1 text-xs text-parchment-200">
+													Elvish
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+							)}
+
+							{/* Defenses - Hide when showing condition picker */}
+							{!showConditionPicker && (
+								<div>
+									<div className="text-xs text-accent-400 uppercase tracking-wider mb-3 text-center">
+										Defenses
+									</div>
+									<div className="space-y-3">
+										{/* Vulnerabilities */}
+										<div>
+											<div className="text-xs text-parchment-400 uppercase mb-1">Vulnerabilities</div>
+											<div className="flex flex-wrap gap-2">
+												<div className="bg-background-secondary/50 border border-accent-400/20 rounded px-2 py-1 text-xs text-parchment-200">
+													None
+												</div>
+											</div>
+										</div>
+										{/* Resistances */}
+										<div>
+											<div className="text-xs text-parchment-400 uppercase mb-1">Resistances</div>
+											<div className="flex flex-wrap gap-2">
+												<div className="bg-background-secondary/50 border border-accent-400/20 rounded px-2 py-1 text-xs text-parchment-200">
+													None
+												</div>
+											</div>
+										</div>
+										{/* Immunities */}
+										<div>
+											<div className="text-xs text-parchment-400 uppercase mb-1">Immunities</div>
+											<div className="flex flex-wrap gap-2">
+												<div className="bg-background-secondary/50 border border-accent-400/20 rounded px-2 py-1 text-xs text-parchment-200">
+													None
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+							)}
+						</div>
+					</div>
+
+					{/* MIDDLE COLUMN - Skills */}
+					<div className="bg-background-primary overflow-y-auto p-6">
+						<div className="space-y-6 max-w-3xl mx-auto">
 							{/* Skills */}
 							<div>
 								<div className="text-xs text-accent-400 uppercase tracking-wider mb-3 text-center">
@@ -837,244 +1189,51 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 									})}
 								</div>
 							</div>
-						</div>
-					</div>
 
-					{/* MIDDLE COLUMN - Combat Stats, Actions */}
-					<div className="bg-background-primary overflow-y-auto p-6">
-						<div className="space-y-6 max-w-3xl mx-auto">
-							{/* TODO: Decide on Middle column */}
-						</div>
-					</div>
-
-					{/* RIGHT COLUMN - Proficiencies/Conditions & Features/Actions/Spells/Inventory */}
-					<div className="bg-background-primary border-l border-accent-400/20 flex flex-col overflow-hidden">
-						{/* Top Tabs - Proficiencies / Conditions */}
-						<div className="border-b border-accent-400/20 flex-shrink-0">
-							<div className="flex items-center p-2 gap-2">
-								<button
-									onClick={() => setRightTab("proficiencies")}
-									className={`flex-1 px-4 py-2 rounded transition-colors text-sm font-semibold uppercase tracking-wide ${
-										rightTab === "proficiencies"
-											? "bg-accent-400 text-background-primary"
-											: "text-parchment-300 hover:bg-background-secondary"
-									}`}
-								>
-									<span className="mr-2">⚔</span>
-									Proficiencies
-								</button>
-								<button
-									onClick={() => setRightTab("conditions")}
-									className={`flex-1 px-4 py-2 rounded transition-colors text-sm font-semibold uppercase tracking-wide ${
-										rightTab === "conditions"
-											? "bg-accent-400 text-background-primary"
-											: "text-parchment-300 hover:bg-background-secondary"
-									}`}
-								>
-									<span className="mr-2">❖</span>
-									Conditions
-								</button>
+							{/* Death Saves */}
+							<div>
+								<div className="text-xs text-accent-400 uppercase tracking-wider mb-3 text-center">
+									Death Saves
+								</div>
+								<div className="grid grid-cols-2 gap-4">
+									{/* Successes */}
+									<div>
+										<div className="text-xs text-parchment-400 uppercase mb-2 text-center">
+											Successes
+										</div>
+										<div className="flex justify-center gap-2">
+											{[1, 2, 3].map((i) => (
+												<button
+													key={i}
+													className="w-6 h-6 rounded-full border-2 border-accent-400/40 hover:bg-accent-400/20 transition-colors"
+												>
+												</button>
+											))}
+										</div>
+									</div>
+									{/* Failures */}
+									<div>
+										<div className="text-xs text-parchment-400 uppercase mb-2 text-center">
+											Failures
+										</div>
+										<div className="flex justify-center gap-2">
+											{[1, 2, 3].map((i) => (
+												<button
+													key={i}
+													className="w-6 h-6 rounded-full border-2 border-red-800/40 hover:bg-red-900/20 transition-colors"
+												>
+												</button>
+											))}
+										</div>
+									</div>
+								</div>
 							</div>
 						</div>
+					</div>
 
-						{/* Proficiencies/Conditions Content */}
-						<div className="p-4 border-b border-accent-400/20 flex-shrink-0">
-							{rightTab === "proficiencies" && (
-								<div className="space-y-2">
-									{/* Weapon Proficiencies */}
-									<div className="grid grid-cols-2 gap-2">
-										<div className="bg-background-secondary/50 border border-accent-400/20 rounded px-3 py-2 text-center text-sm text-parchment-200">
-											Light Armor
-										</div>
-										<div className="bg-background-secondary/50 border border-accent-400/20 rounded px-3 py-2 text-center text-sm text-parchment-200">
-											Simple Weapons
-										</div>
-										<div className="bg-background-secondary/50 border border-accent-400/20 rounded px-3 py-2 text-center text-sm text-parchment-200">
-											Crossbow, Hand
-										</div>
-										<div className="bg-background-secondary/50 border border-accent-400/20 rounded px-3 py-2 text-center text-sm text-parchment-200">
-											Longsword
-										</div>
-										<div className="bg-background-secondary/50 border border-accent-400/20 rounded px-3 py-2 text-center text-sm text-parchment-200">
-											Rapier
-										</div>
-										<div className="bg-background-secondary/50 border border-accent-400/20 rounded px-3 py-2 text-center text-sm text-parchment-200">
-											Shortsword
-										</div>
-										<div className="bg-background-secondary/50 border border-accent-400/20 rounded px-3 py-2 text-center text-sm text-parchment-200">
-											Musical Instruments
-										</div>
-									</div>
-								</div>
-							)}
-							{rightTab === "conditions" && (
-								<div className="space-y-3">
-									{/* Active Conditions */}
-									{activeConditions.size > 0 ? (
-										<div className="space-y-2">
-											<div className="flex flex-wrap gap-2">
-												{Array.from(
-													activeConditions.entries()
-												).map(([name, level]) => (
-													<div
-														key={name}
-														className="bg-accent-400/20 border border-accent-400/40 rounded px-3 py-1.5 flex items-center gap-2"
-													>
-														<span className="text-sm font-semibold text-accent-400">
-															{name}
-															{level !== null &&
-																` ${level}`}
-														</span>
-														<button
-															onClick={() =>
-																removeCondition(
-																	name
-																)
-															}
-															className="text-parchment-300 hover:text-red-400 transition-colors text-xs"
-														>
-															✕
-														</button>
-													</div>
-												))}
-											</div>
-											{/* Exhaustion Level Selector */}
-											{activeConditions.has(
-												"Exhaustion"
-											) && (
-												<div className="bg-background-secondary/50 border border-accent-400/20 rounded-lg p-3">
-													<div className="text-xs text-parchment-400 mb-2">
-														Exhaustion Level:
-													</div>
-													<div className="flex gap-1">
-														{[1, 2, 3, 4, 5, 6].map(
-															(lvl) => (
-																<button
-																	key={lvl}
-																	onClick={() =>
-																		setExhaustionLevel(
-																			lvl
-																		)
-																	}
-																	className={`flex-1 px-2 py-1 rounded text-xs font-semibold transition-colors ${
-																		activeConditions.get(
-																			"Exhaustion"
-																		) ===
-																		lvl
-																			? "bg-accent-400 text-background-primary"
-																			: "bg-background-tertiary/50 text-parchment-300 hover:bg-accent-400/20"
-																	}`}
-																>
-																	{lvl}
-																</button>
-															)
-														)}
-													</div>
-												</div>
-											)}
-										</div>
-									) : (
-										<div className="text-center text-parchment-400 text-sm py-2">
-											No active conditions
-										</div>
-									)}
-
-									{/* Add Condition Button */}
-									<button
-										onClick={() =>
-											setShowConditionPicker(
-												!showConditionPicker
-											)
-										}
-										className="w-full py-2 px-3 rounded bg-accent-400/20 hover:bg-accent-400/30 text-accent-400 text-sm font-semibold transition-colors"
-									>
-										{showConditionPicker
-											? "Hide Conditions"
-											: "Add Condition"}
-									</button>
-
-									{/* Condition Picker */}
-									<div
-										className={`overflow-hidden transition-all duration-300 ease-in-out ${
-											showConditionPicker
-												? "max-h-96 opacity-100"
-												: "max-h-0 opacity-0"
-										}`}
-									>
-										<div className="overflow-y-auto space-y-2 pr-1 max-h-96">
-											{Object.entries(CONDITIONS_DATA)
-												.filter(
-													([name]) =>
-														!activeConditions.has(
-															name
-														)
-												)
-												.map(([name, condition]) => (
-													<div
-														key={name}
-														className="border border-accent-400/20 bg-background-secondary/50 rounded-lg p-3"
-													>
-														{/* Condition Header */}
-														<div className="flex items-start justify-between mb-2">
-															<div className="flex-1">
-																<div className="font-semibold text-parchment-100">
-																	{name}
-																</div>
-																<div className="text-xs text-parchment-400 mt-1">
-																	{
-																		condition.description
-																	}
-																</div>
-															</div>
-															<button
-																onClick={() =>
-																	toggleCondition(
-																		name
-																	)
-																}
-																className="ml-2 px-3 py-1 rounded text-xs font-semibold transition-colors flex-shrink-0 bg-background-tertiary text-parchment-300 hover:bg-accent-400/20"
-															>
-																Add
-															</button>
-														</div>
-
-														{/* Condition Effects */}
-														{condition.effects
-															.length > 0 && (
-															<div className="mt-2 space-y-1">
-																{condition.effects.map(
-																	(
-																		effect,
-																		idx
-																	) => (
-																		<div
-																			key={
-																				idx
-																			}
-																			className="text-xs text-parchment-300 flex items-start"
-																		>
-																			<span className="text-accent-400 mr-2">
-																				•
-																			</span>
-																			<span>
-																				{
-																					effect
-																				}
-																			</span>
-																		</div>
-																	)
-																)}
-															</div>
-														)}
-													</div>
-												))}
-										</div>
-									</div>
-								</div>
-							)}
-						</div>
-
-						{/* Bottom Tabs - Features / Actions / Spells / Inventory */}
+					{/* RIGHT COLUMN - Features/Actions/Spells/Inventory */}
+					<div className="bg-background-primary border-l border-accent-400/20 flex flex-col overflow-hidden">
+						{/* Tabs - Features / Actions / Spells / Inventory / Notes */}
 						<div className="border-b border-accent-400/20 flex-shrink-0">
 							<div className="flex items-center p-2 gap-2">
 								<button
