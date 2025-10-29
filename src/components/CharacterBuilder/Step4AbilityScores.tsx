@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import type { CharacterBuilderState } from "../../types/characterBuilder";
 import type { AbilityScores } from "../../types/abilities";
 
@@ -22,12 +22,8 @@ const ABILITY_NAMES: (keyof AbilityScores)[] = [
 /**
  * Step 4: Ability Score Assignment
  */
-export default function Step4AbilityScores({
-	state,
-	onUpdate,
-	onNext,
-	onPrevious,
-}: Step4AbilityScoresProps) {
+export default function Step4AbilityScores(props: Step4AbilityScoresProps) {
+	const { state, onUpdate } = props;
 	const [assignedScores, setAssignedScores] = useState<
 		Partial<Record<keyof AbilityScores, number>>
 	>(state.abilityScores || {});
@@ -69,14 +65,7 @@ export default function Step4AbilityScores({
 		onUpdate({ abilityScores: null });
 	};
 
-	const handleContinue = () => {
-		if (state.abilityScores) {
-			onNext();
-		}
-	};
-
 	const availableScores = getAvailableScores();
-	const allAssigned = Object.keys(assignedScores).length === 6;
 
 	return (
 		<div className="space-y-2">

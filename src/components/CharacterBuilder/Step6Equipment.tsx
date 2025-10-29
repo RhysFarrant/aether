@@ -52,12 +52,8 @@ function getWeaponChoices(item: string): string[] {
 /**
  * Step 6: Equipment Selection
  */
-export default function Step6Equipment({
-	state,
-	onUpdate,
-	onNext,
-	onPrevious,
-}: Step6EquipmentProps) {
+export default function Step6Equipment(props: Step6EquipmentProps) {
+	const { state, onUpdate } = props;
 	const selectedClass = useClass(state.classId || undefined);
 	const selectedOrigin = useOriginById(state.originId || undefined);
 
@@ -120,12 +116,6 @@ export default function Step6Equipment({
 			...equipmentChoices,
 			[choiceIndex]: optionIndex,
 		});
-	};
-
-	const handleContinue = () => {
-		if (isComplete) {
-			onNext();
-		}
 	};
 
 	const isComplete = choicesMade === totalChoices && areWeaponSubSelectionsComplete();

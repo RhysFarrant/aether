@@ -33,7 +33,9 @@ interface SpellData {
 
 const WEAPON_DATA = weaponDataImport as Record<string, WeaponProperties>;
 const CONDITIONS_DATA = conditionsDataImport as Record<string, Condition>;
-const SPELLS_DATA = spellsDataImport as Record<string, { cantrips: SpellData[], spells: Record<string, SpellData[]> }>;
+type ClassSpellList = Record<string, SpellData[]> & { cantrips: SpellData[] };
+
+const SPELLS_DATA = spellsDataImport as Record<string, ClassSpellList>;
 
 interface CharacterSheetProps {
 	character: Character;
@@ -199,7 +201,6 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 		proficiencyBonus,
 		equipment,
 		skillProficiencies,
-		notes,
 	} = character;
 
 	// Calculate ability modifiers
@@ -211,9 +212,6 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 	const chaMod = getAbilityModifier(abilityScores.charisma);
 
 	// Tab states
-	const [rightTab, setRightTab] = useState<"proficiencies" | "conditions">(
-		"proficiencies"
-	);
 	const [featuresTab, setFeaturesTab] = useState<
 		"features" | "actions" | "spells" | "inventory" | "notes"
 	>("features");
@@ -222,13 +220,6 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 	const [currentHP, setCurrentHP] = useState(currentHitPoints);
 	const [tempHP, setTempHP] = useState(0);
 	const [hpAmount, setHpAmount] = useState("");
-
-	// Death saves
-	const [deathSaveSuccesses, setDeathSaveSuccesses] = useState(0);
-	const [deathSaveFailures, setDeathSaveFailures] = useState(0);
-
-	// Initiative tracking
-	const [initiative, setInitiative] = useState<number | null>(null);
 
 	// Hit dice tracking (starts at character level)
 	const [currentHitDice, setCurrentHitDice] = useState(level);
@@ -268,7 +259,6 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 	const [equippedShield, setEquippedShield] = useState(false);
 	const [showAddItem, setShowAddItem] = useState(false);
 	const [newItemName, setNewItemName] = useState("");
-	const [newItemWeight, setNewItemWeight] = useState("");
 
 	// Calculate carrying capacity (STR score × 15)
 	const maxCarryingCapacity = abilityScores.strength * 15;
@@ -305,42 +295,6 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 			}
 			setHpAmount("");
 		}
-	};
-
-	// Temp HP functions
-	const increaseTempHP = () => {
-		setTempHP(tempHP + 1);
-	};
-
-	const decreaseTempHP = () => {
-		setTempHP(Math.max(0, tempHP - 1));
-	};
-
-	// Death save functions
-	const toggleDeathSaveSuccess = (index: number) => {
-		if (index < deathSaveSuccesses) {
-			setDeathSaveSuccesses(index);
-		} else {
-			setDeathSaveSuccesses(index + 1);
-		}
-	};
-
-	const toggleDeathSaveFailure = (index: number) => {
-		if (index < deathSaveFailures) {
-			setDeathSaveFailures(index);
-		} else {
-			setDeathSaveFailures(index + 1);
-		}
-	};
-
-	// Initiative functions
-	const rollInitiative = () => {
-		const roll = Math.floor(Math.random() * 20) + 1;
-		setInitiative(roll + dexMod);
-	};
-
-	const clearInitiative = () => {
-		setInitiative(null);
 	};
 
 	// Hit dice functions
@@ -440,7 +394,6 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 		if (newItemName.trim()) {
 			setInventoryItems([...inventoryItems, newItemName]);
 			setNewItemName("");
-			setNewItemWeight("");
 			setShowAddItem(false);
 		}
 	};

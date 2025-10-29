@@ -34,12 +34,8 @@ const SPELL_DATA = spellDataImport as SpellData;
 /**
  * Step 5a: Spell Selection (only for spellcasters)
  */
-export default function Step5aSpells({
-	state,
-	onUpdate,
-	onNext,
-	onPrevious,
-}: Step5aSpellsProps) {
+export default function Step5aSpells(props: Step5aSpellsProps) {
+	const { state, onUpdate, onNext } = props;
 	const selectedClass = useClass(state.classId || undefined);
 
 	const [selectedCantrips, setSelectedCantrips] = useState<string[]>(
@@ -132,10 +128,6 @@ export default function Step5aSpells({
 			setSelectedSpells([...selectedSpells, spell]);
 		}
 	};
-
-	const cantripsRemaining = cantripsNeeded - selectedCantrips.length;
-	const spellsRemaining = spellsNeeded - selectedSpells.length;
-	const isComplete = cantripsRemaining === 0 && (spellsNeeded === 0 || spellsRemaining === 0);
 
 	return (
 		<div className="space-y-2">

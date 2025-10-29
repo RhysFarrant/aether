@@ -64,12 +64,13 @@ Aether is designed to be the **go-to tool for managing D&D 5e characters**: fast
    - Polish character card designs
    - Refine color scheme and typography
    - Add loading states and empty states improvements
-
-### **Phase 3 – Character Management**
-   - Leveling and progression
-   - Editable character sheets
    - Long rest/short rest mechanics (HP/spell slot recovery)
    - Inventory management (add/remove items, weight tracking)
+
+### **Phase 3 – Character Management**
+   - User Accounts and Auth with Firebase
+   - Leveling and progression
+   - Editable character sheets
    - Character notes field
 
 ### **Phase 4 – Advanced Features**
@@ -83,7 +84,11 @@ Aether is designed to be the **go-to tool for managing D&D 5e characters**: fast
    - Import/export JSON
    - Optional PDF export
 
-### **Phase 6 – Polish & Package**
+### **Phase 6 – Verification and Polish**
+   - Create data files for all SRD data
+   - Verify all SRD data is correct and accurate
+
+### **Phase 7 – Polish & Package**
    - Tauri desktop packaging
    - Dark/light theme toggle
    - Accessibility audit (keyboard navigation, screen readers)

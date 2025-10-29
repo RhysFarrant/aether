@@ -1,4 +1,4 @@
-import { useParams, Link, Navigate } from "react-router-dom";
+import { useParams, Navigate } from "react-router-dom";
 import { useCharacterById } from "../store";
 import CharacterSheet from "../components/CharacterSheet";
 

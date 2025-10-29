@@ -12,12 +12,8 @@ interface Step5SkillsProps {
 /**
  * Step 5: Skill Selection
  */
-export default function Step5Skills({
-	state,
-	onUpdate,
-	onNext,
-	onPrevious,
-}: Step5SkillsProps) {
+export default function Step5Skills(props: Step5SkillsProps) {
+	const { state, onUpdate } = props;
 	const selectedClass = useClass(state.classId || undefined);
 	const selectedOrigin = useOriginById(state.originId || undefined);
 
@@ -60,17 +56,6 @@ export default function Step5Skills({
 			setSelectedSkills([...selectedSkills, skill]);
 		}
 	};
-
-	const handleContinue = () => {
-		if (classSkillsRemaining === 0) {
-			// Combine origin skills and class skills before continuing
-			const allSkills = [...new Set([...originSkills, ...selectedSkills])];
-			onUpdateRef.current({ selectedSkills: allSkills });
-			onNext();
-		}
-	};
-
-	const isComplete = classSkillsRemaining === 0;
 
 	return (
 		<div className="space-y-2">

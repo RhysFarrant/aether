@@ -12,12 +12,8 @@ interface Step7DetailsProps {
  * Step 7: Character Details
  * Name and descriptive information
  */
-export default function Step7Details({
-	state,
-	onUpdate,
-	onNext,
-	onPrevious,
-}: Step7DetailsProps) {
+export default function Step7Details(props: Step7DetailsProps) {
+	const { state, onUpdate } = props;
 	const [name, setName] = useState<string>(state.name || "");
 	const [debouncedName, setDebouncedName] = useState<string>(state.name || "");
 	const [alignment, setAlignment] = useState<string>(state.alignment || "true-neutral");
@@ -41,14 +37,6 @@ export default function Step7Details({
 
 		return () => clearTimeout(timer);
 	}, [name]);
-
-	const handleContinue = () => {
-		if (name.trim().length > 0) {
-			onNext();
-		}
-	};
-
-	const isComplete = name.trim().length > 0;
 
 	// Generate a jokey comment based on the name
 	const getNameComment = (nameInput: string): string | null => {

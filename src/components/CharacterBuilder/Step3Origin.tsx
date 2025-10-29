@@ -14,12 +14,8 @@ interface Step3OriginProps {
  * BG3-inspired interaction: click to expand, click again to collapse
  * Items smoothly slide to position when selected/deselected
  */
-export default function Step3Origin({
-	state,
-	onUpdate,
-	onNext,
-	onPrevious,
-}: Step3OriginProps) {
+export default function Step3Origin(props: Step3OriginProps) {
+	const { state, onUpdate, onNext } = props;
 	const origins = useOrigins();
 	const [expandedOriginId, setExpandedOriginId] = useState<string | null>(
 		state.originId

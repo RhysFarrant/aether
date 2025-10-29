@@ -15,11 +15,8 @@ interface Step8ReviewProps {
  * Step 8: Review & Create Character
  * Final review and character creation
  */
-export default function Step8Review({
-	state,
-	onPrevious,
-	onReset,
-}: Step8ReviewProps) {
+export default function Step8Review(props: Step8ReviewProps) {
+	const { state, onReset } = props;
 	const navigate = useNavigate();
 	const { addCharacter } = useCharacters();
 	const [isCreating, setIsCreating] = useState(false);
@@ -135,8 +132,13 @@ export default function Step8Review({
 						{selectedSubspecies && ` (${selectedSubspecies.name})`}
 					</p>
 					<div className="text-xs text-parchment-300 mt-2">
-						<div>Size: {selectedSpecies?.size || selectedSubspecies?.size}</div>
-						<div>Speed: {selectedSpecies?.speed || selectedSubspecies?.speed} ft</div>
+						<div>Size: {selectedSpecies?.size ?? "—"}</div>
+						<div>
+							Speed:{" "}
+							{selectedSpecies?.speed !== undefined
+								? `${selectedSpecies.speed} ft`
+								: "—"}
+						</div>
 					</div>
 				</div>
 

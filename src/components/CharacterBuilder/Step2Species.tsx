@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import type { CharacterBuilderState } from "../../types/characterBuilder";
 import { useSpecies, useSubspeciesByParent } from "../../hooks/useSRD";
 
@@ -14,12 +14,8 @@ interface Step2SpeciesProps {
  * BG3-inspired interaction: click to expand, click again to collapse
  * Items smoothly slide to position when selected/deselected
  */
-export default function Step2Species({
-	state,
-	onUpdate,
-	onNext,
-	onPrevious,
-}: Step2SpeciesProps) {
+export default function Step2Species(props: Step2SpeciesProps) {
+	const { state, onUpdate, onNext } = props;
 	const allSpecies = useSpecies();
 	const [expandedSpeciesId, setExpandedSpeciesId] = useState<string | null>(
 		state.speciesId
@@ -81,14 +77,7 @@ export default function Step2Species({
 		setSelectedSubspeciesId(subspeciesId);
 	};
 
-	const selectedSpecies = allSpecies.find((s) => s.id === expandedSpeciesId);
 	const isSpeciesSelected = state.speciesId === expandedSpeciesId;
-	const canContinue =
-		state.speciesId &&
-		(!selectedSpecies?.subraces ||
-			selectedSpecies.subraces.length === 0 ||
-			state.subspeciesId);
-
 	// Reorder species so expanded one is first
 	const orderedSpecies = expandedSpeciesId
 		? [
@@ -102,6 +91,19 @@ export default function Step2Species({
 			{orderedSpecies.map((species) => {
 				const isExpanded = species.id === expandedSpeciesId;
 				const isCollapsed = expandedSpeciesId && !isExpanded;
+				const speciesSummary =
+					species.alignmentDescription ??
+					species.ageDescription ??
+					species.sizeDescription ??
+					"";
+				const descriptionSections = [
+					species.ageDescription,
+					species.alignmentDescription,
+					species.sizeDescription,
+				].filter((text): text is string => Boolean(text));
+				const abilityIncreaseEntries = Object.entries(
+					species.abilityIncreases
+				);
 
 				return (
 					<div
@@ -133,7 +135,7 @@ export default function Step2Species({
 										{species.name.toUpperCase()}
 									</h3>
 									<p className="text-sm text-parchment-300 mt-1">
-										{species.description}
+										{speciesSummary}
 									</p>
 								</div>
 								<div className="text-accent-400 text-sm transition-transform">
@@ -146,11 +148,18 @@ export default function Step2Species({
 						{isExpanded && (
 							<div className="mt-4 bg-background-secondary border border-accent-400/20 rounded-lg p-6 space-y-6 animate-slideInFromBottom">
 								{/* Description */}
-								<div>
-									<p className="text-parchment-200 leading-relaxed">
-										{species.description}
-									</p>
-								</div>
+								{descriptionSections.length > 0 && (
+									<div className="space-y-3">
+										{descriptionSections.map((text, idx) => (
+											<p
+												key={idx}
+												className="text-parchment-200 leading-relaxed"
+											>
+												{text}
+											</p>
+										))}
+									</div>
+								)}
 
 								{/* Stats */}
 								<div className="grid grid-cols-2 gap-4">
@@ -159,11 +168,14 @@ export default function Step2Species({
 											Ability Score Increases:
 										</div>
 										<div className="text-sm text-parchment-200">
-											{Object.entries(species.abilityScoreIncrease || {})
-												.map(
-													([ability, value]) => `${ability.toUpperCase()} +${value}`
-												)
-												.join(", ")}
+											{abilityIncreaseEntries.length > 0
+												? abilityIncreaseEntries
+														.map(
+															([ability, value]) =>
+																`${ability.toUpperCase()} +${value}`
+														)
+														.join(", ")
+												: "None"}
 										</div>
 									</div>
 									<div>
@@ -241,9 +253,9 @@ export default function Step2Species({
 															<p className="text-xs text-parchment-300 mt-1">
 																{sub.description}
 															</p>
-															{sub.abilityScoreIncrease && (
+															{Object.keys(sub.abilityIncreases).length > 0 && (
 																<div className="text-xs text-accent-400 mt-2">
-																	{Object.entries(sub.abilityScoreIncrease)
+																	{Object.entries(sub.abilityIncreases)
 																		.map(
 																			([ability, value]) =>
 																				`${ability.toUpperCase()} +${value}`
