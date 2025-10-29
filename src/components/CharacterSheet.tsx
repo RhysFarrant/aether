@@ -2233,8 +2233,7 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 										)}
 
 									{/* Level 1 Spells */}
-									{characterSpells &&
-										characterSpells.length > 0 && (
+									{(maxSpellSlots[1] > 0 || (characterSpells && characterSpells.length > 0)) && (
 											<div>
 												<div className="flex items-center justify-between mb-3">
 													<div className="text-sm text-accent-400 uppercase tracking-wider font-semibold">
@@ -2267,64 +2266,142 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 														</div>
 													</div>
 												</div>
-												<div className="space-y-3">
-													{characterSpells.map((spellName) => {
-														const spellData = getSpellData(spellName, charClass.name);
-														const canCast = currentSpellSlots[1] > 0;
-														return (
-															<div
-																key={spellName}
-																className={`bg-background-secondary border border-accent-400/30 rounded-lg p-4 transition-opacity ${
-																	!canCast ? "opacity-60" : ""
-																}`}
-															>
-																<div className="flex items-center justify-between mb-2">
-																	<div className="flex items-center gap-2">
-																		<span className="font-bold text-accent-400 uppercase text-sm">
-																			{spellName}
-																		</span>
-																		<span className="text-xs uppercase tracking-wider text-parchment-400 bg-background-tertiary px-2 py-0.5 rounded">
-																			Level 1
-																		</span>
-																		{spellData?.concentration && (
-																			<span className="text-xs uppercase tracking-wider text-parchment-400 bg-background-tertiary px-2 py-0.5 rounded">
-																				Concentration
+												{characterSpells && characterSpells.length > 0 ? (
+													<div className="space-y-3">
+														{characterSpells.map((spellName) => {
+															const spellData = getSpellData(spellName, charClass.name);
+															const canCast = currentSpellSlots[1] > 0;
+															return (
+																<div
+																	key={spellName}
+																	className={`bg-background-secondary border border-accent-400/30 rounded-lg p-4 transition-opacity ${
+																		!canCast ? "opacity-60" : ""
+																	}`}
+																>
+																	<div className="flex items-center justify-between mb-2">
+																		<div className="flex items-center gap-2">
+																			<span className="font-bold text-accent-400 uppercase text-sm">
+																				{spellName}
 																			</span>
-																		)}
-																		{spellData?.ritual && (
 																			<span className="text-xs uppercase tracking-wider text-parchment-400 bg-background-tertiary px-2 py-0.5 rounded">
-																				Ritual
+																				Level 1
 																			</span>
-																		)}
+																			{spellData?.concentration && (
+																				<span className="text-xs uppercase tracking-wider text-parchment-400 bg-background-tertiary px-2 py-0.5 rounded">
+																					Concentration
+																				</span>
+																			)}
+																			{spellData?.ritual && (
+																				<span className="text-xs uppercase tracking-wider text-parchment-400 bg-background-tertiary px-2 py-0.5 rounded">
+																					Ritual
+																				</span>
+																			)}
+																		</div>
+																		<button
+																			onClick={() => castSpell(1)}
+																			disabled={!canCast}
+																			className={`px-3 py-1 rounded border text-xs font-semibold transition-colors ${
+																				canCast
+																					? "bg-accent-400/20 hover:bg-accent-400/30 border-accent-400/40 text-accent-400"
+																					: "bg-background-tertiary/30 border-accent-400/10 text-parchment-400 cursor-not-allowed"
+																			}`}
+																		>
+																			Cast
+																		</button>
 																	</div>
-																	<button
-																		onClick={() => castSpell(1)}
-																		disabled={!canCast}
-																		className={`px-3 py-1 rounded border text-xs font-semibold transition-colors ${
-																			canCast
-																				? "bg-accent-400/20 hover:bg-accent-400/30 border-accent-400/40 text-accent-400"
-																				: "bg-background-tertiary/30 border-accent-400/10 text-parchment-400 cursor-not-allowed"
-																		}`}
-																	>
-																		Cast
-																	</button>
+																	{spellData && (
+																		<>
+																			<div className="text-xs text-parchment-300 leading-relaxed mb-2">
+																				{spellData.description}
+																			</div>
+																			<div className="flex flex-wrap gap-3 text-xs text-parchment-400">
+																				<span><strong>Casting Time:</strong> {spellData.castingTime}</span>
+																				<span><strong>Range:</strong> {spellData.range}</span>
+																				<span><strong>Components:</strong> {spellData.components.join(", ")}</span>
+																				<span><strong>Duration:</strong> {spellData.duration}</span>
+																			</div>
+																		</>
+																	)}
 																</div>
-																{spellData && (
-																	<>
-																		<div className="text-xs text-parchment-300 leading-relaxed mb-2">
-																			{spellData.description}
-																		</div>
-																		<div className="flex flex-wrap gap-3 text-xs text-parchment-400">
-																			<span><strong>Casting Time:</strong> {spellData.castingTime}</span>
-																			<span><strong>Range:</strong> {spellData.range}</span>
-																			<span><strong>Components:</strong> {spellData.components.join(", ")}</span>
-																			<span><strong>Duration:</strong> {spellData.duration}</span>
-																		</div>
-																	</>
-																)}
-															</div>
-														);
-													})}
+															);
+														})}
+													</div>
+												) : (
+													<div className="text-center py-4 text-parchment-400 text-xs">
+														No level 1 spells learned yet
+													</div>
+												)}
+											</div>
+										)}
+
+									{/* Level 2 Spells */}
+									{maxSpellSlots[2] > 0 && (
+											<div>
+												<div className="flex items-center justify-between mb-3">
+													<div className="text-sm text-accent-400 uppercase tracking-wider font-semibold">
+														Level 2 Spells
+													</div>
+													{/* Spell Slots */}
+													<div className="flex items-center gap-2">
+														<span className="text-xs text-parchment-400 uppercase">Spell Slots</span>
+														<div className="flex gap-1">
+															{Array.from({ length: maxSpellSlots[2] }).map((_, i) => (
+																<button
+																	key={i}
+																	onClick={() => {
+																		setCurrentSpellSlots(prev => ({
+																			...prev,
+																			2: prev[2] === i ? i + 1 : i
+																		}));
+																	}}
+																	className={`w-6 h-6 rounded border-2 transition-colors ${
+																		i < currentSpellSlots[2]
+																			? "bg-accent-400 border-accent-400"
+																			: "border-accent-400/40 hover:bg-accent-400/20"
+																	}`}
+																/>
+															))}
+														</div>
+													</div>
+												</div>
+												<div className="text-center py-4 text-parchment-400 text-xs">
+													No level 2 spells learned yet
+												</div>
+											</div>
+										)}
+
+									{/* Level 3 Spells */}
+									{maxSpellSlots[3] > 0 && (
+											<div>
+												<div className="flex items-center justify-between mb-3">
+													<div className="text-sm text-accent-400 uppercase tracking-wider font-semibold">
+														Level 3 Spells
+													</div>
+													{/* Spell Slots */}
+													<div className="flex items-center gap-2">
+														<span className="text-xs text-parchment-400 uppercase">Spell Slots</span>
+														<div className="flex gap-1">
+															{Array.from({ length: maxSpellSlots[3] }).map((_, i) => (
+																<button
+																	key={i}
+																	onClick={() => {
+																		setCurrentSpellSlots(prev => ({
+																			...prev,
+																			3: prev[3] === i ? i + 1 : i
+																		}));
+																	}}
+																	className={`w-6 h-6 rounded border-2 transition-colors ${
+																		i < currentSpellSlots[3]
+																			? "bg-accent-400 border-accent-400"
+																			: "border-accent-400/40 hover:bg-accent-400/20"
+																	}`}
+																/>
+															))}
+														</div>
+													</div>
+												</div>
+												<div className="text-center py-4 text-parchment-400 text-xs">
+													No level 3 spells learned yet
 												</div>
 											</div>
 										)}
@@ -2332,7 +2409,10 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 									{(!characterCantrips ||
 										characterCantrips.length === 0) &&
 										(!characterSpells ||
-											characterSpells.length === 0) && (
+											characterSpells.length === 0) &&
+										maxSpellSlots[1] === 0 &&
+										maxSpellSlots[2] === 0 &&
+										maxSpellSlots[3] === 0 && (
 											<div className="text-center py-8 text-parchment-400 text-sm">
 												No spells available
 											</div>
