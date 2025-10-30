@@ -57,6 +57,12 @@ export interface Character {
   cantrips?: string[];
   spells?: string[];
 
+  /** Feature usage tracking - key is "classId:featureName" */
+  featureUses?: Record<string, {
+    current: number;
+    max: number;
+  }>;
+
   alignment?: string;
 
   personality?: {

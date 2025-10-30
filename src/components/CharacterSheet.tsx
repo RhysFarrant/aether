@@ -4,6 +4,7 @@ import weaponDataImport from "../data/weapons.json";
 import conditionsDataImport from "../data/conditions.json";
 import spellsDataImport from "../data/spells.json";
 import armorDataImport from "../data/armor.json";
+import classesDataImport from "../data/classes.json";
 import { updateCharacter } from "../utils/storage";
 import LevelUpModal from "./LevelUpModal";
 
@@ -239,19 +240,39 @@ function lookupItemData(itemName: string): InventoryItem | null {
  * CharacterSheet - Full-screen character sheet with BG3-inspired layout
  */
 export default function CharacterSheet({ character }: CharacterSheetProps) {
+	// Refresh class data from classes.json to ensure latest features
+	const classesData = classesDataImport as any[];
+	const refreshedClass = classesData.find(c => c.id === character.class.id) || character.class;
+
+	// Refresh multiclass data if present
+	const refreshedCharacter = character.classes
+		? {
+			...character,
+			class: refreshedClass,
+			classes: character.classes.map(cl => ({
+				...cl,
+				class: classesData.find(c => c.id === cl.class.id) || cl.class
+			}))
+		}
+		: {
+			...character,
+			class: refreshedClass
+		};
+
 	const {
 		name,
 		level,
 		species,
 		subspecies,
-		class: charClass,
 		abilityScores,
 		currentHitPoints,
 		maxHitPoints,
 		proficiencyBonus,
 		equipment,
 		skillProficiencies,
-	} = character;
+	} = refreshedCharacter;
+
+	const charClass = refreshedCharacter.class;
 
 	// Calculate ability modifiers
 	const strMod = getAbilityModifier(abilityScores.strength);
@@ -279,6 +300,11 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 	);
 	const [deathSaveFailures, setDeathSaveFailures] = useState(
 		character.deathSaves?.failures || 0
+	);
+
+	// Feature usage tracking
+	const [featureUses, setFeatureUses] = useState<Record<string, { current: number; max: number }>>(
+		{} // Will be initialized by useEffect
 	);
 
 	// Hit dice tracking (starts at character level)
@@ -597,6 +623,26 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 			count: 1,
 		}));
 
+	// Feature usage helper functions
+	const getFeatureKey = (classId: string, featureName: string) => `${classId}:${featureName}`;
+
+	const calculateFeatureMaxUses = (usesConfig: { max: number | string; period: string }, classLevel: number): number => {
+		if (typeof usesConfig.max === 'number') {
+			return usesConfig.max;
+		}
+
+		// Evaluate formula string
+		try {
+			const formula = usesConfig.max;
+			// eslint-disable-next-line no-new-func
+			const evaluate = new Function('level', 'proficiencyBonus', `return ${formula}`);
+			return Math.floor(evaluate(classLevel, proficiencyBonus));
+		} catch (e) {
+			console.error('Error calculating feature uses:', e);
+			return 0;
+		}
+	};
+
 	// Auto-save character changes with debounce
 	useEffect(() => {
 		const timeoutId = setTimeout(() => {
@@ -616,6 +662,7 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 				activeConditions: Object.fromEntries(activeConditions),
 				equippedArmor: equippedArmor,
 				equippedShield: equippedShield,
+				featureUses: featureUses,
 			});
 		}, 1000); // Debounce for 1 second
 
@@ -634,6 +681,7 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 		activeConditions,
 		equippedArmor,
 		equippedShield,
+		featureUses,
 	]);
 
 	// Update zoom based on viewport width
@@ -657,6 +705,38 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 		window.addEventListener("resize", updateZoom);
 		return () => window.removeEventListener("resize", updateZoom);
 	}, []);
+
+	// Initialize feature uses on component mount
+	useEffect(() => {
+		const classesToCheck = refreshedCharacter.classes || [{ class: charClass, level, hitDiceUsed: 0 }];
+		const initialFeatureUses: Record<string, { current: number; max: number }> = {};
+
+		console.log('Initializing feature uses for classes:', classesToCheck.map(cl => cl.class.name));
+
+		classesToCheck.forEach((cl) => {
+			cl.class.features?.forEach((feature) => {
+				console.log('Checking feature:', feature.name, 'has uses:', !!feature.uses, 'level req:', feature.level, 'char level:', cl.level);
+				if (feature.uses && feature.level <= cl.level) {
+					const key = getFeatureKey(cl.class.id, feature.name);
+					const maxUses = calculateFeatureMaxUses(feature.uses, cl.level);
+					console.log('Adding feature uses:', key, 'max:', maxUses);
+
+					// If already have saved uses, use those but update max; otherwise initialize to max (all available)
+					if (character.featureUses?.[key]) {
+						initialFeatureUses[key] = {
+							current: character.featureUses[key].current,
+							max: maxUses, // Always recalculate max in case level changed
+						};
+					} else {
+						initialFeatureUses[key] = { current: maxUses, max: maxUses };
+					}
+				}
+			});
+		});
+
+		console.log('Final initialFeatureUses:', initialFeatureUses);
+		setFeatureUses(initialFeatureUses);
+	}, [character.id]); // Only run on mount or when character changes
 
 	// HP functions
 	const applyHealing = () => {
@@ -768,6 +848,33 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 		setHitDiceToSpendByClass({});
 	};
 
+	// Feature use/restore functions
+	const useFeature = (classId: string, featureName: string) => {
+		const key = getFeatureKey(classId, featureName);
+		if (featureUses[key] && featureUses[key].current > 0) {
+			setFeatureUses(prev => ({
+				...prev,
+				[key]: {
+					...prev[key],
+					current: prev[key].current - 1,
+				},
+			}));
+		}
+	};
+
+	const restoreFeature = (classId: string, featureName: string) => {
+		const key = getFeatureKey(classId, featureName);
+		if (featureUses[key]) {
+			setFeatureUses(prev => ({
+				...prev,
+				[key]: {
+					...prev[key],
+					current: prev[key].max,
+				},
+			}));
+		}
+	};
+
 	const longRest = () => {
 		// On long rest: restore HP to max, restore up to half of total hit dice (minimum 1), and restore all spell slots
 		setCurrentHP(maxHitPoints);
@@ -804,6 +911,22 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 			2: maxSpellSlots[2],
 			3: maxSpellSlots[3],
 		});
+
+		// Restore long rest features
+		const classesToCheck = character.classes || [{ class: charClass, level, hitDiceUsed: 0 }];
+		const updatedFeatureUses = { ...featureUses };
+
+		classesToCheck.forEach((cl) => {
+			cl.class.features?.forEach((feature) => {
+				if (feature.uses && feature.uses.period === "long rest" && feature.level <= cl.level) {
+					const key = getFeatureKey(cl.class.id, feature.name);
+					const maxUses = calculateFeatureMaxUses(feature.uses, cl.level);
+					updatedFeatureUses[key] = { current: maxUses, max: maxUses };
+				}
+			});
+		});
+
+		setFeatureUses(updatedFeatureUses);
 	};
 
 	// Level up function
@@ -2379,24 +2502,70 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 
 											if (!shouldShow || classFeatures.length === 0) return null;
 
-											return classFeatures.map((feature) => (
-												<div
-													key={`${cl.class.id}-${feature.name}`}
-													className="bg-background-secondary border border-accent-400/30 rounded-lg p-4"
-												>
-													<div className="flex items-center gap-2 mb-2">
-														<span className="font-bold text-accent-400 uppercase text-sm">
-															{feature.name}
-														</span>
-														<span className="text-xs uppercase tracking-wider text-parchment-400 bg-background-tertiary px-2 py-0.5 rounded">
-															{cl.class.name} Feature
-														</span>
+											return classFeatures.map((feature) => {
+												const featureKey = getFeatureKey(cl.class.id, feature.name);
+												const featureUsage = featureUses[featureKey];
+
+												return (
+													<div
+														key={`${cl.class.id}-${feature.name}`}
+														className="bg-background-secondary border border-accent-400/30 rounded-lg p-4"
+													>
+														<div className="flex items-center justify-between gap-2 mb-2">
+															<div className="flex items-center gap-2">
+																<span className="font-bold text-accent-400 uppercase text-sm">
+																	{feature.name}
+																</span>
+																<span className="text-xs uppercase tracking-wider text-parchment-400 bg-background-tertiary px-2 py-0.5 rounded">
+																	{cl.class.name} Feature
+																</span>
+															</div>
+															{feature.uses && featureUsage && (
+																<div className="flex items-center gap-2">
+																	<span className="text-xs text-parchment-400 uppercase tracking-wider">
+																		Uses
+																	</span>
+																	<div className="flex gap-1">
+																		{Array.from({ length: featureUsage.max }).map((_, i) => (
+																			<button
+																				key={i}
+																				onClick={() => {
+																					const key = getFeatureKey(cl.class.id, feature.name);
+																					setFeatureUses((prev) => {
+																						const currentVal = prev[key]?.current ?? 0;
+																						const usedCount = featureUsage.max - currentVal;
+																						const clickedUsed = i < usedCount;
+																						// Match spell slot behavior: filled = available, empty = used
+																						const newVal = clickedUsed
+																							? featureUsage.max - i
+																							: featureUsage.max - i - 1;
+																						console.log('Feature click:', 'index:', i, 'currentVal:', currentVal, 'usedCount:', usedCount, 'clickedUsed:', clickedUsed, 'newVal:', newVal);
+																						return {
+																							...prev,
+																							[key]: {
+																								...prev[key],
+																								current: newVal,
+																							},
+																						};
+																					});
+																				}}
+																				className={`w-6 h-6 rounded border-2 transition-colors ${
+																					i >= featureUsage.max - featureUsage.current
+																						? "bg-accent-400 border-accent-400"
+																						: "border-accent-400/40 hover:bg-accent-400/20"
+																				}`}
+																			/>
+																		))}
+																	</div>
+																</div>
+															)}
+														</div>
+														<div className="text-xs text-parchment-300 leading-relaxed">
+															{feature.description}
+														</div>
 													</div>
-													<div className="text-xs text-parchment-300 leading-relaxed">
-														{feature.description}
-													</div>
-												</div>
-											));
+												);
+											});
 										})
 									) : (
 										(featureFilter === "all" || featureFilter === charClass.id) &&
@@ -2407,31 +2576,59 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 													.filter(
 														(f) => f.level <= level
 													)
-													.map((feature) => (
-														<div
-															key={feature.name}
-															className="bg-background-secondary border border-accent-400/30 rounded-lg p-4"
-														>
-															<div className="flex items-center gap-2 mb-2">
-																<span className="font-bold text-accent-400 uppercase text-sm">
-																	{
-																		feature.name
-																	}
-																</span>
-																<span className="text-xs uppercase tracking-wider text-parchment-400 bg-background-tertiary px-2 py-0.5 rounded">
-																	{
-																		charClass.name
-																	}{" "}
-																	Feature
-																</span>
+													.map((feature) => {
+														const featureKey = getFeatureKey(charClass.id, feature.name);
+														const featureUsage = featureUses[featureKey];
+
+														return (
+															<div
+																key={feature.name}
+																className="bg-background-secondary border border-accent-400/30 rounded-lg p-4"
+															>
+																<div className="flex items-center justify-between gap-2 mb-2">
+																	<div className="flex items-center gap-2">
+																		<span className="font-bold text-accent-400 uppercase text-sm">
+																			{feature.name}
+																		</span>
+																		<span className="text-xs uppercase tracking-wider text-parchment-400 bg-background-tertiary px-2 py-0.5 rounded">
+																			{charClass.name} Feature
+																		</span>
+																	</div>
+																	{feature.uses && featureUsage && (
+																		<div className="flex items-center gap-2">
+																			<span className="text-xs text-parchment-400 uppercase tracking-wider">
+																				Uses
+																			</span>
+																			<div className="flex gap-1">
+																				{Array.from({ length: featureUsage.max }).map((_, i) => (
+																					<button
+																						key={i}
+																						onClick={() => {
+																							setFeatureUses((prev) => ({
+																								...prev,
+																								[getFeatureKey(charClass.id, feature.name)]: {
+																									...prev[getFeatureKey(charClass.id, feature.name)],
+																									current: i + 1,
+																								},
+																							}));
+																						}}
+																						className={`w-6 h-6 rounded border-2 transition-colors ${
+																							i < featureUsage.current
+																								? "bg-accent-400 border-accent-400"
+																								: "border-accent-400/40 hover:bg-accent-400/20"
+																						}`}
+																					/>
+																				))}
+																			</div>
+																		</div>
+																	)}
+																</div>
+																<div className="text-xs text-parchment-300 leading-relaxed">
+																	{feature.description}
+																</div>
 															</div>
-															<div className="text-xs text-parchment-300 leading-relaxed">
-																{
-																	feature.description
-																}
-															</div>
-														</div>
-													))}
+														);
+													})}
 											</>
 										)
 									)}
@@ -2683,24 +2880,70 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 
 											if (!shouldShow || classActions.length === 0) return null;
 
-											return classActions.map((feature) => (
-												<div
-													key={`${cl.class.id}-${feature.name}`}
-													className="bg-background-secondary border border-accent-400/30 rounded-lg p-4"
-												>
-													<div className="flex items-center gap-2 mb-2">
-														<span className="font-bold text-accent-400 uppercase text-sm">
-															{feature.name}
-														</span>
-														<span className="text-xs uppercase tracking-wider text-parchment-400 bg-background-tertiary px-2 py-0.5 rounded">
-															{cl.class.name} Feature
-														</span>
+											return classActions.map((feature) => {
+												const featureKey = getFeatureKey(cl.class.id, feature.name);
+												const featureUsage = featureUses[featureKey];
+
+												return (
+													<div
+														key={`${cl.class.id}-${feature.name}`}
+														className="bg-background-secondary border border-accent-400/30 rounded-lg p-4"
+													>
+														<div className="flex items-center justify-between gap-2 mb-2">
+															<div className="flex items-center gap-2">
+																<span className="font-bold text-accent-400 uppercase text-sm">
+																	{feature.name}
+																</span>
+																<span className="text-xs uppercase tracking-wider text-parchment-400 bg-background-tertiary px-2 py-0.5 rounded">
+																	{cl.class.name} Feature
+																</span>
+															</div>
+															{feature.uses && featureUsage && (
+																<div className="flex items-center gap-2">
+																	<span className="text-xs text-parchment-400 uppercase tracking-wider">
+																		Uses
+																	</span>
+																	<div className="flex gap-1">
+																		{Array.from({ length: featureUsage.max }).map((_, i) => (
+																			<button
+																				key={i}
+																				onClick={() => {
+																					const key = getFeatureKey(cl.class.id, feature.name);
+																					setFeatureUses((prev) => {
+																						const currentVal = prev[key]?.current ?? 0;
+																						const usedCount = featureUsage.max - currentVal;
+																						const clickedUsed = i < usedCount;
+																						// Match spell slot behavior: filled = available, empty = used
+																						const newVal = clickedUsed
+																							? featureUsage.max - i
+																							: featureUsage.max - i - 1;
+																						console.log('Feature click:', 'index:', i, 'currentVal:', currentVal, 'usedCount:', usedCount, 'clickedUsed:', clickedUsed, 'newVal:', newVal);
+																						return {
+																							...prev,
+																							[key]: {
+																								...prev[key],
+																								current: newVal,
+																							},
+																						};
+																					});
+																				}}
+																				className={`w-6 h-6 rounded border-2 transition-colors ${
+																					i >= featureUsage.max - featureUsage.current
+																						? "bg-accent-400 border-accent-400"
+																						: "border-accent-400/40 hover:bg-accent-400/20"
+																				}`}
+																			/>
+																		))}
+																	</div>
+																</div>
+															)}
+														</div>
+														<div className="text-xs text-parchment-300 leading-relaxed">
+															{feature.description}
+														</div>
 													</div>
-													<div className="text-xs text-parchment-300 leading-relaxed">
-														{feature.description}
-													</div>
-												</div>
-											));
+												);
+											});
 										})
 									) : (
 										(actionFilter === "all" || actionFilter === charClass.id) &&
@@ -2716,31 +2959,59 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 															f.level <= level &&
 															!f.isPassive
 													)
-													.map((feature) => (
-														<div
-															key={feature.name}
-															className="bg-background-secondary border border-accent-400/30 rounded-lg p-4"
-														>
-															<div className="flex items-center gap-2 mb-2">
-																<span className="font-bold text-accent-400 uppercase text-sm">
-																	{
-																		feature.name
-																	}
-																</span>
-																<span className="text-xs uppercase tracking-wider text-parchment-400 bg-background-tertiary px-2 py-0.5 rounded">
-																	{
-																		charClass.name
-																	}{" "}
-																	Feature
-																</span>
+													.map((feature) => {
+														const featureKey = getFeatureKey(charClass.id, feature.name);
+														const featureUsage = featureUses[featureKey];
+
+														return (
+															<div
+																key={feature.name}
+																className="bg-background-secondary border border-accent-400/30 rounded-lg p-4"
+															>
+																<div className="flex items-center justify-between gap-2 mb-2">
+																	<div className="flex items-center gap-2">
+																		<span className="font-bold text-accent-400 uppercase text-sm">
+																			{feature.name}
+																		</span>
+																		<span className="text-xs uppercase tracking-wider text-parchment-400 bg-background-tertiary px-2 py-0.5 rounded">
+																			{charClass.name} Feature
+																		</span>
+																	</div>
+																	{feature.uses && featureUsage && (
+																		<div className="flex items-center gap-2">
+																			<span className="text-xs text-parchment-400 uppercase tracking-wider">
+																				Uses
+																			</span>
+																			<div className="flex gap-1">
+																				{Array.from({ length: featureUsage.max }).map((_, i) => (
+																					<button
+																						key={i}
+																						onClick={() => {
+																							setFeatureUses((prev) => ({
+																								...prev,
+																								[getFeatureKey(charClass.id, feature.name)]: {
+																									...prev[getFeatureKey(charClass.id, feature.name)],
+																									current: i + 1,
+																								},
+																							}));
+																						}}
+																						className={`w-6 h-6 rounded border-2 transition-colors ${
+																							i < featureUsage.current
+																								? "bg-accent-400 border-accent-400"
+																								: "border-accent-400/40 hover:bg-accent-400/20"
+																						}`}
+																					/>
+																				))}
+																			</div>
+																		</div>
+																	)}
+																</div>
+																<div className="text-xs text-parchment-300 leading-relaxed">
+																	{feature.description}
+																</div>
 															</div>
-															<div className="text-xs text-parchment-300 leading-relaxed">
-																{
-																	feature.description
-																}
-															</div>
-														</div>
-													))}
+														);
+													})}
 											</>
 										)
 									)}
@@ -3068,20 +3339,21 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 																		setCurrentSpellSlots(
 																			(
 																				prev
-																			) => ({
-																				...prev,
-																				1:
-																					prev[1] ===
-																					i
-																						? i +
-																						  1
-																						: i,
-																			})
+																			) => {
+																				const usedSlots = maxSpellSlots[1] - prev[1];
+																				const clickedUsed = i < usedSlots;
+																				return {
+																					...prev,
+																					1: clickedUsed
+																						? maxSpellSlots[1] - i
+																						: maxSpellSlots[1] - i - 1,
+																				};
+																			}
 																		);
 																	}}
 																	className={`w-6 h-6 rounded border-2 transition-colors ${
-																		i <
-																		currentSpellSlots[1]
+																		i >=
+																		maxSpellSlots[1] - currentSpellSlots[1]
 																			? "bg-accent-400 border-accent-400"
 																			: "border-accent-400/40 hover:bg-accent-400/20"
 																	}`}
@@ -3239,20 +3511,21 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 																	setCurrentSpellSlots(
 																		(
 																			prev
-																		) => ({
-																			...prev,
-																			2:
-																				prev[2] ===
-																				i
-																					? i +
-																					  1
-																					: i,
-																		})
+																		) => {
+																			const usedSlots = maxSpellSlots[2] - prev[2];
+																			const clickedUsed = i < usedSlots;
+																			return {
+																				...prev,
+																				2: clickedUsed
+																					? maxSpellSlots[2] - i
+																					: maxSpellSlots[2] - i - 1,
+																			};
+																		}
 																	);
 																}}
 																className={`w-6 h-6 rounded border-2 transition-colors ${
-																	i <
-																	currentSpellSlots[2]
+																	i >=
+																	maxSpellSlots[2] - currentSpellSlots[2]
 																		? "bg-accent-400 border-accent-400"
 																		: "border-accent-400/40 hover:bg-accent-400/20"
 																}`}
@@ -3289,20 +3562,21 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 																	setCurrentSpellSlots(
 																		(
 																			prev
-																		) => ({
-																			...prev,
-																			3:
-																				prev[3] ===
-																				i
-																					? i +
-																					  1
-																					: i,
-																		})
+																		) => {
+																			const usedSlots = maxSpellSlots[3] - prev[3];
+																			const clickedUsed = i < usedSlots;
+																			return {
+																				...prev,
+																				3: clickedUsed
+																					? maxSpellSlots[3] - i
+																					: maxSpellSlots[3] - i - 1,
+																			};
+																		}
 																	);
 																}}
 																className={`w-6 h-6 rounded border-2 transition-colors ${
-																	i <
-																	currentSpellSlots[3]
+																	i >=
+																	maxSpellSlots[3] - currentSpellSlots[3]
 																		? "bg-accent-400 border-accent-400"
 																		: "border-accent-400/40 hover:bg-accent-400/20"
 																}`}

@@ -72,4 +72,9 @@ export interface ClassFeature {
   level: number;
   description: string;
   isPassive?: boolean; // Default false - passive features don't show in Actions
+  /** Limited use feature tracking */
+  uses?: {
+    max: number | string; // Number or formula like "2 + proficiency bonus"
+    period: "short rest" | "long rest" | "day"; // When uses refresh
+  };
 }
