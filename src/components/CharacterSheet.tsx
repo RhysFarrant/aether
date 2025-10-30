@@ -287,10 +287,12 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 
 	// Tab states
 	const [featuresTab, setFeaturesTab] = useState<
-		"features" | "actions" | "spells" | "inventory" | "notes"
+		"features" | "actions" | "spells" | "inventory" | "details" | "notes"
 	>("features");
 	const [featureFilter, setFeatureFilter] = useState<string>("all");
 	const [actionFilter, setActionFilter] = useState<string>("all");
+	const [hiddenFeatures, setHiddenFeatures] = useState<Set<string>>(new Set());
+	const [hiddenActions, setHiddenActions] = useState<Set<string>>(new Set());
 
 	// HP and combat state
 	const [currentHP, setCurrentHP] = useState(currentHitPoints);
@@ -1692,6 +1694,30 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 		);
 	};
 
+	const toggleFeatureVisibility = (featureName: string) => {
+		setHiddenFeatures(prev => {
+			const newSet = new Set(prev);
+			if (newSet.has(featureName)) {
+				newSet.delete(featureName);
+			} else {
+				newSet.add(featureName);
+			}
+			return newSet;
+		});
+	};
+
+	const toggleActionVisibility = (actionName: string) => {
+		setHiddenActions(prev => {
+			const newSet = new Set(prev);
+			if (newSet.has(actionName)) {
+				newSet.delete(actionName);
+			} else {
+				newSet.add(actionName);
+			}
+			return newSet;
+		});
+	};
+
 	// All D&D 5e skills with their associated abilities
 	const allSkills = [
 		{ name: "Acrobatics", ability: "DEX", modifier: dexMod },
@@ -3065,25 +3091,55 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 										)}
 									</div>
 
+									{/* Hidden Features */}
+									{hiddenFeatures.size > 0 && (
+										<div className="bg-background-tertiary border border-accent-400/20 rounded-lg p-3">
+											<div className="text-xs text-accent-400 uppercase tracking-wider mb-2">
+												Hidden Features ({hiddenFeatures.size})
+											</div>
+											<div className="flex flex-wrap gap-2">
+												{Array.from(hiddenFeatures).map(featureName => (
+													<button
+														key={featureName}
+														onClick={() => toggleFeatureVisibility(featureName)}
+														className="px-2 py-1 rounded bg-background-secondary hover:bg-accent-400/20 text-parchment-300 text-xs font-semibold transition-colors"
+														title="Click to show this feature"
+													>
+														{featureName} ×
+													</button>
+												))}
+											</div>
+										</div>
+									)}
+
 									{/* Species Traits */}
 									{(featureFilter === "all" ||
 										featureFilter === "species") &&
 										species.traits &&
 										species.traits.length > 0 && (
 											<>
-												{species.traits.filter((trait) => trait.showOnSheet !== false).map((trait) => (
+												{species.traits.filter((trait) => trait.showOnSheet !== false && !hiddenFeatures.has(trait.name)).map((trait) => (
 													<div
 														key={trait.name}
 														className="bg-background-secondary border border-accent-400/30 rounded-lg p-4"
 													>
-														<div className="flex items-center gap-2 mb-2">
-															<span className="font-bold text-accent-400 uppercase text-sm">
-																{trait.name}
-															</span>
-															<span className="text-xs uppercase tracking-wider text-parchment-400 bg-background-tertiary px-2 py-0.5 rounded">
-																{species.name}{" "}
-																Trait
-															</span>
+														<div className="flex items-center justify-between mb-2">
+															<div className="flex items-center gap-2">
+																<span className="font-bold text-accent-400 uppercase text-sm">
+																	{trait.name}
+																</span>
+																<span className="text-xs uppercase tracking-wider text-parchment-400 bg-background-tertiary px-2 py-0.5 rounded">
+																	{species.name}{" "}
+																	Trait
+																</span>
+															</div>
+															<button
+																onClick={() => toggleFeatureVisibility(trait.name)}
+																className="px-2 py-1 rounded bg-background-tertiary hover:bg-background-tertiary/70 text-parchment-300 text-xs font-semibold transition-colors"
+																title="Hide this feature"
+															>
+																Hide
+															</button>
 														</div>
 														<div className="text-xs text-parchment-300 leading-relaxed">
 															{trait.description}
