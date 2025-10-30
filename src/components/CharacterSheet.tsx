@@ -34,6 +34,7 @@ interface InventoryItem {
 	isCustom: boolean;
 	equipped?: boolean; // Whether the item is currently equipped
 	customName?: string; // User-provided custom name for personalization
+	tags?: string[]; // User-defined tags for organization (e.g., "quest", "important", "sell")
 	weaponData?: WeaponProperties;
 	armorData?: ArmorProperties;
 	customStats?: {
@@ -563,6 +564,8 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 	const [showSuggestions, setShowSuggestions] = useState(false);
 	const [editingItemIndex, setEditingItemIndex] = useState<number | null>(null);
 	const [editingItemName, setEditingItemName] = useState("");
+	const [addingTagToIndex, setAddingTagToIndex] = useState<number | null>(null);
+	const [newTag, setNewTag] = useState("");
 	const [isCustomItem, setIsCustomItem] = useState(false);
 	const [customItemType, setCustomItemType] = useState<
 		"weapon" | "armor" | "shield" | "other"
@@ -1653,6 +1656,40 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 	const cancelEditingItem = () => {
 		setEditingItemIndex(null);
 		setEditingItemName("");
+	};
+
+	const startAddingTag = (index: number) => {
+		setAddingTagToIndex(index);
+		setNewTag("");
+	};
+
+	const saveTag = (index: number) => {
+		if (!newTag.trim()) return;
+
+		setInventoryItems(prevItems =>
+			prevItems.map((item, i) =>
+				i === index
+					? { ...item, tags: [...(item.tags || []), newTag.trim()] }
+					: item
+			)
+		);
+		setAddingTagToIndex(null);
+		setNewTag("");
+	};
+
+	const cancelAddingTag = () => {
+		setAddingTagToIndex(null);
+		setNewTag("");
+	};
+
+	const removeTag = (index: number, tagToRemove: string) => {
+		setInventoryItems(prevItems =>
+			prevItems.map((item, i) =>
+				i === index
+					? { ...item, tags: (item.tags || []).filter(tag => tag !== tagToRemove) }
+					: item
+			)
+		);
 	};
 
 	// All D&D 5e skills with their associated abilities
@@ -5114,6 +5151,65 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 																</div>
 															);
 														})()}
+
+														{/* Tags Section */}
+														<div className="mt-2 space-y-1">
+															{item.tags && item.tags.length > 0 && (
+																<div className="flex flex-wrap gap-1">
+																	{item.tags.map((tag, tagIdx) => (
+																		<span
+																			key={tagIdx}
+																			className="inline-flex items-center gap-1 text-xs bg-accent-400/20 text-accent-400 px-2 py-0.5 rounded border border-accent-400/30"
+																		>
+																			{tag}
+																			<button
+																				onClick={() => removeTag(idx, tag)}
+																				className="hover:text-red-400 transition-colors"
+																				title="Remove tag"
+																			>
+																				×
+																			</button>
+																		</span>
+																	))}
+																</div>
+															)}
+
+															{addingTagToIndex === idx ? (
+																<div className="flex items-center gap-2">
+																	<input
+																		type="text"
+																		value={newTag}
+																		onChange={(e) => setNewTag(e.target.value)}
+																		onKeyDown={(e) => {
+																			if (e.key === "Enter") saveTag(idx);
+																			if (e.key === "Escape") cancelAddingTag();
+																		}}
+																		className="flex-1 bg-background-tertiary border border-accent-400/30 rounded px-2 py-1 text-xs text-parchment-100 focus:outline-none focus:border-accent-400"
+																		placeholder="Enter tag name..."
+																		autoFocus
+																	/>
+																	<button
+																		onClick={() => saveTag(idx)}
+																		className="px-2 py-1 rounded bg-accent-400/20 hover:bg-accent-400/30 text-accent-400 text-xs font-semibold"
+																	>
+																		✓
+																	</button>
+																	<button
+																		onClick={cancelAddingTag}
+																		className="px-2 py-1 rounded bg-background-tertiary hover:bg-background-tertiary/70 text-parchment-300 text-xs font-semibold"
+																	>
+																		✕
+																	</button>
+																</div>
+															) : (
+																<button
+																	onClick={() => startAddingTag(idx)}
+																	className="text-xs px-2 py-1 rounded bg-background-tertiary hover:bg-background-tertiary/70 text-parchment-300 font-semibold transition-colors"
+																>
+																	+ Add Tag
+																</button>
+															)}
+														</div>
 													</div>
 												);
 											})
