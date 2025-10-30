@@ -429,51 +429,80 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 	);
 	const [showAddSpell, setShowAddSpell] = useState(false);
 	const [newSpellName, setNewSpellName] = useState("");
-	const [newSpellLevel, setNewSpellLevel] = useState<"cantrip" | 1>(1);
+	const [newSpellLevel, setNewSpellLevel] = useState<"cantrip" | "any" | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9>("any");
 	const [selectedSpell, setSelectedSpell] = useState<string | null>(null);
 	const [showSpellSuggestions, setShowSpellSuggestions] = useState(false);
 	const [searchAllSpells, setSearchAllSpells] = useState(false);
 	const [spellAbilityOverride, setSpellAbilityOverride] = useState<'intelligence' | 'wisdom' | 'charisma' | ''>('');
 	const [spellGrantedByClass, setSpellGrantedByClass] = useState<string>('');
 
-	// Get filtered spells based on search mode
-	const filteredSpells = newSpellName.trim()
+	// Helper to get spell level
+	const getSpellLevel = (spellName: string, className?: string): string => {
+		const searchClasses = className ? [className.toLowerCase()] : Object.keys(SPELLS_DATA);
+
+		for (const cls of searchClasses) {
+			const classSpells = SPELLS_DATA[cls];
+			if (!classSpells) continue;
+
+			// Check cantrips
+			if (classSpells.cantrips?.some(s => s.name === spellName)) return "Cantrip";
+
+			// Check levels 1-9
+			for (let level = 1; level <= 9; level++) {
+				const levelKey = `level${level}`;
+				const levelSpells = classSpells[levelKey];
+				if (Array.isArray(levelSpells) && levelSpells.some((s: SpellData) => s.name === spellName)) {
+					return `Level ${level}`;
+				}
+			}
+		}
+		return "Unknown";
+	};
+
+	// Get filtered spells based on search mode - returns {name, level}
+	const filteredSpells: { name: string; level: string }[] = newSpellName.trim()
 		? (() => {
 				const query = newSpellName.toLowerCase();
-				const spells: string[] = [];
+				const spells: { name: string; level: string }[] = [];
+				const seenNames = new Set<string>();
 
 				if (searchAllSpells) {
 					// Search all classes
 					Object.values(SPELLS_DATA).forEach((classSpells) => {
 						// Search cantrips
 						if (
-							newSpellLevel === "cantrip" &&
+							(newSpellLevel === "cantrip" || newSpellLevel === "any") &&
 							classSpells.cantrips
 						) {
 							classSpells.cantrips.forEach((s) => {
 								if (
 									s.name.toLowerCase().includes(query) &&
-									!spells.includes(s.name)
+									!seenNames.has(s.name)
 								) {
-									spells.push(s.name);
+									seenNames.add(s.name);
+									spells.push({ name: s.name, level: "Cantrip" });
 								}
 							});
 						}
 
 						// Search level spells
 						if (newSpellLevel !== "cantrip") {
-							const levelKey = `level${newSpellLevel}`;
-							const levelSpells = classSpells[levelKey];
-							if (Array.isArray(levelSpells)) {
-								levelSpells.forEach((s: SpellData) => {
-									if (
-										s.name.toLowerCase().includes(query) &&
-										!spells.includes(s.name)
-									) {
-										spells.push(s.name);
-									}
-								});
-							}
+							const levels = newSpellLevel === "any" ? [1, 2, 3, 4, 5, 6, 7, 8, 9] : [newSpellLevel as number];
+							levels.forEach(level => {
+								const levelKey = `level${level}`;
+								const levelSpells = classSpells[levelKey];
+								if (Array.isArray(levelSpells)) {
+									levelSpells.forEach((s: SpellData) => {
+										if (
+											s.name.toLowerCase().includes(query) &&
+											!seenNames.has(s.name)
+										) {
+											seenNames.add(s.name);
+											spells.push({ name: s.name, level: `Level ${level}` });
+										}
+									});
+								}
+							});
 						}
 					});
 				} else {
@@ -483,36 +512,35 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 					if (availableSpells) {
 						// Search cantrips
 						if (
-							newSpellLevel === "cantrip" &&
+							(newSpellLevel === "cantrip" || newSpellLevel === "any") &&
 							availableSpells.cantrips
 						) {
-							spells.push(
-								...availableSpells.cantrips
-									.filter((s) =>
-										s.name.toLowerCase().includes(query)
-									)
-									.map((s) => s.name)
-							);
+							availableSpells.cantrips
+								.filter((s) => s.name.toLowerCase().includes(query))
+								.forEach((s) => {
+									spells.push({ name: s.name, level: "Cantrip" });
+								});
 						}
 
 						// Search level spells
 						if (newSpellLevel !== "cantrip") {
-							const levelKey = `level${newSpellLevel}`;
-							const levelSpells = availableSpells[levelKey];
-							if (Array.isArray(levelSpells)) {
-								spells.push(
-									...levelSpells
-										.filter((s: SpellData) =>
-											s.name.toLowerCase().includes(query)
-										)
-										.map((s: SpellData) => s.name)
-								);
-							}
+							const levels = newSpellLevel === "any" ? [1, 2, 3, 4, 5, 6, 7, 8, 9] : [newSpellLevel as number];
+							levels.forEach(level => {
+								const levelKey = `level${level}`;
+								const levelSpells = availableSpells[levelKey];
+								if (Array.isArray(levelSpells)) {
+									levelSpells
+										.filter((s: SpellData) => s.name.toLowerCase().includes(query))
+										.forEach((s: SpellData) => {
+											spells.push({ name: s.name, level: `Level ${level}` });
+										});
+								}
+							});
 						}
 					}
 				}
 
-				return spells.sort().slice(0, 10); // Sort and limit to 10 suggestions
+				return spells.sort((a, b) => a.name.localeCompare(b.name)).slice(0, 10); // Sort and limit to 10 suggestions
 		  })()
 		: [];
 
@@ -1287,8 +1315,13 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 
 	const addSpell = () => {
 		if (selectedSpell) {
+			// Determine actual spell level if "any" was selected
+			const actualSpellLevel = newSpellLevel === "any"
+				? getSpellLevel(selectedSpell, searchAllSpells ? undefined : charClass.name)
+				: newSpellLevel === "cantrip" ? "Cantrip" : `Level ${newSpellLevel}`;
+
 			// Add spell to character's spell list
-			if (newSpellLevel === "cantrip") {
+			if (actualSpellLevel === "Cantrip") {
 				const updatedCantrips = [...characterCantrips, selectedSpell];
 				setCharacterCantrips(updatedCantrips);
 			} else {
@@ -3472,16 +3505,11 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 													<select
 														value={newSpellLevel}
 														onChange={(e) => {
+															const val = e.target.value;
 															setNewSpellLevel(
-																e.target
-																	.value ===
-																	"cantrip"
-																	? "cantrip"
-																	: (parseInt(
-																			e
-																				.target
-																				.value
-																	  ) as 1)
+																val === "cantrip" ? "cantrip" :
+																val === "any" ? "any" :
+																parseInt(val) as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
 															);
 															setNewSpellName("");
 															setSelectedSpell(
@@ -3493,12 +3521,17 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 														}}
 														className="w-full bg-background-tertiary border border-accent-400/30 rounded px-3 py-2 text-sm text-parchment-100 focus:outline-none focus:border-accent-400"
 													>
-														<option value="cantrip">
-															Cantrip
-														</option>
-														<option value="1">
-															Level 1
-														</option>
+														<option value="any">Any Level</option>
+														<option value="cantrip">Cantrip</option>
+														<option value="1">Level 1</option>
+														<option value="2">Level 2</option>
+														<option value="3">Level 3</option>
+														<option value="4">Level 4</option>
+														<option value="5">Level 5</option>
+														<option value="6">Level 6</option>
+														<option value="7">Level 7</option>
+														<option value="8">Level 8</option>
+														<option value="9">Level 9</option>
 													</select>
 												</div>
 
@@ -3569,18 +3602,17 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 																	(spell) => (
 																		<button
 																			key={
-																				spell
+																				spell.name
 																			}
 																			onClick={() =>
 																				selectSpellFromSuggestion(
-																					spell
+																					spell.name
 																				)
 																			}
-																			className="w-full text-left px-3 py-2 text-sm text-parchment-200 hover:bg-accent-400/20 transition-colors"
+																			className="w-full text-left px-3 py-2 text-sm text-parchment-200 hover:bg-accent-400/20 transition-colors flex items-center justify-between"
 																		>
-																			{
-																				spell
-																			}
+																			<span>{spell.name}</span>
+																			<span className="text-xs text-parchment-400 ml-2">{spell.level}</span>
 																		</button>
 																	)
 																)}
