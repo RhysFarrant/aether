@@ -265,12 +265,8 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 	const [featuresTab, setFeaturesTab] = useState<
 		"features" | "actions" | "spells" | "inventory" | "notes"
 	>("features");
-	const [featureFilter, setFeatureFilter] = useState<
-		"all" | "species" | "subspecies" | "class"
-	>("all");
-	const [actionFilter, setActionFilter] = useState<
-		"all" | "weapons" | "species" | "subspecies" | "class"
-	>("all");
+	const [featureFilter, setFeatureFilter] = useState<string>("all");
+	const [actionFilter, setActionFilter] = useState<string>("all");
 
 	// HP and combat state
 	const [currentHP, setCurrentHP] = useState(currentHitPoints);
@@ -291,6 +287,7 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 	);
 	const [isShortResting, setIsShortResting] = useState(false);
 	const [hitDiceToSpend, setHitDiceToSpend] = useState(0);
+	const [hitDiceToSpendByClass, setHitDiceToSpendByClass] = useState<Record<string, number>>({});
 
 	// Conditions tracking
 	const [activeConditions, setActiveConditions] = useState<
@@ -313,8 +310,63 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 	// Zoom state for responsive scaling
 	const [zoom, setZoom] = useState(100);
 
-	// Calculate max spell slots based on class and level
+	// Calculate max spell slots based on class and level (with multiclass support)
 	const maxSpellSlots = (() => {
+		// For multiclass characters, calculate spell slots based on combined caster level
+		if (character.classes && character.classes.length > 1) {
+			let totalCasterLevel = 0;
+
+			character.classes.forEach((cl) => {
+				const spellcasting = cl.class.spellcasting;
+
+				if (spellcasting && spellcasting.spellSlotsByLevel) {
+					// Full casters (Wizard, Cleric, etc.) contribute full level
+					// Half casters (Paladin, Ranger) contribute half level (rounded down)
+					// Third casters (Eldritch Knight, Arcane Trickster) contribute 1/3 level (rounded down)
+
+					// Determine caster type based on spell progression
+					const level1Slots = spellcasting.spellSlotsByLevel[1];
+					const level2Slots = spellcasting.spellSlotsByLevel[2];
+
+					// Full caster: has spell slots at level 1
+					if (level1Slots && level1Slots[1] >= 2) {
+						totalCasterLevel += cl.level;
+					}
+					// Half caster: gets spell slots at level 2
+					else if (level2Slots && level2Slots[1] > 0) {
+						totalCasterLevel += Math.floor(cl.level / 2);
+					}
+					// Third caster: gets spell slots later
+					else {
+						totalCasterLevel += Math.floor(cl.level / 3);
+					}
+				}
+			});
+
+			// Use any full caster class's spell slot table with the total caster level
+			const fullCasterClass = character.classes.find((cl) => {
+				const spellcasting = cl.class.spellcasting;
+				const level1Slots = spellcasting?.spellSlotsByLevel?.[1];
+				return level1Slots && level1Slots[1] >= 2;
+			});
+
+			if (fullCasterClass && totalCasterLevel > 0) {
+				const spellcasting = fullCasterClass.class.spellcasting;
+				const slotsForLevel = spellcasting?.spellSlotsByLevel?.[totalCasterLevel];
+
+				if (slotsForLevel) {
+					return {
+						1: slotsForLevel[1] || 0,
+						2: slotsForLevel[2] || 0,
+						3: slotsForLevel[3] || 0,
+					};
+				}
+			}
+
+			return { 1: 0, 2: 0, 3: 0 };
+		}
+
+		// Single class - use original logic
 		const spellcasting = charClass.spellcasting;
 
 		// No spellcasting ability = no spell slots
@@ -655,35 +707,96 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 	const startShortRest = () => {
 		setIsShortResting(true);
 		setHitDiceToSpend(0);
+		setHitDiceToSpendByClass({});
 	};
 
 	const cancelShortRest = () => {
 		setIsShortResting(false);
 		setHitDiceToSpend(0);
+		setHitDiceToSpendByClass({});
 	};
 
 	const confirmShortRest = () => {
-		// Roll each hit die and apply healing
-		let totalHealing = 0;
-		for (let i = 0; i < hitDiceToSpend; i++) {
-			const hitDieSize = charClass.hitDie;
-			const roll = Math.floor(Math.random() * hitDieSize) + 1;
-			const healing = Math.max(1, roll + conMod); // Minimum 1 HP
-			totalHealing += healing;
+		// For multiclass characters
+		if (character.classes && character.classes.length > 1) {
+			let totalHealing = 0;
+			const updatedClasses = character.classes.map((cl) => {
+				const diceToSpend = hitDiceToSpendByClass[cl.class.id] || 0;
+
+				// Roll each hit die for this class
+				for (let i = 0; i < diceToSpend; i++) {
+					const hitDieSize = cl.class.hitDie;
+					const roll = Math.floor(Math.random() * hitDieSize) + 1;
+					const healing = Math.max(1, roll + conMod);
+					totalHealing += healing;
+				}
+
+				// Update hit dice used for this class
+				return {
+					...cl,
+					hitDiceUsed: (cl.hitDiceUsed || 0) + diceToSpend,
+				};
+			});
+
+			// Apply healing
+			setCurrentHP(Math.min(currentHP + totalHealing, maxHitPoints));
+
+			// Update character in storage
+			updateCharacter(character.id, {
+				classes: updatedClasses,
+			});
+
+			// Reload to refresh
+			window.location.reload();
+		} else {
+			// Single class - use old logic
+			let totalHealing = 0;
+			for (let i = 0; i < hitDiceToSpend; i++) {
+				const hitDieSize = charClass.hitDie;
+				const roll = Math.floor(Math.random() * hitDieSize) + 1;
+				const healing = Math.max(1, roll + conMod);
+				totalHealing += healing;
+			}
+
+			// Apply healing and spend hit dice
+			setCurrentHP(Math.min(currentHP + totalHealing, maxHitPoints));
+			setCurrentHitDice(currentHitDice - hitDiceToSpend);
 		}
 
-		// Apply healing and spend hit dice
-		setCurrentHP(Math.min(currentHP + totalHealing, maxHitPoints));
-		setCurrentHitDice(currentHitDice - hitDiceToSpend);
 		setIsShortResting(false);
 		setHitDiceToSpend(0);
+		setHitDiceToSpendByClass({});
 	};
 
 	const longRest = () => {
 		// On long rest: restore HP to max, restore up to half of total hit dice (minimum 1), and restore all spell slots
 		setCurrentHP(maxHitPoints);
-		const restoredAmount = Math.max(1, Math.floor(level / 2));
-		setCurrentHitDice(Math.min(currentHitDice + restoredAmount, level));
+
+		// For multiclass characters, restore hit dice per class
+		if (character.classes && character.classes.length > 1) {
+			const updatedClasses = character.classes.map((cl) => {
+				const usedHitDice = cl.hitDiceUsed || 0;
+				const restoredAmount = Math.max(1, Math.floor(cl.level / 2));
+				const newUsedHitDice = Math.max(0, usedHitDice - restoredAmount);
+
+				return {
+					...cl,
+					hitDiceUsed: newUsedHitDice,
+				};
+			});
+
+			// Update character in storage
+			updateCharacter(character.id, {
+				classes: updatedClasses,
+			});
+
+			// Reload to refresh
+			window.location.reload();
+		} else {
+			// Single class - restore half of total hit dice
+			const restoredAmount = Math.max(1, Math.floor(level / 2));
+			setCurrentHitDice(Math.min(currentHitDice + restoredAmount, level));
+		}
 
 		// Restore all spell slots
 		setCurrentSpellSlots({
@@ -694,11 +807,46 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 	};
 
 	// Level up function
-	const handleLevelUp = (hpIncrease: number) => {
+	const handleLevelUp = (hpIncrease: number, selectedClass: any) => {
 		if (level >= 20) return; // Max level is 20
 
 		const newLevel = level + 1;
 		const newMaxHP = maxHitPoints + hpIncrease;
+
+		// Check if multiclassing (selected a different class)
+		const isMulticlassing = selectedClass.id !== charClass.id;
+
+		// Initialize or update classes array for multiclassing
+		let updatedClasses = character.classes || [
+			{ class: charClass, level: level, hitDiceUsed: 0 }
+		];
+
+		if (isMulticlassing) {
+			// Check if this class already exists in multiclass array
+			const existingClassIndex = updatedClasses.findIndex(
+				(cl) => cl.class.id === selectedClass.id
+			);
+
+			if (existingClassIndex >= 0) {
+				// Level up existing multiclass
+				updatedClasses[existingClassIndex].level += 1;
+			} else {
+				// Add new multiclass
+				updatedClasses.push({
+					class: selectedClass,
+					level: 1,
+					hitDiceUsed: 0
+				});
+			}
+		} else {
+			// Leveling up primary class
+			const primaryClassIndex = updatedClasses.findIndex(
+				(cl) => cl.class.id === charClass.id
+			);
+			if (primaryClassIndex >= 0) {
+				updatedClasses[primaryClassIndex].level += 1;
+			}
+		}
 
 		// Update character in storage
 		updateCharacter(character.id, {
@@ -706,6 +854,7 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 			maxHitPoints: newMaxHP,
 			currentHitPoints: currentHP + hpIncrease, // Also increase current HP
 			currentHitDice: currentHitDice + 1, // Add one hit die for new level
+			classes: updatedClasses,
 		});
 
 		// Refresh the page to recalculate all stats
@@ -921,49 +1070,96 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 								Short Rest
 							</h2>
 							<p className="text-parchment-300 text-sm mb-4">
-								Spend hit dice to recover hit points. You have{" "}
-								{currentHitDice} hit dice available.
+								Spend hit dice to recover hit points.
 							</p>
 
-							{/* Hit Dice Selector */}
-							<div className="mb-6">
-								<label className="text-xs text-parchment-400 uppercase tracking-wider mb-2 block">
-									Hit Dice to Spend
-								</label>
-								<div className="flex items-center gap-3">
-									<button
-										onClick={() =>
-											setHitDiceToSpend(
-												Math.max(0, hitDiceToSpend - 1)
-											)
-										}
-										className="w-10 h-10 rounded bg-background-tertiary hover:bg-accent-400/20 border border-accent-400/40 text-accent-400 font-bold transition-colors"
-									>
-										-
-									</button>
-									<div className="flex-1 text-center">
-										<div className="text-3xl font-bold text-accent-400">
-											{hitDiceToSpend}
-										</div>
-										<div className="text-xs text-parchment-400">
-											d{charClass.hitDie} each
-										</div>
-									</div>
-									<button
-										onClick={() =>
-											setHitDiceToSpend(
-												Math.min(
-													currentHitDice,
-													hitDiceToSpend + 1
-												)
-											)
-										}
-										className="w-10 h-10 rounded bg-background-tertiary hover:bg-accent-400/20 border border-accent-400/40 text-accent-400 font-bold transition-colors"
-									>
-										+
-									</button>
+							{/* Hit Dice Selectors */}
+							{character.classes && character.classes.length > 1 ? (
+								<div className="mb-6 space-y-4">
+									{character.classes.map((cl) => {
+										const usedHitDice = cl.hitDiceUsed || 0;
+										const availableHitDice = cl.level - usedHitDice;
+										const currentSpend = hitDiceToSpendByClass[cl.class.id] || 0;
+
+										return (
+											<div key={cl.class.id} className="bg-background-tertiary/30 rounded-lg p-3">
+												<label className="text-xs text-parchment-300 font-semibold mb-2 block">
+													{cl.class.name} (d{cl.class.hitDie}) - {availableHitDice} available
+												</label>
+												<div className="flex items-center gap-3">
+													<button
+														onClick={() =>
+															setHitDiceToSpendByClass({
+																...hitDiceToSpendByClass,
+																[cl.class.id]: Math.max(0, currentSpend - 1),
+															})
+														}
+														className="w-10 h-10 rounded bg-background-tertiary hover:bg-accent-400/20 border border-accent-400/40 text-accent-400 font-bold transition-colors"
+													>
+														-
+													</button>
+													<div className="flex-1 text-center">
+														<div className="text-2xl font-bold text-accent-400">
+															{currentSpend}
+														</div>
+													</div>
+													<button
+														onClick={() =>
+															setHitDiceToSpendByClass({
+																...hitDiceToSpendByClass,
+																[cl.class.id]: Math.min(availableHitDice, currentSpend + 1),
+															})
+														}
+														disabled={availableHitDice === 0}
+														className="w-10 h-10 rounded bg-background-tertiary hover:bg-accent-400/20 border border-accent-400/40 text-accent-400 font-bold transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+													>
+														+
+													</button>
+												</div>
+											</div>
+										);
+									})}
 								</div>
-							</div>
+							) : (
+								<div className="mb-6">
+									<label className="text-xs text-parchment-400 uppercase tracking-wider mb-2 block">
+										Hit Dice to Spend ({currentHitDice} available)
+									</label>
+									<div className="flex items-center gap-3">
+										<button
+											onClick={() =>
+												setHitDiceToSpend(
+													Math.max(0, hitDiceToSpend - 1)
+												)
+											}
+											className="w-10 h-10 rounded bg-background-tertiary hover:bg-accent-400/20 border border-accent-400/40 text-accent-400 font-bold transition-colors"
+										>
+											-
+										</button>
+										<div className="flex-1 text-center">
+											<div className="text-3xl font-bold text-accent-400">
+												{hitDiceToSpend}
+											</div>
+											<div className="text-xs text-parchment-400">
+												d{charClass.hitDie} each
+											</div>
+										</div>
+										<button
+											onClick={() =>
+												setHitDiceToSpend(
+													Math.min(
+														currentHitDice,
+														hitDiceToSpend + 1
+													)
+												)
+											}
+											className="w-10 h-10 rounded bg-background-tertiary hover:bg-accent-400/20 border border-accent-400/40 text-accent-400 font-bold transition-colors"
+										>
+											+
+										</button>
+									</div>
+								</div>
+							)}
 
 							{/* Action Buttons */}
 							<div className="flex gap-3">
@@ -975,9 +1171,15 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 								</button>
 								<button
 									onClick={confirmShortRest}
-									disabled={hitDiceToSpend === 0}
+									disabled={
+										character.classes && character.classes.length > 1
+											? Object.values(hitDiceToSpendByClass).reduce((sum, val) => sum + val, 0) === 0
+											: hitDiceToSpend === 0
+									}
 									className={`flex-1 px-4 py-2 rounded-lg transition-colors text-sm font-semibold ${
-										hitDiceToSpend > 0
+										(character.classes && character.classes.length > 1
+											? Object.values(hitDiceToSpendByClass).reduce((sum, val) => sum + val, 0) > 0
+											: hitDiceToSpend > 0)
 											? "bg-accent-400 hover:bg-accent-400/80 text-background-primary"
 											: "bg-background-tertiary/30 text-parchment-400 cursor-not-allowed border border-accent-400/10"
 									}`}
@@ -1008,7 +1210,17 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 									{subspecies
 										? subspecies.name
 										: species.name}{" "}
-									- {charClass.name} {level}
+									-{" "}
+									{character.classes && character.classes.length > 0 ? (
+										character.classes.map((cl, idx) => (
+											<span key={cl.class.id}>
+												{cl.class.name} {cl.level}
+												{idx < character.classes.length - 1 && " / "}
+											</span>
+										))
+									) : (
+										`${charClass.name} ${level}`
+									)}
 								</p>
 							</div>
 						</div>
@@ -1017,11 +1229,19 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 						<div className="flex items-center gap-2">
 							<button
 								onClick={startShortRest}
-								disabled={currentHitDice === 0}
+								disabled={
+									character.classes && character.classes.length > 1
+										? character.classes.every((cl) => (cl.level - (cl.hitDiceUsed || 0)) === 0)
+										: currentHitDice === 0
+								}
 								className={`px-4 py-2 rounded-lg transition-colors text-sm font-semibold ${
-									currentHitDice > 0
-										? "bg-accent-400/20 hover:bg-accent-400/30 text-accent-400 border border-accent-400/40"
-										: "bg-background-tertiary/30 text-parchment-400 cursor-not-allowed border border-accent-400/10"
+									character.classes && character.classes.length > 1
+										? character.classes.some((cl) => (cl.level - (cl.hitDiceUsed || 0)) > 0)
+											? "bg-accent-400/20 hover:bg-accent-400/30 text-accent-400 border border-accent-400/40"
+											: "bg-background-tertiary/30 text-parchment-400 cursor-not-allowed border border-accent-400/10"
+										: currentHitDice > 0
+											? "bg-accent-400/20 hover:bg-accent-400/30 text-accent-400 border border-accent-400/40"
+											: "bg-background-tertiary/30 text-parchment-400 cursor-not-allowed border border-accent-400/10"
 								}`}
 							>
 								Short Rest
@@ -1340,20 +1560,70 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 									<div className="text-xs text-parchment-400 uppercase tracking-wider">
 										Hit Dice
 									</div>
-									<div className="flex items-baseline gap-1">
-										<span className="text-2xl font-bold text-accent-400">
-											{currentHitDice}
-										</span>
-										<span className="text-lg font-bold text-parchment-400">
-											/
-										</span>
-										<span className="text-2xl font-bold text-parchment-100">
-											{level}
-										</span>
-									</div>
-									<div className="text-sm text-parchment-300 font-semibold">
-										d{charClass.hitDie}
-									</div>
+									{character.classes && character.classes.length > 1 ? (
+										<div className="flex flex-col gap-0.5">
+											{(() => {
+												// Group by hit die type
+												const hitDiceByType: Record<number, { available: number; total: number }> = {};
+
+												character.classes.forEach((cl) => {
+													const hitDie = cl.class.hitDie;
+													const usedHitDice = cl.hitDiceUsed || 0;
+													const availableHitDice = cl.level - usedHitDice;
+
+													if (!hitDiceByType[hitDie]) {
+														hitDiceByType[hitDie] = { available: 0, total: 0 };
+													}
+
+													hitDiceByType[hitDie].available += availableHitDice;
+													hitDiceByType[hitDie].total += cl.level;
+												});
+
+												// Sort by die size (d6, d8, d10, d12)
+												return Object.keys(hitDiceByType)
+													.map(Number)
+													.sort((a, b) => a - b)
+													.map((hitDie) => {
+														const { available, total } = hitDiceByType[hitDie];
+														return (
+															<div key={hitDie} className="flex items-center gap-1.5">
+																<div className="flex items-baseline gap-0.5">
+																	<span className="text-sm font-bold text-accent-400">
+																		{available}
+																	</span>
+																	<span className="text-xs font-bold text-parchment-400">
+																		/
+																	</span>
+																	<span className="text-sm font-bold text-parchment-100">
+																		{total}
+																	</span>
+																</div>
+																<div className="text-xs text-parchment-300 font-semibold">
+																	d{hitDie}
+																</div>
+															</div>
+														);
+													});
+											})()}
+										</div>
+									) : (
+										<>
+											<div className="flex items-baseline gap-1">
+												<span className="text-2xl font-bold text-accent-400">
+													{currentHitDice}
+												</span>
+												<span className="text-lg font-bold text-parchment-400">
+													/
+												</span>
+												<span className="text-2xl font-bold text-parchment-100">
+													{level}
+												</span>
+											</div>
+											<div className="text-sm text-parchment-300 font-semibold">
+												d{charClass.hitDie}
+											</div>
+										</>
+									)}
 								</div>
 							</div>
 						</div>
@@ -1965,7 +2235,7 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 							{featuresTab === "features" && (
 								<div className="space-y-3">
 									{/* Filter Buttons */}
-									<div className="flex gap-2 pb-3 border-b border-accent-400/20">
+									<div className="flex gap-2 pb-3 border-b border-accent-400/20 flex-wrap">
 										<button
 											onClick={() =>
 												setFeatureFilter("all")
@@ -2007,18 +2277,36 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 												{subspecies.name}
 											</button>
 										)}
-										<button
-											onClick={() =>
-												setFeatureFilter("class")
-											}
-											className={`px-3 py-1.5 rounded text-xs font-semibold uppercase transition-colors ${
-												featureFilter === "class"
-													? "bg-accent-400 text-background-primary"
-													: "bg-background-tertiary text-parchment-300 hover:bg-accent-400/20"
-											}`}
-										>
-											{charClass.name}
-										</button>
+										{character.classes && character.classes.length > 0 ? (
+											character.classes.map((cl) => (
+												<button
+													key={cl.class.id}
+													onClick={() =>
+														setFeatureFilter(cl.class.id)
+													}
+													className={`px-3 py-1.5 rounded text-xs font-semibold uppercase transition-colors ${
+														featureFilter === cl.class.id
+															? "bg-accent-400 text-background-primary"
+															: "bg-background-tertiary text-parchment-300 hover:bg-accent-400/20"
+													}`}
+												>
+													{cl.class.name}
+												</button>
+											))
+										) : (
+											<button
+												onClick={() =>
+													setFeatureFilter(charClass.id)
+												}
+												className={`px-3 py-1.5 rounded text-xs font-semibold uppercase transition-colors ${
+													featureFilter === charClass.id
+														? "bg-accent-400 text-background-primary"
+														: "bg-background-tertiary text-parchment-300 hover:bg-accent-400/20"
+												}`}
+											>
+												{charClass.name}
+											</button>
+										)}
 									</div>
 
 									{/* Species Traits */}
@@ -2083,9 +2371,35 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 											</>
 										)}
 
-									{/* Class Features */}
-									{(featureFilter === "all" ||
-										featureFilter === "class") &&
+									{/* Class Features - All Classes */}
+									{character.classes && character.classes.length > 0 ? (
+										character.classes.map((cl) => {
+											const shouldShow = featureFilter === "all" || featureFilter === cl.class.id;
+											const classFeatures = cl.class.features?.filter((f) => f.level <= cl.level) || [];
+
+											if (!shouldShow || classFeatures.length === 0) return null;
+
+											return classFeatures.map((feature) => (
+												<div
+													key={`${cl.class.id}-${feature.name}`}
+													className="bg-background-secondary border border-accent-400/30 rounded-lg p-4"
+												>
+													<div className="flex items-center gap-2 mb-2">
+														<span className="font-bold text-accent-400 uppercase text-sm">
+															{feature.name}
+														</span>
+														<span className="text-xs uppercase tracking-wider text-parchment-400 bg-background-tertiary px-2 py-0.5 rounded">
+															{cl.class.name} Feature
+														</span>
+													</div>
+													<div className="text-xs text-parchment-300 leading-relaxed">
+														{feature.description}
+													</div>
+												</div>
+											));
+										})
+									) : (
+										(featureFilter === "all" || featureFilter === charClass.id) &&
 										charClass.features &&
 										charClass.features.length > 0 && (
 											<>
@@ -2119,14 +2433,15 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 														</div>
 													))}
 											</>
-										)}
+										)
+									)}
 								</div>
 							)}
 
 							{featuresTab === "actions" && (
 								<div className="space-y-3">
 									{/* Filter Buttons */}
-									<div className="flex gap-2 pb-3 border-b border-accent-400/20">
+									<div className="flex gap-2 pb-3 border-b border-accent-400/20 flex-wrap">
 										<button
 											onClick={() =>
 												setActionFilter("all")
@@ -2180,18 +2495,36 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 												{subspecies.name}
 											</button>
 										)}
-										<button
-											onClick={() =>
-												setActionFilter("class")
-											}
-											className={`px-3 py-1.5 rounded text-xs font-semibold uppercase transition-colors ${
-												actionFilter === "class"
-													? "bg-accent-400 text-background-primary"
-													: "bg-background-tertiary text-parchment-300 hover:bg-accent-400/20"
-											}`}
-										>
-											{charClass.name}
-										</button>
+										{character.classes && character.classes.length > 0 ? (
+											character.classes.map((cl) => (
+												<button
+													key={cl.class.id}
+													onClick={() =>
+														setActionFilter(cl.class.id)
+													}
+													className={`px-3 py-1.5 rounded text-xs font-semibold uppercase transition-colors ${
+														actionFilter === cl.class.id
+															? "bg-accent-400 text-background-primary"
+															: "bg-background-tertiary text-parchment-300 hover:bg-accent-400/20"
+													}`}
+												>
+													{cl.class.name}
+												</button>
+											))
+										) : (
+											<button
+												onClick={() =>
+													setActionFilter(charClass.id)
+												}
+												className={`px-3 py-1.5 rounded text-xs font-semibold uppercase transition-colors ${
+													actionFilter === charClass.id
+														? "bg-accent-400 text-background-primary"
+														: "bg-background-tertiary text-parchment-300 hover:bg-accent-400/20"
+												}`}
+											>
+												{charClass.name}
+											</button>
+										)}
 									</div>
 
 									{/* Weapons */}
@@ -2342,9 +2675,35 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 											</>
 										)}
 
-									{/* Non-passive Class Features */}
-									{(actionFilter === "all" ||
-										actionFilter === "class") &&
+									{/* Non-passive Class Features - All Classes */}
+									{character.classes && character.classes.length > 0 ? (
+										character.classes.map((cl) => {
+											const shouldShow = actionFilter === "all" || actionFilter === cl.class.id;
+											const classActions = cl.class.features?.filter((f) => f.level <= cl.level && !f.isPassive) || [];
+
+											if (!shouldShow || classActions.length === 0) return null;
+
+											return classActions.map((feature) => (
+												<div
+													key={`${cl.class.id}-${feature.name}`}
+													className="bg-background-secondary border border-accent-400/30 rounded-lg p-4"
+												>
+													<div className="flex items-center gap-2 mb-2">
+														<span className="font-bold text-accent-400 uppercase text-sm">
+															{feature.name}
+														</span>
+														<span className="text-xs uppercase tracking-wider text-parchment-400 bg-background-tertiary px-2 py-0.5 rounded">
+															{cl.class.name} Feature
+														</span>
+													</div>
+													<div className="text-xs text-parchment-300 leading-relaxed">
+														{feature.description}
+													</div>
+												</div>
+											));
+										})
+									) : (
+										(actionFilter === "all" || actionFilter === charClass.id) &&
 										charClass.features &&
 										charClass.features.filter(
 											(f) =>
@@ -2383,7 +2742,8 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 														</div>
 													))}
 											</>
-										)}
+										)
+									)}
 								</div>
 							)}
 

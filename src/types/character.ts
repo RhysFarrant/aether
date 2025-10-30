@@ -4,13 +4,23 @@ import type { Subspecies } from "./subspecies";
 import type { CharacterClass } from "./class";
 import type { Origin } from "./origin";
 
+/**
+ * Represents a class level for multiclassing
+ */
+export interface ClassLevel {
+  class: CharacterClass;
+  level: number;
+  hitDiceUsed?: number; // Track hit dice per class
+}
+
 export interface Character {
   id: string;
   name: string;
-  level: number;
+  level: number; // Total character level
   species: Species;
   subspecies?: Subspecies;
-  class: CharacterClass;
+  class: CharacterClass; // Primary class (for backwards compatibility)
+  classes?: ClassLevel[]; // Multiclass support
   origin: Origin;
 
   baseAbilityScores: AbilityScores;
