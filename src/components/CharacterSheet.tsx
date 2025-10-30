@@ -319,7 +319,7 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 	const [featureFilter, setFeatureFilter] = useState<string>("all");
 	const [actionFilter, setActionFilter] = useState<string>("all");
 	const [hiddenFeatures, setHiddenFeatures] = useState<Set<string>>(new Set());
-	const [hiddenActions, setHiddenActions] = useState<Set<string>>(new Set());
+	const [_hiddenActions, _setHiddenActions] = useState<Set<string>>(new Set());
 
 	// Notes state
 	interface Note {
@@ -789,7 +789,7 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 			});
 		} else if (charClass.features) {
 			const features = charClass.features.filter((f: any) => f.level <= level && f.speedBonus);
-			features.forEach(feature => {
+			features.forEach((feature: any) => {
 				if (isFeatureActive(feature)) {
 					speedBonus += feature.speedBonus || 0;
 				}
@@ -839,7 +839,7 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 			});
 		} else if (charClass.features) {
 			const features = charClass.features.filter((f: any) => f.level <= level && f.hpBonus);
-			features.forEach(feature => {
+			features.forEach((feature: any) => {
 				if (feature.hpBonus) {
 					if (typeof feature.hpBonus === 'string') {
 						if (feature.hpBonus === 'level') {
@@ -1097,8 +1097,7 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 			? ignoredWarnings.filter(id => id !== warningId)
 			: [...ignoredWarnings, warningId];
 
-		updateCharacter({
-			...character,
+		updateCharacter(character.id, {
 			ignoredItemWarnings: newIgnored
 		});
 	};
@@ -1564,8 +1563,7 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 					...(spellGrantedByClass && { grantedBy: spellGrantedByClass }),
 					...(spellAbilityOverride && { abilityOverride: spellAbilityOverride as 'intelligence' | 'wisdom' | 'charisma' })
 				};
-				updateCharacter({
-					...character,
+				updateCharacter(character.id, {
 					spellMetadata
 				});
 			}
@@ -1749,17 +1747,18 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 		});
 	};
 
-	const toggleActionVisibility = (actionName: string) => {
-		setHiddenActions(prev => {
-			const newSet = new Set(prev);
-			if (newSet.has(actionName)) {
-				newSet.delete(actionName);
-			} else {
-				newSet.add(actionName);
-			}
-			return newSet;
-		});
-	};
+	// Future: Toggle action visibility (not yet implemented in UI)
+	// const _toggleActionVisibility = (_actionName: string) => {
+	// 	_setHiddenActions(prev => {
+	// 		const newSet = new Set(prev);
+	// 		if (newSet.has(_actionName)) {
+	// 			newSet.delete(_actionName);
+	// 		} else {
+	// 			newSet.add(_actionName);
+	// 		}
+	// 		return newSet;
+	// 	});
+	// };
 
 	const toggleItemSelection = (itemName: string) => {
 		setSelectedItemsToBrowse(prev => {
@@ -1783,31 +1782,32 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 		setShowBrowseItems(false);
 	};
 
-	const moveItemToContainer = (itemIndex: number, containerId: string) => {
-		setInventoryItems(prevItems =>
-			prevItems.map((item, i) =>
-				i === itemIndex
-					? { ...item, containerId }
-					: item
-			)
-		);
-	};
+	// Future: Container management functions (not yet fully implemented in UI)
+	// const _moveItemToContainer = (_itemIndex: number, _containerId: string) => {
+	// 	setInventoryItems(prevItems =>
+	// 		prevItems.map((item, i) =>
+	// 			i === _itemIndex
+	// 				? { ...item, containerId: _containerId }
+	// 				: item
+	// 		)
+	// 	);
+	// };
 
-	const removeItemFromContainer = (itemIndex: number) => {
-		setInventoryItems(prevItems =>
-			prevItems.map((item, i) =>
-				i === itemIndex
-					? { ...item, containerId: undefined }
-					: item
-			)
-		);
-	};
+	// const _removeItemFromContainer = (_itemIndex: number) => {
+	// 	setInventoryItems(prevItems =>
+	// 		prevItems.map((item, i) =>
+	// 			i === _itemIndex
+	// 				? { ...item, containerId: undefined }
+	// 				: item
+	// 		)
+	// 	);
+	// };
 
-	const getContainerWeight = (containerId: string): number => {
-		return inventoryItems
-			.filter(item => item.containerId === containerId)
-			.reduce((total, item) => total + item.weight, 0);
-	};
+	// const _getContainerWeight = (_containerId: string): number => {
+	// 	return inventoryItems
+	// 		.filter(item => item.containerId === _containerId)
+	// 		.reduce((total, item) => total + item.weight, 0);
+	// };
 
 	const addNote = () => {
 		if (!noteTitle.trim()) return;
@@ -5202,7 +5202,7 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 									<div className="space-y-2">
 										{inventoryItems &&
 										inventoryItems.length > 0 ? (
-											groupedInventoryItems.map((group, groupIdx) => {
+											groupedInventoryItems.map((group) => {
 												const item = group.item;
 												const idx = group.indices[0]; // Use first index for operations
 												const isShield =
@@ -5641,7 +5641,7 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 													<input
 														type="text"
 														className="w-full bg-background-tertiary border border-accent-400/30 rounded px-3 py-2 text-parchment-100 focus:outline-none focus:border-accent-400"
-														placeholder="e.g., 5'10\""
+														placeholder="e.g., 5'10&quot;"
 													/>
 												</div>
 												<div>
