@@ -351,15 +351,15 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 					// Third casters (Eldritch Knight, Arcane Trickster) contribute 1/3 level (rounded down)
 
 					// Determine caster type based on spell progression
-					const level1Slots = spellcasting.spellSlotsByLevel[1];
-					const level2Slots = spellcasting.spellSlotsByLevel[2];
+					const level1Slots = spellcasting?.spellSlotsByLevel?.[1];
+					const level2Slots = spellcasting?.spellSlotsByLevel?.[2];
 
 					// Full caster: has spell slots at level 1
-					if (level1Slots && level1Slots[1] >= 2) {
+					if (level1Slots && level1Slots[1] !== undefined && level1Slots[1] >= 2) {
 						totalCasterLevel += cl.level;
 					}
 					// Half caster: gets spell slots at level 2
-					else if (level2Slots && level2Slots[1] > 0) {
+					else if (level2Slots && level2Slots[1] !== undefined && level2Slots[1] > 0) {
 						totalCasterLevel += Math.floor(cl.level / 2);
 					}
 					// Third caster: gets spell slots later
@@ -373,7 +373,7 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 			const fullCasterClass = character.classes.find((cl) => {
 				const spellcasting = cl.class.spellcasting;
 				const level1Slots = spellcasting?.spellSlotsByLevel?.[1];
-				return level1Slots && level1Slots[1] >= 2;
+				return level1Slots && level1Slots[1] !== undefined && level1Slots[1] >= 2;
 			});
 
 			if (fullCasterClass && totalCasterLevel > 0) {
@@ -711,15 +711,11 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 		const classesToCheck = refreshedCharacter.classes || [{ class: charClass, level, hitDiceUsed: 0 }];
 		const initialFeatureUses: Record<string, { current: number; max: number }> = {};
 
-		console.log('Initializing feature uses for classes:', classesToCheck.map(cl => cl.class.name));
-
 		classesToCheck.forEach((cl) => {
-			cl.class.features?.forEach((feature) => {
-				console.log('Checking feature:', feature.name, 'has uses:', !!feature.uses, 'level req:', feature.level, 'char level:', cl.level);
+			cl.class.features?.forEach((feature: any) => {
 				if (feature.uses && feature.level <= cl.level) {
 					const key = getFeatureKey(cl.class.id, feature.name);
 					const maxUses = calculateFeatureMaxUses(feature.uses, cl.level);
-					console.log('Adding feature uses:', key, 'max:', maxUses);
 
 					// If already have saved uses, use those but update max; otherwise initialize to max (all available)
 					if (character.featureUses?.[key]) {
@@ -734,7 +730,6 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 			});
 		});
 
-		console.log('Final initialFeatureUses:', initialFeatureUses);
 		setFeatureUses(initialFeatureUses);
 	}, [character.id]); // Only run on mount or when character changes
 
@@ -848,33 +843,6 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 		setHitDiceToSpendByClass({});
 	};
 
-	// Feature use/restore functions
-	const useFeature = (classId: string, featureName: string) => {
-		const key = getFeatureKey(classId, featureName);
-		if (featureUses[key] && featureUses[key].current > 0) {
-			setFeatureUses(prev => ({
-				...prev,
-				[key]: {
-					...prev[key],
-					current: prev[key].current - 1,
-				},
-			}));
-		}
-	};
-
-	const restoreFeature = (classId: string, featureName: string) => {
-		const key = getFeatureKey(classId, featureName);
-		if (featureUses[key]) {
-			setFeatureUses(prev => ({
-				...prev,
-				[key]: {
-					...prev[key],
-					current: prev[key].max,
-				},
-			}));
-		}
-	};
-
 	const longRest = () => {
 		// On long rest: restore HP to max, restore up to half of total hit dice (minimum 1), and restore all spell slots
 		setCurrentHP(maxHitPoints);
@@ -917,7 +885,7 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 		const updatedFeatureUses = { ...featureUses };
 
 		classesToCheck.forEach((cl) => {
-			cl.class.features?.forEach((feature) => {
+			cl.class.features?.forEach((feature: any) => {
 				if (feature.uses && feature.uses.period === "long rest" && feature.level <= cl.level) {
 					const key = getFeatureKey(cl.class.id, feature.name);
 					const maxUses = calculateFeatureMaxUses(feature.uses, cl.level);
@@ -1338,7 +1306,7 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 										character.classes.map((cl, idx) => (
 											<span key={cl.class.id}>
 												{cl.class.name} {cl.level}
-												{idx < character.classes.length - 1 && " / "}
+												{idx < (character.classes?.length ?? 0) - 1 && " / "}
 											</span>
 										))
 									) : (
@@ -2438,7 +2406,7 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 										species.traits &&
 										species.traits.length > 0 && (
 											<>
-												{species.traits.map((trait) => (
+												{species.traits.filter((trait) => trait.showOnSheet !== false).map((trait) => (
 													<div
 														key={trait.name}
 														className="bg-background-secondary border border-accent-400/30 rounded-lg p-4"
@@ -2466,7 +2434,7 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 										subspecies?.traits &&
 										subspecies.traits.length > 0 && (
 											<>
-												{subspecies.traits.map(
+												{subspecies.traits.filter((trait) => trait.showOnSheet !== false).map(
 													(trait) => (
 														<div
 															key={trait.name}
@@ -2498,7 +2466,7 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 									{character.classes && character.classes.length > 0 ? (
 										character.classes.map((cl) => {
 											const shouldShow = featureFilter === "all" || featureFilter === cl.class.id;
-											const classFeatures = cl.class.features?.filter((f) => f.level <= cl.level) || [];
+											const classFeatures = cl.class.features?.filter((f) => f.level <= cl.level && f.showOnSheet !== false) || [];
 
 											if (!shouldShow || classFeatures.length === 0) return null;
 
@@ -2539,7 +2507,6 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 																						const newVal = clickedUsed
 																							? featureUsage.max - i
 																							: featureUsage.max - i - 1;
-																						console.log('Feature click:', 'index:', i, 'currentVal:', currentVal, 'usedCount:', usedCount, 'clickedUsed:', clickedUsed, 'newVal:', newVal);
 																						return {
 																							...prev,
 																							[key]: {
@@ -2574,9 +2541,9 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 											<>
 												{charClass.features
 													.filter(
-														(f) => f.level <= level
+														(f: any) => f.level <= level && f.showOnSheet !== false
 													)
-													.map((feature) => {
+													.map((feature: any) => {
 														const featureKey = getFeatureKey(charClass.id, feature.name);
 														const featureUsage = featureUses[featureKey];
 
@@ -2799,13 +2766,14 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 										actionFilter === "species") &&
 										species.traits &&
 										species.traits.filter(
-											(trait) => !trait.isPassive
+											(trait) => !trait.isPassive && trait.showOnSheet !== false
 										).length > 0 && (
 											<>
 												{species.traits
 													.filter(
 														(trait) =>
-															!trait.isPassive
+															!trait.isPassive &&
+															trait.showOnSheet !== false
 													)
 													.map((trait) => (
 														<div
@@ -2838,13 +2806,14 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 										actionFilter === "subspecies") &&
 										subspecies?.traits &&
 										subspecies.traits.filter(
-											(trait) => !trait.isPassive
+											(trait) => !trait.isPassive && trait.showOnSheet !== false
 										).length > 0 && (
 											<>
 												{subspecies.traits
 													.filter(
 														(trait) =>
-															!trait.isPassive
+															!trait.isPassive &&
+															trait.showOnSheet !== false
 													)
 													.map((trait) => (
 														<div
@@ -2876,7 +2845,7 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 									{character.classes && character.classes.length > 0 ? (
 										character.classes.map((cl) => {
 											const shouldShow = actionFilter === "all" || actionFilter === cl.class.id;
-											const classActions = cl.class.features?.filter((f) => f.level <= cl.level && !f.isPassive) || [];
+											const classActions = cl.class.features?.filter((f) => f.level <= cl.level && !f.isPassive && f.showOnSheet !== false) || [];
 
 											if (!shouldShow || classActions.length === 0) return null;
 
@@ -2917,7 +2886,6 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 																						const newVal = clickedUsed
 																							? featureUsage.max - i
 																							: featureUsage.max - i - 1;
-																						console.log('Feature click:', 'index:', i, 'currentVal:', currentVal, 'usedCount:', usedCount, 'clickedUsed:', clickedUsed, 'newVal:', newVal);
 																						return {
 																							...prev,
 																							[key]: {
@@ -2949,17 +2917,18 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 										(actionFilter === "all" || actionFilter === charClass.id) &&
 										charClass.features &&
 										charClass.features.filter(
-											(f) =>
+											(f: any) =>
 												f.level <= level && !f.isPassive
 										).length > 0 && (
 											<>
 												{charClass.features
 													.filter(
-														(f) =>
+														(f: any) =>
 															f.level <= level &&
-															!f.isPassive
+															!f.isPassive &&
+															f.showOnSheet !== false
 													)
-													.map((feature) => {
+													.map((feature: any) => {
 														const featureKey = getFeatureKey(charClass.id, feature.name);
 														const featureUsage = featureUses[featureKey];
 

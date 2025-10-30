@@ -79,12 +79,14 @@
       {
         "name": "Martial Archetype",
         "level": 3,
-        "description": "At 3rd level, you choose an archetype that you strive to emulate in your combat styles and techniques. The archetype you choose grants you features at 3rd level and again at 7th, 10th, 15th, and 18th level."
+        "description": "At 3rd level, you choose an archetype that you strive to emulate in your combat styles and techniques. The archetype you choose grants you features at 3rd level and again at 7th, 10th, 15th, and 18th level.",
+        "showOnSheet": false
       },
       {
         "name": "Ability Score Improvement",
         "level": 4,
-        "description": "When you reach 4th level, and again at 6th, 8th, 12th, 14th, 16th, and 19th level, you can increase one ability score of your choice by 2, or you can increase two ability scores of your choice by 1. As normal, you can't increase an ability score above 20 using this feature."
+        "description": "When you reach 4th level, and again at 6th, 8th, 12th, 14th, 16th, and 19th level, you can increase one ability score of your choice by 2, or you can increase two ability scores of your choice by 1. As normal, you can't increase an ability score above 20 using this feature.",
+        "showOnSheet": false
       },
       {
         "name": "Extra Attack",
@@ -177,7 +179,8 @@
       {
         "name": "Spellcasting",
         "level": 1,
-        "description": "As a student of arcane magic, you have a spellbook containing spells that show the first glimmerings of your true power. At 1st level, you know three cantrips of your choice from the wizard spell list. You learn additional wizard cantrips of your choice at higher levels."
+        "description": "As a student of arcane magic, you have a spellbook containing spells that show the first glimmerings of your true power. At 1st level, you know three cantrips of your choice from the wizard spell list. You learn additional wizard cantrips of your choice at higher levels.",
+        "showOnSheet": false
       },
       {
         "name": "Arcane Recovery",
@@ -192,7 +195,8 @@
       {
         "name": "Ability Score Improvement",
         "level": 4,
-        "description": "When you reach 4th level, and again at 8th, 12th, 16th, and 19th level, you can increase one ability score of your choice by 2, or you can increase two ability scores of your choice by 1. As normal, you can't increase an ability score above 20 using this feature."
+        "description": "When you reach 4th level, and again at 8th, 12th, 16th, and 19th level, you can increase one ability score of your choice by 2, or you can increase two ability scores of your choice by 1. As normal, you can't increase an ability score above 20 using this feature.",
+        "showOnSheet": false
       }
     ]
   },
@@ -271,12 +275,14 @@
       {
         "name": "Roguish Archetype",
         "level": 3,
-        "description": "At 3rd level, you choose an archetype that you emulate in the exercise of your rogue abilities. Your archetype choice grants you features at 3rd level and then again at 9th, 13th, and 17th level."
+        "description": "At 3rd level, you choose an archetype that you emulate in the exercise of your rogue abilities. Your archetype choice grants you features at 3rd level and then again at 9th, 13th, and 17th level.",
+        "showOnSheet": false
       },
       {
         "name": "Ability Score Improvement",
         "level": 4,
-        "description": "When you reach 4th level, and again at 8th, 10th, 12th, 16th, and 19th level, you can increase one ability score of your choice by 2, or you can increase two ability scores of your choice by 1. As normal, you can't increase an ability score above 20 using this feature."
+        "description": "When you reach 4th level, and again at 8th, 10th, 12th, 16th, and 19th level, you can increase one ability score of your choice by 2, or you can increase two ability scores of your choice by 1. As normal, you can't increase an ability score above 20 using this feature.",
+        "showOnSheet": false
       },
       {
         "name": "Uncanny Dodge",
@@ -376,12 +382,14 @@
       {
         "name": "Spellcasting",
         "level": 1,
-        "description": "As a conduit for divine power, you can cast cleric spells. At 1st level, you know three cantrips of your choice from the cleric spell list. You prepare the list of cleric spells that are available for you to cast, choosing from the cleric spell list. The number of spells you can prepare equals your Wisdom modifier + your cleric level (minimum of one spell)."
+        "description": "As a conduit for divine power, you can cast cleric spells. At 1st level, you know three cantrips of your choice from the cleric spell list. You prepare the list of cleric spells that are available for you to cast, choosing from the cleric spell list. The number of spells you can prepare equals your Wisdom modifier + your cleric level (minimum of one spell).",
+        "showOnSheet": false
       },
       {
         "name": "Divine Domain",
         "level": 1,
-        "description": "Choose one domain related to your deity. Your choice grants you domain spells and other features when you choose it at 1st level. It also grants you additional ways to use Channel Divinity when you gain that feature at 2nd level, and additional benefits at 6th, 8th, and 17th levels."
+        "description": "Choose one domain related to your deity. Your choice grants you domain spells and other features when you choose it at 1st level. It also grants you additional ways to use Channel Divinity when you gain that feature at 2nd level, and additional benefits at 6th, 8th, and 17th levels.",
+        "showOnSheet": false
       },
       {
         "name": "Channel Divinity",
@@ -396,7 +404,8 @@
       {
         "name": "Ability Score Improvement",
         "level": 4,
-        "description": "When you reach 4th level, and again at 8th, 12th, 16th, and 19th level, you can increase one ability score of your choice by 2, or you can increase two ability scores of your choice by 1. As normal, you can't increase an ability score above 20 using this feature."
+        "description": "When you reach 4th level, and again at 8th, 12th, 16th, and 19th level, you can increase one ability score of your choice by 2, or you can increase two ability scores of your choice by 1. As normal, you can't increase an ability score above 20 using this feature.",
+        "showOnSheet": false
       },
       {
         "name": "Destroy Undead",
@@ -507,7 +516,8 @@
       {
         "name": "Spellcasting",
         "level": 2,
-        "description": "By 2nd level, you have learned to draw on divine magic through meditation and prayer to cast spells as a cleric does. You prepare the list of paladin spells that are available for you to cast, choosing from the paladin spell list. When you do so, choose a number of paladin spells equal to your Charisma modifier + half your paladin level, rounded down (minimum of one spell). The spells must be of a level for which you have spell slots."
+        "description": "By 2nd level, you have learned to draw on divine magic through meditation and prayer to cast spells as a cleric does. You prepare the list of paladin spells that are available for you to cast, choosing from the paladin spell list. When you do so, choose a number of paladin spells equal to your Charisma modifier + half your paladin level, rounded down (minimum of one spell). The spells must be of a level for which you have spell slots.",
+        "showOnSheet": false
       },
       {
         "name": "Divine Smite",
@@ -522,12 +532,14 @@
       {
         "name": "Sacred Oath",
         "level": 3,
-        "description": "When you reach 3rd level, you swear the oath that binds you as a paladin forever. Up to this time you have been in a preparatory stage, committed to the path but not yet sworn to it. Your choice grants you features at 3rd level and again at 7th, 15th, and 20th level. Those features include oath spells and the Channel Divinity feature."
+        "description": "When you reach 3rd level, you swear the oath that binds you as a paladin forever. Up to this time you have been in a preparatory stage, committed to the path but not yet sworn to it. Your choice grants you features at 3rd level and again at 7th, 15th, and 20th level. Those features include oath spells and the Channel Divinity feature.",
+        "showOnSheet": false
       },
       {
         "name": "Ability Score Improvement",
         "level": 4,
-        "description": "When you reach 4th level, and again at 8th, 12th, 16th, and 19th level, you can increase one ability score of your choice by 2, or you can increase two ability scores of your choice by 1. As normal, you can't increase an ability score above 20 using this feature."
+        "description": "When you reach 4th level, and again at 8th, 12th, 16th, and 19th level, you can increase one ability score of your choice by 2, or you can increase two ability scores of your choice by 1. As normal, you can't increase an ability score above 20 using this feature.",
+        "showOnSheet": false
       },
       {
         "name": "Extra Attack",
@@ -615,12 +627,14 @@
       {
         "name": "Primal Path",
         "level": 3,
-        "description": "At 3rd level, you choose a path that shapes the nature of your rage. Your choice grants you features at 3rd level and again at 6th, 10th, and 14th levels."
+        "description": "At 3rd level, you choose a path that shapes the nature of your rage. Your choice grants you features at 3rd level and again at 6th, 10th, and 14th levels.",
+        "showOnSheet": false
       },
       {
         "name": "Ability Score Improvement",
         "level": 4,
-        "description": "When you reach 4th level, and again at 8th, 12th, 16th, and 19th level, you can increase one ability score of your choice by 2, or you can increase two ability scores of your choice by 1. As normal, you can't increase an ability score above 20 using this feature."
+        "description": "When you reach 4th level, and again at 8th, 12th, 16th, and 19th level, you can increase one ability score of your choice by 2, or you can increase two ability scores of your choice by 1. As normal, you can't increase an ability score above 20 using this feature.",
+        "showOnSheet": false
       },
       {
         "name": "Extra Attack",

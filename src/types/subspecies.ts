@@ -40,4 +40,5 @@ export interface SubspeciesTrait {
   name: string;
   description: string;
   isPassive?: boolean; // Default false - passive features don't show in Actions
+  showOnSheet?: boolean; // Default true - set to false to hide redundant traits (e.g., proficiency grants, languages)
 }

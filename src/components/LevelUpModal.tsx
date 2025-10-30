@@ -110,15 +110,15 @@ export default function LevelUpModal({
 
 			if (spellcasting && spellcasting.spellSlotsByLevel) {
 				// Determine caster type based on spell progression
-				const level1Slots = spellcasting.spellSlotsByLevel[1];
-				const level2Slots = spellcasting.spellSlotsByLevel[2];
+				const level1Slots = spellcasting?.spellSlotsByLevel?.[1];
+				const level2Slots = spellcasting?.spellSlotsByLevel?.[2];
 
 				// Full caster: has spell slots at level 1
-				if (level1Slots && level1Slots[1] >= 2) {
+				if (level1Slots && level1Slots[1] !== undefined && level1Slots[1] >= 2) {
 					totalCasterLevel += cl.level;
 				}
 				// Half caster: gets spell slots at level 2
-				else if (level2Slots && level2Slots[1] > 0) {
+				else if (level2Slots && level2Slots[1] !== undefined && level2Slots[1] > 0) {
 					totalCasterLevel += Math.floor(cl.level / 2);
 				}
 				// Third caster: gets spell slots later
@@ -132,7 +132,7 @@ export default function LevelUpModal({
 		const fullCasterClass = classesAfterLevelUp.find((cl) => {
 			const spellcasting = cl.class.spellcasting;
 			const level1Slots = spellcasting?.spellSlotsByLevel?.[1];
-			return level1Slots && level1Slots[1] >= 2;
+			return level1Slots && level1Slots[1] !== undefined && level1Slots[1] >= 2;
 		});
 
 		if (fullCasterClass && totalCasterLevel > 0) {

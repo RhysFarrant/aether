@@ -72,6 +72,7 @@ export interface ClassFeature {
   level: number;
   description: string;
   isPassive?: boolean; // Default false - passive features don't show in Actions
+  showOnSheet?: boolean; // Default true - set to false to hide redundant features (e.g., proficiency grants, languages)
   /** Limited use feature tracking */
   uses?: {
     max: number | string; // Number or formula like "2 + proficiency bonus"

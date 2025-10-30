@@ -9,7 +9,8 @@
     "traits": [
       {
         "name": "Elf Weapon Training",
-        "description": "You have proficiency with the longsword, shortsword, shortbow, and longbow."
+        "description": "You have proficiency with the longsword, shortsword, shortbow, and longbow.",
+        "showOnSheet": false
       },
       {
         "name": "Cantrip",
@@ -17,7 +18,8 @@
       },
       {
         "name": "Extra Language",
-        "description": "You can speak, read, and write one extra language of your choice."
+        "description": "You can speak, read, and write one extra language of your choice.",
+        "showOnSheet": false
       }
     ],
     "proficiencies": ["Longsword", "Shortsword", "Shortbow", "Longbow"],
