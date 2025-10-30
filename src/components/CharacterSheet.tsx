@@ -433,6 +433,8 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 	const [selectedSpell, setSelectedSpell] = useState<string | null>(null);
 	const [showSpellSuggestions, setShowSpellSuggestions] = useState(false);
 	const [searchAllSpells, setSearchAllSpells] = useState(false);
+	const [spellAbilityOverride, setSpellAbilityOverride] = useState<'intelligence' | 'wisdom' | 'charisma' | ''>('');
+	const [spellGrantedByClass, setSpellGrantedByClass] = useState<string>('');
 
 	// Get filtered spells based on search mode
 	const filteredSpells = newSpellName.trim()
@@ -1294,11 +1296,26 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 				setCharacterSpells(updatedSpells);
 			}
 
+			// Save spell metadata (class and ability override)
+			if (spellGrantedByClass || spellAbilityOverride) {
+				const spellMetadata = character.spellMetadata || {};
+				spellMetadata[selectedSpell] = {
+					...(spellGrantedByClass && { grantedBy: spellGrantedByClass }),
+					...(spellAbilityOverride && { abilityOverride: spellAbilityOverride as 'intelligence' | 'wisdom' | 'charisma' })
+				};
+				updateCharacter({
+					...character,
+					spellMetadata
+				});
+			}
+
 			setShowAddSpell(false);
 			setNewSpellName("");
 			setSelectedSpell(null);
 			setShowSpellSuggestions(false);
 			setSearchAllSpells(false);
+			setSpellAbilityOverride('');
+			setSpellGrantedByClass('');
 		}
 	};
 
@@ -3598,6 +3615,48 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 														</div>
 													)}
 												</div>
+
+												{/* Granted By Class (for multiclass) */}
+												{character.classes && character.classes.length > 1 && (
+													<div>
+														<label className="text-xs text-parchment-400 uppercase tracking-wider block mb-1">
+															Granted By Class (Optional)
+														</label>
+														<select
+															value={spellGrantedByClass}
+															onChange={(e) => setSpellGrantedByClass(e.target.value)}
+															className="w-full bg-background-tertiary border border-accent-400/30 rounded px-3 py-2 text-sm text-parchment-100 focus:outline-none focus:border-accent-400"
+														>
+															<option value="">Auto-detect from primary class</option>
+															{character.classes.map(cl => (
+																<option key={cl.class.name} value={cl.class.name}>
+																	{cl.class.name}
+																</option>
+															))}
+														</select>
+													</div>
+												)}
+
+												{/* Ability Override (for racial spells or multiclass) */}
+												<div>
+													<label className="text-xs text-parchment-400 uppercase tracking-wider block mb-1">
+														Spellcasting Ability (Optional)
+													</label>
+													<select
+														value={spellAbilityOverride}
+														onChange={(e) => setSpellAbilityOverride(e.target.value as any)}
+														className="w-full bg-background-tertiary border border-accent-400/30 rounded px-3 py-2 text-sm text-parchment-100 focus:outline-none focus:border-accent-400"
+													>
+														<option value="">Use default ({spellcastingAbilityData.abbreviation})</option>
+														<option value="intelligence">Intelligence (INT)</option>
+														<option value="wisdom">Wisdom (WIS)</option>
+														<option value="charisma">Charisma (CHA)</option>
+													</select>
+													<p className="text-xs text-parchment-400 mt-1 opacity-70">
+														Override for racial spells or different spellcasting classes
+													</p>
+												</div>
+
 												<div className="flex gap-2">
 													<button
 														onClick={() => {
@@ -3664,7 +3723,7 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 																	}`}
 																>
 																	<div className="flex items-center justify-between mb-2">
-																		<div className="flex items-center gap-2">
+																		<div className="flex items-center gap-2 flex-wrap">
 																			<span className={`font-bold uppercase text-sm ${
 																				!canCastSpells ? "text-parchment-400" : "text-accent-400"
 																			}`}>
@@ -3675,6 +3734,17 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 																			<span className="text-xs uppercase tracking-wider text-parchment-400 bg-background-tertiary px-2 py-0.5 rounded">
 																				Cantrip
 																			</span>
+																			{character.spellMetadata?.[cantripName]?.grantedBy && (
+																				<span className="text-xs uppercase tracking-wider text-blue-400 bg-blue-400/10 px-2 py-0.5 rounded border border-blue-400/30">
+																					{character.spellMetadata[cantripName].grantedBy}
+																				</span>
+																			)}
+																			{character.spellMetadata?.[cantripName]?.abilityOverride && (
+																				<span className="text-xs uppercase tracking-wider text-purple-400 bg-purple-400/10 px-2 py-0.5 rounded border border-purple-400/30">
+																					{character.spellMetadata[cantripName].abilityOverride === 'intelligence' ? 'INT' :
+																					 character.spellMetadata[cantripName].abilityOverride === 'wisdom' ? 'WIS' : 'CHA'}
+																				</span>
+																			)}
 																		</div>
 																		<button
 																			className="px-3 py-1 rounded bg-accent-400/20 hover:bg-accent-400/30 border border-accent-400/40 text-accent-400 text-xs font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
@@ -3817,7 +3887,7 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 																	}`}
 																>
 																	<div className="flex items-center justify-between mb-2">
-																		<div className="flex items-center gap-2">
+																		<div className="flex items-center gap-2 flex-wrap">
 																			<span className={`font-bold uppercase text-sm ${
 																				!canCastSpells ? "text-parchment-400" : "text-accent-400"
 																			}`}>
@@ -3829,6 +3899,17 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 																				Level
 																				1
 																			</span>
+																			{character.spellMetadata?.[spellName]?.grantedBy && (
+																				<span className="text-xs uppercase tracking-wider text-blue-400 bg-blue-400/10 px-2 py-0.5 rounded border border-blue-400/30">
+																					{character.spellMetadata[spellName].grantedBy}
+																				</span>
+																			)}
+																			{character.spellMetadata?.[spellName]?.abilityOverride && (
+																				<span className="text-xs uppercase tracking-wider text-purple-400 bg-purple-400/10 px-2 py-0.5 rounded border border-purple-400/30">
+																					{character.spellMetadata[spellName].abilityOverride === 'intelligence' ? 'INT' :
+																					 character.spellMetadata[spellName].abilityOverride === 'wisdom' ? 'WIS' : 'CHA'}
+																				</span>
+																			)}
 																			{spellData?.concentration && (
 																				<span className="text-xs uppercase tracking-wider text-parchment-400 bg-background-tertiary px-2 py-0.5 rounded">
 																					Concentration
