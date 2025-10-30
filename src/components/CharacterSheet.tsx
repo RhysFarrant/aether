@@ -1055,6 +1055,46 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 		});
 	};
 
+	// Group inventory items by name (excluding custom named items)
+	const groupedInventoryItems = inventoryItems.reduce((acc, item, originalIndex) => {
+		// If item has custom name, treat it as unique
+		if (item.customName) {
+			acc.push({
+				item,
+				count: 1,
+				indices: [originalIndex],
+				isGroup: false
+			});
+			return acc;
+		}
+
+		// Find existing group for this item name
+		const existingGroup = acc.find(group =>
+			!group.item.customName &&
+			group.item.name === item.name &&
+			group.item.equipped === item.equipped
+		);
+
+		if (existingGroup) {
+			existingGroup.count++;
+			existingGroup.indices.push(originalIndex);
+		} else {
+			acc.push({
+				item,
+				count: 1,
+				indices: [originalIndex],
+				isGroup: false
+			});
+		}
+
+		return acc;
+	}, [] as { item: InventoryItem; count: number; indices: number[]; isGroup: boolean }[]);
+
+	// Mark groups with count > 1
+	groupedInventoryItems.forEach(group => {
+		if (group.count > 1) group.isGroup = true;
+	});
+
 	// Extract equipped weapons from inventory items
 	const weapons = inventoryItems
 		.filter((item) => (item.weaponData || item.customStats?.damage) && item.equipped)
@@ -4813,7 +4853,9 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 									<div className="space-y-2">
 										{inventoryItems &&
 										inventoryItems.length > 0 ? (
-											inventoryItems.map((item, idx) => {
+											groupedInventoryItems.map((group, groupIdx) => {
+												const item = group.item;
+												const idx = group.indices[0]; // Use first index for operations
 												const isShield =
 													item.armorData?.category ===
 														"Shield" ||
@@ -4905,15 +4947,22 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 																	</div>
 																) : (
 																	<>
-																		<div className="flex flex-col">
-																			<span className="font-semibold text-parchment-100 text-sm truncate">
-																				{item.customName || item.name}
-																			</span>
-																			{item.customName && (
-																				<span className="text-xs text-parchment-400 truncate">
-																					{item.name}
+																		<div className="flex items-center gap-2">
+																			<div className="flex flex-col">
+																				<span className="font-semibold text-parchment-100 text-sm truncate">
+																					{item.customName || item.name}
+																					{group.count > 1 && (
+																						<span className="ml-2 text-accent-400 font-bold">
+																							×{group.count}
+																						</span>
+																					)}
 																				</span>
-																			)}
+																				{item.customName && (
+																					<span className="text-xs text-parchment-400 truncate">
+																						{item.name}
+																					</span>
+																				)}
+																			</div>
 																		</div>
 																	</>
 																)}
