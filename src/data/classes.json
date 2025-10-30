@@ -654,6 +654,7 @@
         "level": 5,
         "description": "Starting at 5th level, your speed increases by 10 feet while you aren't wearing heavy armor.",
         "isPassive": true,
+        "speedBonus": 10,
         "condition": {
           "type": "no_heavy_armor",
           "description": "You must not be wearing heavy armor to gain this speed increase."

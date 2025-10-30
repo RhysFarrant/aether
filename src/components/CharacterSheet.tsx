@@ -720,6 +720,36 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 
 	const displayAC = calculateAC();
 
+	// Calculate total speed including feature bonuses
+	const calculateSpeed = (): number => {
+		let baseSpeed = species.speed;
+		let speedBonus = 0;
+
+		// Check all class features for speed bonuses
+		if (character.classes && character.classes.length > 0) {
+			character.classes.forEach(cl => {
+				const features = cl.class.features?.filter((f: any) => f.level <= cl.level && f.speedBonus) || [];
+				features.forEach(feature => {
+					// Only add bonus if feature is active (condition met)
+					if (isFeatureActive(feature)) {
+						speedBonus += feature.speedBonus || 0;
+					}
+				});
+			});
+		} else if (charClass.features) {
+			const features = charClass.features.filter((f: any) => f.level <= level && f.speedBonus);
+			features.forEach(feature => {
+				if (isFeatureActive(feature)) {
+					speedBonus += feature.speedBonus || 0;
+				}
+			});
+		}
+
+		return baseSpeed + speedBonus;
+	};
+
+	const displaySpeed = calculateSpeed();
+
 	// Calculate spell attack modifier and spell save DC
 	const getSpellcastingAbility = (): { modifier: number; name: string; abbreviation: string } => {
 		// For multiclass, use the first spellcasting class found
@@ -1821,7 +1851,7 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 								</div>
 								<div className="text-center">
 									<div className="text-lg font-bold text-accent-400">
-										{species.speed} ft
+										{displaySpeed} ft
 									</div>
 								</div>
 							</div>

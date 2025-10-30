@@ -84,4 +84,8 @@ export interface ClassFeature {
     description: string; // Human-readable description shown when inactive
     customCheck?: string; // For custom conditions - JavaScript expression that evaluates to boolean
   };
+  /** Speed bonus granted by this feature (in feet) */
+  speedBonus?: number;
+  /** HP bonus granted by this feature */
+  hpBonus?: number | string; // Number or formula like "level" for per-level bonuses
 }
