@@ -5,6 +5,7 @@ import conditionsDataImport from "../data/conditions.json";
 import spellsDataImport from "../data/spells.json";
 import armorDataImport from "../data/armor.json";
 import { updateCharacter } from "../utils/storage";
+import LevelUpModal from "./LevelUpModal";
 
 interface WeaponProperties {
 	damage: string;
@@ -305,6 +306,9 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 
 	// Inspiration
 	const [hasInspiration, setHasInspiration] = useState(false);
+
+	// Level up modal
+	const [showLevelUpModal, setShowLevelUpModal] = useState(false);
 
 	// Zoom state for responsive scaling
 	const [zoom, setZoom] = useState(100);
@@ -689,6 +693,25 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 		});
 	};
 
+	// Level up function
+	const handleLevelUp = (hpIncrease: number) => {
+		if (level >= 20) return; // Max level is 20
+
+		const newLevel = level + 1;
+		const newMaxHP = maxHitPoints + hpIncrease;
+
+		// Update character in storage
+		updateCharacter(character.id, {
+			level: newLevel,
+			maxHitPoints: newMaxHP,
+			currentHitPoints: currentHP + hpIncrease, // Also increase current HP
+			currentHitDice: currentHitDice + 1, // Add one hit die for new level
+		});
+
+		// Refresh the page to recalculate all stats
+		window.location.reload();
+	};
+
 	// Conditions functions
 	const toggleCondition = (conditionName: string) => {
 		setActiveConditions((prev) => {
@@ -871,11 +894,20 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 	];
 
 	return (
-		<div className="h-screen bg-background-primary text-parchment-100 flex justify-center overflow-hidden">
-			<div
-				className="w-full flex flex-col overflow-hidden"
-				style={{
-					zoom: `${zoom}%`,
+		<>
+			{/* Level Up Modal */}
+			<LevelUpModal
+				isOpen={showLevelUpModal}
+				character={character}
+				onConfirm={handleLevelUp}
+				onCancel={() => setShowLevelUpModal(false)}
+			/>
+
+			<div className="h-screen bg-background-primary text-parchment-100 flex justify-center overflow-hidden">
+				<div
+					className="w-full flex flex-col overflow-hidden"
+					style={{
+						zoom: `${zoom}%`,
 					minWidth: `1600px`,
 					maxWidth: `1600px`,
 					height: `${100 / (zoom / 100)}vh`,
@@ -981,7 +1013,7 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 							</div>
 						</div>
 
-						{/* Right: Rest Buttons */}
+						{/* Right: Rest Buttons & Level Up */}
 						<div className="flex items-center gap-2">
 							<button
 								onClick={startShortRest}
@@ -999,6 +1031,18 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 								className="px-4 py-2 rounded-lg transition-colors text-sm font-semibold bg-accent-400/20 hover:bg-accent-400/30 text-accent-400 border border-accent-400/40"
 							>
 								Long Rest
+							</button>
+							<button
+								onClick={() => setShowLevelUpModal(true)}
+								disabled={level >= 20}
+								className={`px-4 py-2 rounded-lg transition-colors text-sm font-semibold ${
+									level < 20
+										? "bg-accent-400 hover:bg-accent-500 text-background-primary border border-accent-400"
+										: "bg-background-tertiary/30 text-parchment-400 cursor-not-allowed border border-accent-400/10"
+								}`}
+								title={level >= 20 ? "Max level reached" : "Level up your character"}
+							>
+								Level Up
 							</button>
 						</div>
 					</div>
@@ -3561,5 +3605,6 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 				</div>
 			</div>
 		</div>
+		</>
 	);
 }
