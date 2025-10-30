@@ -674,6 +674,185 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 
 	const displayAC = calculateAC();
 
+	// Calculate spell attack modifier and spell save DC
+	const getSpellcastingAbility = (): number => {
+		// For multiclass, use the first spellcasting class found
+		if (character.classes && character.classes.length > 0) {
+			for (const cl of character.classes) {
+				if (cl.class.spellcasting?.ability) {
+					const abilityName = cl.class.spellcasting.ability.toLowerCase();
+					switch (abilityName) {
+						case 'intelligence': return intMod;
+						case 'wisdom': return wisMod;
+						case 'charisma': return chaMod;
+						default: return 0;
+					}
+				}
+			}
+		}
+
+		// Single class fallback
+		if (charClass.spellcasting?.ability) {
+			const abilityName = charClass.spellcasting.ability.toLowerCase();
+			switch (abilityName) {
+				case 'intelligence': return intMod;
+				case 'wisdom': return wisMod;
+				case 'charisma': return chaMod;
+				default: return 0;
+			}
+		}
+
+		return 0;
+	};
+
+	const spellcastingAbilityMod = getSpellcastingAbility();
+	const spellAttackModifier = proficiencyBonus + spellcastingAbilityMod;
+	const spellSaveDC = 8 + proficiencyBonus + spellcastingAbilityMod;
+
+	// Check if character is wearing armor they're not proficient with
+	const isWearingNonProficientArmor = (): boolean => {
+		if (!equippedArmor) return false;
+
+		const armorItem = inventoryItems.find(item => item.name === equippedArmor);
+		if (!armorItem?.armorData) return false;
+
+		// Get all armor proficiencies from all classes
+		const armorProficiencies: string[] = [];
+		if (character.classes && character.classes.length > 0) {
+			character.classes.forEach(cl => {
+				if (cl.class.proficiencies?.armor) {
+					armorProficiencies.push(...cl.class.proficiencies.armor);
+				}
+			});
+		} else if (charClass.proficiencies?.armor) {
+			armorProficiencies.push(...charClass.proficiencies.armor);
+		}
+
+		const armorCategory = armorItem.armorData.category;
+
+		// Check if proficient
+		if (armorProficiencies.includes("All armor")) return false;
+		if (armorCategory === "Light Armor" && armorProficiencies.includes("Light armor")) return false;
+		if (armorCategory === "Medium Armor" && armorProficiencies.includes("Medium armor")) return false;
+		if (armorCategory === "Heavy Armor" && armorProficiencies.includes("Heavy armor")) return false;
+		if (armorCategory === "Shield" && armorProficiencies.includes("Shields")) return false;
+
+		return true;
+	};
+
+	const canCastSpells = !isWearingNonProficientArmor();
+
+	// Check if character is proficient with a specific armor item
+	const isProficientWithArmor = (armorItem: InventoryItem): boolean => {
+		if (!armorItem.armorData) return true;
+
+		const armorProficiencies: string[] = [];
+		if (character.classes && character.classes.length > 0) {
+			character.classes.forEach(cl => {
+				if (cl.class.proficiencies?.armor) {
+					armorProficiencies.push(...cl.class.proficiencies.armor);
+				}
+			});
+		} else if (charClass.proficiencies?.armor) {
+			armorProficiencies.push(...charClass.proficiencies.armor);
+		}
+
+		const armorCategory = armorItem.armorData.category;
+
+		// Debug logging
+		console.log(`Checking armor proficiency for ${armorItem.name}:`, {
+			armorCategory,
+			armorProficiencies,
+			hasAllArmor: armorProficiencies.includes("All armor"),
+			hasLightArmor: armorProficiencies.includes("Light armor"),
+			hasMediumArmor: armorProficiencies.includes("Medium armor"),
+			hasHeavyArmor: armorProficiencies.includes("Heavy armor"),
+		});
+
+		// Check for "All armor" proficiency
+		if (armorProficiencies.includes("All armor")) return true;
+
+		// Check category proficiency (armor data has "Light Armor", proficiency is "Light armor")
+		if (armorCategory === "Light Armor" && armorProficiencies.includes("Light armor")) return true;
+		if (armorCategory === "Medium Armor" && armorProficiencies.includes("Medium armor")) return true;
+		if (armorCategory === "Heavy Armor" && armorProficiencies.includes("Heavy armor")) return true;
+		if (armorCategory === "Shield" && armorProficiencies.includes("Shields")) return true;
+
+		console.log(`${armorItem.name} is NOT proficient`);
+		return false;
+	};
+
+	// Check if character is proficient with a specific weapon
+	const isProficientWithWeapon = (weaponItem: InventoryItem): boolean => {
+		if (!weaponItem.weaponData) return true;
+
+		const weaponProficiencies: string[] = [];
+		if (character.classes && character.classes.length > 0) {
+			character.classes.forEach(cl => {
+				if (cl.class.proficiencies?.weapons) {
+					weaponProficiencies.push(...cl.class.proficiencies.weapons);
+				}
+			});
+		} else if (charClass.proficiencies?.weapons) {
+			weaponProficiencies.push(...charClass.proficiencies.weapons);
+		}
+
+		// Check if proficient
+		if (weaponProficiencies.includes("All weapons")) return true;
+
+		// Check category proficiency (handle variations like "Simple Melee", "Martial Ranged")
+		const category = weaponItem.weaponData.category;
+		if (category?.includes("Simple") && weaponProficiencies.includes("Simple weapons")) return true;
+		if (category?.includes("Martial") && weaponProficiencies.includes("Martial weapons")) return true;
+
+		// Check specific weapon name (exact match)
+		if (weaponProficiencies.includes(weaponItem.name)) return true;
+
+		// Check pluralized weapon name (e.g., "Longsword" -> "Longswords")
+		const pluralName = weaponItem.name + "s";
+		if (weaponProficiencies.includes(pluralName)) return true;
+
+		// Case-insensitive check for variations (handles "Hand crossbow" vs "Hand crossbows")
+		const lowerName = weaponItem.name.toLowerCase();
+		const matchingProf = weaponProficiencies.find(prof =>
+			prof.toLowerCase() === lowerName + "s" ||
+			prof.toLowerCase() === lowerName
+		);
+		if (matchingProf) return true;
+
+		return false;
+	};
+
+	// Check if an equipped item is causing issues with features or spells
+	const isItemCausingIssues = (item: InventoryItem): boolean => {
+		const isEquipped = equippedArmor === item.name || (item.armorData?.category === "Shield" && equippedShield);
+		if (!isEquipped || !item.armorData) return false;
+
+		// Check if armor is blocking spells
+		if (!isProficientWithArmor(item)) return true;
+
+		// Check if armor is blocking any class features
+		if (character.classes && character.classes.length > 0) {
+			for (const cl of character.classes) {
+				const features = cl.class.features?.filter((f: any) => f.level <= cl.level && f.condition) || [];
+				for (const feature of features) {
+					if (!isFeatureActive(feature)) {
+						return true;
+					}
+				}
+			}
+		} else if (charClass.features) {
+			const features = charClass.features.filter((f: any) => f.level <= level && f.condition);
+			for (const feature of features) {
+				if (!isFeatureActive(feature)) {
+					return true;
+				}
+			}
+		}
+
+		return false;
+	};
+
 	// Extract weapons from inventory items
 	const weapons = inventoryItems
 		.filter((item) => item.weaponData || item.customStats?.damage)
@@ -2143,6 +2322,12 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 												? proficiencyBonus
 												: 0);
 
+										// Check if wearing armor with stealth disadvantage
+										const hasStealthDisadvantage = skill.name === "Stealth" && equippedArmor && (() => {
+											const armorItem = inventoryItems.find(item => item.name === equippedArmor);
+											return armorItem?.armorData?.stealthDisadvantage === true;
+										})();
+
 										return (
 											<div
 												key={skill.name}
@@ -2166,6 +2351,11 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 													>
 														{skill.name}
 													</span>
+													{hasStealthDisadvantage && (
+														<span className="text-xs text-red-400 font-semibold" title="Disadvantage from armor">
+															⚠
+														</span>
+													)}
 												</div>
 												<div className="flex items-center gap-2">
 													<span className="text-xs text-parchment-400 uppercase">
@@ -2612,9 +2802,17 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 															{feature.description}
 														</div>
 														{feature.condition && !isFeatureActive(feature) && (
-															<div className="mt-3 text-xs text-red-400 bg-red-400/10 border border-red-400 rounded px-3 py-2">
-																<span className="font-semibold">⚠ Requirement: </span>
-																{feature.condition.description}
+															<div className="mt-3 text-xs text-red-400 bg-red-400/10 border border-red-400 rounded px-3 py-3">
+																<div className="mb-2">
+																	<span className="font-semibold">⚠ Requirement: </span>
+																	{feature.condition.description}
+																</div>
+																<button
+																	onClick={() => setFeaturesTab("inventory")}
+																	className="w-full py-1.5 px-3 rounded bg-red-400/20 hover:bg-red-400/30 border border-red-400/60 text-red-400 text-xs font-semibold transition-colors"
+																>
+																	Go to Inventory →
+																</button>
 															</div>
 														)}
 													</div>
@@ -2695,9 +2893,17 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 																	{feature.description}
 																</div>
 																{feature.condition && !isFeatureActive(feature) && (
-																	<div className="mt-3 text-xs text-red-400 bg-red-400/10 border border-red-400 rounded px-3 py-2">
-																		<span className="font-semibold">⚠ Requirement: </span>
-																		{feature.condition.description}
+																	<div className="mt-3 text-xs text-red-400 bg-red-400/10 border border-red-400 rounded px-3 py-3">
+																		<div className="mb-2">
+																			<span className="font-semibold">⚠ Requirement: </span>
+																			{feature.condition.description}
+																		</div>
+																		<button
+																			onClick={() => setFeaturesTab("inventory")}
+																			className="w-full py-1.5 px-3 rounded bg-red-400/20 hover:bg-red-400/30 border border-red-400/60 text-red-400 text-xs font-semibold transition-colors"
+																		>
+																			Go to Inventory →
+																		</button>
 																	</div>
 																)}
 															</div>
@@ -3031,9 +3237,17 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 															{feature.description}
 														</div>
 														{feature.condition && !isFeatureActive(feature) && (
-															<div className="mt-3 text-xs text-red-400 bg-red-400/10 border border-red-400 rounded px-3 py-2">
-																<span className="font-semibold">⚠ Requirement: </span>
-																{feature.condition.description}
+															<div className="mt-3 text-xs text-red-400 bg-red-400/10 border border-red-400 rounded px-3 py-3">
+																<div className="mb-2">
+																	<span className="font-semibold">⚠ Requirement: </span>
+																	{feature.condition.description}
+																</div>
+																<button
+																	onClick={() => setFeaturesTab("inventory")}
+																	className="w-full py-1.5 px-3 rounded bg-red-400/20 hover:bg-red-400/30 border border-red-400/60 text-red-400 text-xs font-semibold transition-colors"
+																>
+																	Go to Inventory →
+																</button>
 															</div>
 														)}
 													</div>
@@ -3115,9 +3329,17 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 																	{feature.description}
 																</div>
 																{feature.condition && !isFeatureActive(feature) && (
-																	<div className="mt-3 text-xs text-red-400 bg-red-400/10 border border-red-400 rounded px-3 py-2">
-																		<span className="font-semibold">⚠ Requirement: </span>
-																		{feature.condition.description}
+																	<div className="mt-3 text-xs text-red-400 bg-red-400/10 border border-red-400 rounded px-3 py-3">
+																		<div className="mb-2">
+																			<span className="font-semibold">⚠ Requirement: </span>
+																			{feature.condition.description}
+																		</div>
+																		<button
+																			onClick={() => setFeaturesTab("inventory")}
+																			className="w-full py-1.5 px-3 rounded bg-red-400/20 hover:bg-red-400/30 border border-red-400/60 text-red-400 text-xs font-semibold transition-colors"
+																		>
+																			Go to Inventory →
+																		</button>
 																	</div>
 																)}
 															</div>
@@ -3131,6 +3353,43 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 
 							{featuresTab === "spells" && (
 								<div className="space-y-4">
+									{/* Spell Attack Modifier and Save DC - Only show if character has spells or spell slots */}
+									{(maxSpellSlots[1] > 0 || maxSpellSlots[2] > 0 || maxSpellSlots[3] > 0 ||
+									  (characterCantrips && characterCantrips.length > 0) ||
+									  (characterSpells && characterSpells.length > 0)) && (
+										<>
+											<div className="bg-background-secondary/30 border border-accent-400/20 rounded-lg p-3 flex gap-4 justify-center">
+												<div className="text-center">
+													<div className="text-xs text-parchment-400 uppercase tracking-wider mb-1">Spell Attack</div>
+													<div className="text-lg font-bold text-accent-400">
+														{spellAttackModifier >= 0 ? '+' : ''}{spellAttackModifier}
+													</div>
+												</div>
+												<div className="border-l border-accent-400/20"></div>
+												<div className="text-center">
+													<div className="text-xs text-parchment-400 uppercase tracking-wider mb-1">Spell Save DC</div>
+													<div className="text-lg font-bold text-accent-400">{spellSaveDC}</div>
+												</div>
+											</div>
+
+											{/* Non-Proficient Armor Warning */}
+											{!canCastSpells && (
+												<div className="bg-red-400/10 border-2 border-red-400 rounded-lg p-4">
+													<div className="text-red-400 font-semibold text-sm mb-2">⚠ Spellcasting Disabled</div>
+													<div className="text-xs text-red-400/90 mb-3">
+														You are wearing armor you are not proficient with. You cannot cast spells while wearing this armor.
+													</div>
+													<button
+														onClick={() => setFeaturesTab("inventory")}
+														className="w-full py-2 px-3 rounded bg-red-400/20 hover:bg-red-400/30 border border-red-400/60 text-red-400 text-xs font-semibold transition-colors"
+													>
+														Go to Inventory →
+													</button>
+												</div>
+											)}
+										</>
+									)}
+
 									{/* Add Spell Button */}
 									<button
 										onClick={() => setShowAddSpell(true)}
@@ -3355,11 +3614,17 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 																	key={
 																		cantripName
 																	}
-																	className="bg-background-secondary border border-accent-400/30 rounded-lg p-4"
+																	className={`bg-background-secondary border rounded-lg p-4 ${
+																		!canCastSpells
+																			? "border-parchment-400/20 opacity-50"
+																			: "border-accent-400/30"
+																	}`}
 																>
 																	<div className="flex items-center justify-between mb-2">
 																		<div className="flex items-center gap-2">
-																			<span className="font-bold text-accent-400 uppercase text-sm">
+																			<span className={`font-bold uppercase text-sm ${
+																				!canCastSpells ? "text-parchment-400" : "text-accent-400"
+																			}`}>
 																				{
 																					cantripName
 																				}
@@ -3368,7 +3633,10 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 																				Cantrip
 																			</span>
 																		</div>
-																		<button className="px-3 py-1 rounded bg-accent-400/20 hover:bg-accent-400/30 border border-accent-400/40 text-accent-400 text-xs font-semibold transition-colors">
+																		<button
+																			className="px-3 py-1 rounded bg-accent-400/20 hover:bg-accent-400/30 border border-accent-400/40 text-accent-400 text-xs font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+																			disabled={!canCastSpells}
+																		>
 																			Cast
 																		</button>
 																	</div>
@@ -3488,23 +3756,28 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 																	spellName,
 																	charClass.name
 																);
-															const canCast =
+															const hasSpellSlots =
 																currentSpellSlots[1] >
 																0;
+															const canCast = canCastSpells && hasSpellSlots;
 															return (
 																<div
 																	key={
 																		spellName
 																	}
-																	className={`bg-background-secondary border border-accent-400/30 rounded-lg p-4 transition-opacity ${
-																		!canCast
-																			? "opacity-60"
-																			: ""
+																	className={`bg-background-secondary border rounded-lg p-4 transition-opacity ${
+																		!canCastSpells
+																			? "border-parchment-400/20 opacity-50"
+																			: !canCast
+																			? "border-accent-400/30 opacity-60"
+																			: "border-accent-400/30"
 																	}`}
 																>
 																	<div className="flex items-center justify-between mb-2">
 																		<div className="flex items-center gap-2">
-																			<span className="font-bold text-accent-400 uppercase text-sm">
+																			<span className={`font-bold uppercase text-sm ${
+																				!canCastSpells ? "text-parchment-400" : "text-accent-400"
+																			}`}>
 																				{
 																					spellName
 																				}
@@ -4222,12 +4495,17 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 														item.name ||
 													(isShield &&
 														equippedShield);
+												const causingIssues = isItemCausingIssues(item);
+												const isArmorNotProficient = (isArmor || isShield) && !isProficientWithArmor(item);
+												const isWeaponNotProficient = isWeapon && !isArmor && !isProficientWithWeapon(item);
 
 												return (
 													<div
 														key={idx}
 														className={`bg-background-secondary border rounded-lg p-2 ${
-															isEquipped
+															causingIssues
+																? "border-red-400 border-2 bg-red-400/5"
+																: isEquipped
 																? "border-accent-400 bg-accent-400/10"
 																: "border-accent-400/30"
 														}`}
@@ -4240,6 +4518,16 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 																{isEquipped && (
 																	<span className="text-xs uppercase tracking-wider text-accent-400 bg-accent-400/20 px-1.5 py-0.5 rounded flex-shrink-0">
 																		Equipped
+																	</span>
+																)}
+																{isArmorNotProficient && (
+																	<span className="text-xs uppercase tracking-wider text-red-400 bg-red-400/20 px-1.5 py-0.5 rounded border border-red-400/40 flex-shrink-0">
+																		Not Proficient
+																	</span>
+																)}
+																{isWeaponNotProficient && (
+																	<span className="text-xs uppercase tracking-wider text-red-400 bg-red-400/20 px-1.5 py-0.5 rounded border border-red-400/40 flex-shrink-0">
+																		Not Proficient
 																	</span>
 																)}
 																{isArmor &&
@@ -4326,6 +4614,12 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 																</button>
 															</div>
 														</div>
+														{causingIssues && (
+															<div className="mt-2 text-xs text-red-400 bg-red-400/10 border border-red-400 rounded px-2 py-1.5">
+																<span className="font-semibold">⚠ Warning: </span>
+																This item is blocking spells or features. Unequip to restore full capabilities.
+															</div>
+														)}
 													</div>
 												);
 											})
