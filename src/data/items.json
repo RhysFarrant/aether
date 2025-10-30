@@ -2,7 +2,9 @@
   "Backpack": {
     "weight": "5 lb",
     "cost": "2 gp",
-    "description": "A backpack can hold 30 pounds of gear"
+    "description": "A backpack can hold 30 pounds of gear",
+    "isContainer": true,
+    "capacity": 30
   },
   "Bedroll": {
     "weight": "7 lb",
@@ -297,7 +299,9 @@
   "Chest": {
     "weight": "25 lb",
     "cost": "5 gp",
-    "description": "A chest can hold 12 cubic feet or 300 pounds"
+    "description": "A chest can hold 12 cubic feet or 300 pounds",
+    "isContainer": true,
+    "capacity": 300
   },
   "Clothes, common": {
     "weight": "3 lb",
@@ -322,12 +326,16 @@
   "Pouch": {
     "weight": "1 lb",
     "cost": "5 sp",
-    "description": "A cloth or leather pouch can hold up to 6 pounds"
+    "description": "A cloth or leather pouch can hold up to 6 pounds",
+    "isContainer": true,
+    "capacity": 6
   },
   "Sack": {
     "weight": "0.5 lb",
     "cost": "1 cp",
-    "description": "A sack can hold 30 pounds"
+    "description": "A sack can hold 30 pounds",
+    "isContainer": true,
+    "capacity": 30
   },
   "Signal whistle": {
     "weight": "0 lb",

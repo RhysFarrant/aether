@@ -36,6 +36,9 @@ interface InventoryItem {
 	equipped?: boolean; // Whether the item is currently equipped
 	customName?: string; // User-provided custom name for personalization
 	tags?: string[]; // User-defined tags for organization (e.g., "quest", "important", "sell")
+	containerId?: string; // ID of the container this item is stored in (if any)
+	isContainer?: boolean; // Whether this item is a container
+	containerCapacity?: number; // Max weight capacity for containers (in lbs)
 	weaponData?: WeaponProperties;
 	armorData?: ArmorProperties;
 	customStats?: {
@@ -69,6 +72,8 @@ interface ItemProperties {
 	weight: string;
 	cost: string;
 	description: string;
+	isContainer?: boolean;
+	capacity?: number;
 }
 
 const WEAPON_DATA = weaponDataImport as Record<string, WeaponProperties>;
@@ -252,6 +257,8 @@ function lookupItemData(itemName: string): InventoryItem | null {
 			name: itemName,
 			weight,
 			isCustom: false,
+			isContainer: itemData.isContainer,
+			containerCapacity: itemData.capacity,
 		};
 	}
 
@@ -1760,6 +1767,32 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 		setInventoryItems(prev => [...prev, ...itemsToAdd]);
 		setSelectedItemsToBrowse(new Set());
 		setShowBrowseItems(false);
+	};
+
+	const moveItemToContainer = (itemIndex: number, containerId: string) => {
+		setInventoryItems(prevItems =>
+			prevItems.map((item, i) =>
+				i === itemIndex
+					? { ...item, containerId }
+					: item
+			)
+		);
+	};
+
+	const removeItemFromContainer = (itemIndex: number) => {
+		setInventoryItems(prevItems =>
+			prevItems.map((item, i) =>
+				i === itemIndex
+					? { ...item, containerId: undefined }
+					: item
+			)
+		);
+	};
+
+	const getContainerWeight = (containerId: string): number => {
+		return inventoryItems
+			.filter(item => item.containerId === containerId)
+			.reduce((total, item) => total + item.weight, 0);
 	};
 
 	// All D&D 5e skills with their associated abilities
