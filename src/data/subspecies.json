@@ -14,7 +14,8 @@
       },
       {
         "name": "Cantrip",
-        "description": "You know one cantrip of your choice from the wizard spell list. Intelligence is your spellcasting ability for it."
+        "description": "You know one cantrip of your choice from the wizard spell list. Intelligence is your spellcasting ability for it.",
+        "showOnSheet": false
       },
       {
         "name": "Extra Language",
