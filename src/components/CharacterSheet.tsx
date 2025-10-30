@@ -4,6 +4,7 @@ import weaponDataImport from "../data/weapons.json";
 import conditionsDataImport from "../data/conditions.json";
 import spellsDataImport from "../data/spells.json";
 import armorDataImport from "../data/armor.json";
+import itemsDataImport from "../data/items.json";
 import classesDataImport from "../data/classes.json";
 import { updateCharacter } from "../utils/storage";
 import LevelUpModal from "./LevelUpModal";
@@ -64,8 +65,15 @@ interface SpellData {
 	ritual?: boolean;
 }
 
+interface ItemProperties {
+	weight: string;
+	cost: string;
+	description: string;
+}
+
 const WEAPON_DATA = weaponDataImport as Record<string, WeaponProperties>;
 const ARMOR_DATA = armorDataImport as Record<string, ArmorProperties>;
+const ITEMS_DATA = itemsDataImport as Record<string, ItemProperties>;
 const CONDITIONS_DATA = conditionsDataImport as Record<string, Condition>;
 type ClassSpellList = Record<string, SpellData[]> & { cantrips: SpellData[] };
 
@@ -204,7 +212,8 @@ function getSpellData(spellName: string, className: string): SpellData | null {
 function getAllAvailableItems(): string[] {
 	const weapons = Object.keys(WEAPON_DATA);
 	const armor = Object.keys(ARMOR_DATA);
-	return [...weapons, ...armor].sort();
+	const items = Object.keys(ITEMS_DATA);
+	return [...weapons, ...armor, ...items].sort();
 }
 
 /**
@@ -232,6 +241,17 @@ function lookupItemData(itemName: string): InventoryItem | null {
 			weight,
 			isCustom: false,
 			armorData,
+		};
+	}
+
+	// Check general items
+	const itemData = ITEMS_DATA[itemName];
+	if (itemData) {
+		const weight = parseFloat(itemData.weight) || 0;
+		return {
+			name: itemName,
+			weight,
+			isCustom: false,
 		};
 	}
 
