@@ -1052,9 +1052,9 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 		});
 	};
 
-	// Extract weapons from inventory items
+	// Extract equipped weapons from inventory items
 	const weapons = inventoryItems
-		.filter((item) => item.weaponData || item.customStats?.damage)
+		.filter((item) => (item.weaponData || item.customStats?.damage) && item.equipped)
 		.map((item) => ({
 			name: item.name,
 			properties: item.weaponData || {
@@ -1065,6 +1065,7 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 				cost: "",
 				weight: `${item.weight} lb`,
 			},
+			isProficient: isProficientWithWeapon(item),
 			count: 1,
 		}));
 
@@ -1574,6 +1575,16 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 
 	const toggleEquipShield = () => {
 		setEquippedShield(!equippedShield);
+	};
+
+	const toggleEquipWeapon = (itemName: string) => {
+		setInventoryItems(prevItems =>
+			prevItems.map(item =>
+				item.name === itemName
+					? { ...item, equipped: !item.equipped }
+					: item
+			)
+		);
 	};
 
 	// All D&D 5e skills with their associated abilities
@@ -3265,13 +3276,18 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 													className="bg-background-secondary border border-accent-400/30 rounded-lg p-4"
 												>
 													<div className="flex items-center justify-between mb-2">
-														<div className="flex items-center gap-2">
+														<div className="flex items-center gap-2 flex-wrap">
 															<span className="font-bold text-accent-400 uppercase text-sm">
 																{weapon.name}
 															</span>
 															<span className="text-xs uppercase tracking-wider text-parchment-400 bg-background-tertiary px-2 py-0.5 rounded">
 																Weapon Attack
 															</span>
+															{!weapon.isProficient && (
+																<span className="text-xs uppercase tracking-wider text-red-400 bg-red-400/20 px-1.5 py-0.5 rounded border border-red-400/40">
+																	Not Proficient
+																</span>
+															)}
 															{weapon.count >
 																1 && (
 																<span className="text-accent-400 text-xs">
@@ -4918,6 +4934,24 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 																		}`}
 																	>
 																		{isEquipped
+																			? "Unequip"
+																			: "Equip"}
+																	</button>
+																)}
+																{isWeapon && !isArmor && !isShield && (
+																	<button
+																		onClick={() =>
+																			toggleEquipWeapon(
+																				item.name
+																			)
+																		}
+																		className={`px-2 py-1 rounded text-xs font-semibold transition-colors ${
+																			item.equipped
+																				? "bg-background-tertiary hover:bg-background-tertiary/70 text-parchment-300"
+																				: "bg-accent-400/20 hover:bg-accent-400/30 text-accent-400"
+																		}`}
+																	>
+																		{item.equipped
 																			? "Unequip"
 																			: "Equip"}
 																	</button>
