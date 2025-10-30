@@ -2679,6 +2679,22 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 											return armorItem?.armorData?.stealthDisadvantage === true;
 										})();
 
+										// Check for conditional advantage on skill checks
+										const skillAdvantage = (() => {
+											const advantages: string[] = [];
+
+											// Stonecunning - Advantage on Intelligence (History) checks related to stonework
+											if (skill.name === "History" && skill.ability === "INT") {
+												const hasStonecunning = species.traits?.some(trait => trait.name === "Stonecunning") ||
+													subspecies?.traits?.some(trait => trait.name === "Stonecunning");
+												if (hasStonecunning) {
+													advantages.push("Stonecunning: Advantage on checks related to the origin of stonework");
+												}
+											}
+
+											return advantages;
+										})();
+
 										return (
 											<div
 												key={skill.name}
@@ -2710,6 +2726,14 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 													{hasStealthDisadvantage && (
 														<span className="text-xs text-red-400 font-semibold" title="Disadvantage from armor">
 															⚠
+														</span>
+													)}
+													{skillAdvantage.length > 0 && (
+														<span
+															className="text-xs text-green-400 font-semibold cursor-help"
+															title={skillAdvantage.join('\n')}
+														>
+															↑
 														</span>
 													)}
 													<span className="text-accent-400 font-semibold min-w-[2rem] text-right text-sm">
