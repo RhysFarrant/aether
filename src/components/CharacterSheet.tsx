@@ -591,6 +591,22 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 		0
 	);
 
+	// Get human-readable description of feature condition
+	const getFeatureConditionDescription = (feature: any): string => {
+		if (!feature.condition) return "";
+
+		const condition = feature.condition;
+
+		switch (condition.type) {
+			case "no_armor":
+				return "Requires: Not wearing armor";
+			case "no_heavy_armor":
+				return "Requires: Not wearing heavy armor";
+			default:
+				return `Requires: ${condition.type}`;
+		}
+	};
+
 	// Check if a feature's condition is met (feature is active)
 	const isFeatureActive = (feature: any): boolean => {
 		if (!feature.condition) return true; // No condition = always active
@@ -2833,11 +2849,14 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 																	</span>
 																)}
 																{feature.condition && (
-																	<span className={`text-xs uppercase tracking-wider px-2 py-0.5 rounded border-2 ${
-																		isFeatureActive(feature)
-																			? "text-green-500/80 bg-green-500/10 border-green-500/30"
-																			: "text-red-400 bg-red-400/10 border-red-400"
-																	}`}>
+																	<span
+																		className={`text-xs uppercase tracking-wider px-2 py-0.5 rounded border-2 cursor-help ${
+																			isFeatureActive(feature)
+																				? "text-green-500/80 bg-green-500/10 border-green-500/30"
+																				: "text-red-400 bg-red-400/10 border-red-400"
+																		}`}
+																		title={getFeatureConditionDescription(feature)}
+																	>
 																		{isFeatureActive(feature) ? "Active" : "Inactive"}
 																	</span>
 																)}
@@ -2934,11 +2953,14 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 																			</span>
 																		)}
 																		{feature.condition && (
-																			<span className={`text-xs uppercase tracking-wider px-2 py-0.5 rounded border-2 ${
-																				isFeatureActive(feature)
-																					? "text-green-500/80 bg-green-500/10 border-green-500/30"
-																					: "text-red-400 bg-red-400/10 border-red-400"
-																			}`}>
+																			<span
+																				className={`text-xs uppercase tracking-wider px-2 py-0.5 rounded border-2 cursor-help ${
+																					isFeatureActive(feature)
+																						? "text-green-500/80 bg-green-500/10 border-green-500/30"
+																						: "text-red-400 bg-red-400/10 border-red-400"
+																				}`}
+																				title={getFeatureConditionDescription(feature)}
+																			>
 																				{isFeatureActive(feature) ? "Active" : "Inactive"}
 																			</span>
 																		)}
@@ -3268,11 +3290,14 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 																	</span>
 																)}
 																{feature.condition && (
-																	<span className={`text-xs uppercase tracking-wider px-2 py-0.5 rounded border-2 ${
-																		isFeatureActive(feature)
-																			? "text-green-500/80 bg-green-500/10 border-green-500/30"
-																			: "text-red-400 bg-red-400/10 border-red-400"
-																	}`}>
+																	<span
+																		className={`text-xs uppercase tracking-wider px-2 py-0.5 rounded border-2 cursor-help ${
+																			isFeatureActive(feature)
+																				? "text-green-500/80 bg-green-500/10 border-green-500/30"
+																				: "text-red-400 bg-red-400/10 border-red-400"
+																		}`}
+																		title={getFeatureConditionDescription(feature)}
+																	>
 																		{isFeatureActive(feature) ? "Active" : "Inactive"}
 																	</span>
 																)}
@@ -3370,11 +3395,14 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 																			{charClass.name} Feature
 																		</span>
 																		{feature.condition && (
-																			<span className={`text-xs uppercase tracking-wider px-2 py-0.5 rounded border-2 ${
-																				isFeatureActive(feature)
-																					? "text-green-500/80 bg-green-500/10 border-green-500/30"
-																					: "text-red-400 bg-red-400/10 border-red-400"
-																			}`}>
+																			<span
+																				className={`text-xs uppercase tracking-wider px-2 py-0.5 rounded border-2 cursor-help ${
+																					isFeatureActive(feature)
+																						? "text-green-500/80 bg-green-500/10 border-green-500/30"
+																						: "text-red-400 bg-red-400/10 border-red-400"
+																				}`}
+																				title={getFeatureConditionDescription(feature)}
+																			>
 																				{isFeatureActive(feature) ? "Active" : "Inactive"}
 																			</span>
 																		)}
