@@ -750,6 +750,63 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 
 	const displaySpeed = calculateSpeed();
 
+	// Calculate HP bonuses from features and traits
+	const calculateHPBonus = (): number => {
+		let hpBonus = 0;
+
+		// Check subspecies traits for HP bonuses
+		if (subspecies?.traits) {
+			subspecies.traits.forEach(trait => {
+				if (trait.hpBonus) {
+					if (typeof trait.hpBonus === 'string') {
+						// Handle formulas like "level"
+						if (trait.hpBonus === 'level') {
+							hpBonus += level;
+						}
+					} else {
+						hpBonus += trait.hpBonus;
+					}
+				}
+			});
+		}
+
+		// Check class features for HP bonuses
+		if (character.classes && character.classes.length > 0) {
+			character.classes.forEach(cl => {
+				const features = cl.class.features?.filter((f: any) => f.level <= cl.level && f.hpBonus) || [];
+				features.forEach(feature => {
+					if (feature.hpBonus) {
+						if (typeof feature.hpBonus === 'string') {
+							if (feature.hpBonus === 'level') {
+								hpBonus += cl.level;
+							}
+						} else {
+							hpBonus += feature.hpBonus;
+						}
+					}
+				});
+			});
+		} else if (charClass.features) {
+			const features = charClass.features.filter((f: any) => f.level <= level && f.hpBonus);
+			features.forEach(feature => {
+				if (feature.hpBonus) {
+					if (typeof feature.hpBonus === 'string') {
+						if (feature.hpBonus === 'level') {
+							hpBonus += level;
+						}
+					} else {
+						hpBonus += feature.hpBonus;
+					}
+				}
+			});
+		}
+
+		return hpBonus;
+	};
+
+	const hpBonus = calculateHPBonus();
+	const displayMaxHP = maxHitPoints + hpBonus;
+
 	// Calculate spell attack modifier and spell save DC
 	const getSpellcastingAbility = (): { modifier: number; name: string; abbreviation: string } => {
 		// For multiclass, use the first spellcasting class found
@@ -1978,7 +2035,7 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 													/
 												</span>
 												<span className="text-xl font-bold text-parchment-100 w-12 text-left">
-													{maxHitPoints}
+													{displayMaxHP}
 												</span>
 											</div>
 											<div className="w-8"></div>

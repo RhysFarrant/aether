@@ -41,4 +41,6 @@ export interface SubspeciesTrait {
   description: string;
   isPassive?: boolean; // Default false - passive features don't show in Actions
   showOnSheet?: boolean; // Default true - set to false to hide redundant traits (e.g., proficiency grants, languages)
+  /** HP bonus granted by this trait */
+  hpBonus?: number | string; // Number or formula like "level" for per-level bonuses
 }
