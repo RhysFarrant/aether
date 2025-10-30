@@ -321,6 +321,20 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 	const [hiddenFeatures, setHiddenFeatures] = useState<Set<string>>(new Set());
 	const [hiddenActions, setHiddenActions] = useState<Set<string>>(new Set());
 
+	// Notes state
+	interface Note {
+		id: string;
+		category: string;
+		title: string;
+		content: string;
+		linkedTo?: string; // ID of another note or entity
+	}
+	const [notes, setNotes] = useState<Note[]>([]);
+	const [showAddNote, setShowAddNote] = useState(false);
+	const [noteCategory, setNoteCategory] = useState("General");
+	const [noteTitle, setNoteTitle] = useState("");
+	const [noteContent, setNoteContent] = useState("");
+
 	// HP and combat state
 	const [currentHP, setCurrentHP] = useState(currentHitPoints);
 	const [tempHP, setTempHP] = useState(character.temporaryHitPoints || 0);
@@ -1793,6 +1807,37 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 		return inventoryItems
 			.filter(item => item.containerId === containerId)
 			.reduce((total, item) => total + item.weight, 0);
+	};
+
+	const addNote = () => {
+		if (!noteTitle.trim()) return;
+
+		const newNote: Note = {
+			id: Date.now().toString(),
+			category: noteCategory,
+			title: noteTitle.trim(),
+			content: noteContent.trim(),
+		};
+
+		setNotes(prev => [...prev, newNote]);
+		setNoteTitle("");
+		setNoteContent("");
+		setShowAddNote(false);
+	};
+
+	const deleteNote = (noteId: string) => {
+		setNotes(prev => prev.filter(note => note.id !== noteId));
+	};
+
+	const getNotesByCategory = () => {
+		const categorized: Record<string, Note[]> = {};
+		notes.forEach(note => {
+			if (!categorized[note.category]) {
+				categorized[note.category] = [];
+			}
+			categorized[note.category].push(note);
+		});
+		return categorized;
 	};
 
 	// All D&D 5e skills with their associated abilities
@@ -5668,10 +5713,112 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 							)}
 
 							{featuresTab === "notes" && (
-								<div className="space-y-2">
-									<div className="text-center py-8 text-parchment-400 text-sm">
-										Notes functionality coming soon!
-									</div>
+								<div className="space-y-4">
+									{/* Add Note Button */}
+									<button
+										onClick={() => setShowAddNote(!showAddNote)}
+										className="w-full py-2 px-3 rounded bg-accent-400/20 hover:bg-accent-400/30 border border-accent-400/40 text-accent-400 text-xs font-semibold transition-colors"
+									>
+										{showAddNote ? "Cancel" : "+ Add Note"}
+									</button>
+
+									{/* Add Note Form */}
+									{showAddNote && (
+										<div className="bg-background-secondary border border-accent-400/30 rounded-lg p-4 space-y-3">
+											<div>
+												<label className="text-xs text-accent-400 uppercase tracking-wider block mb-1">
+													Category
+												</label>
+												<select
+													value={noteCategory}
+													onChange={(e) => setNoteCategory(e.target.value)}
+													className="w-full bg-background-tertiary border border-accent-400/30 rounded px-3 py-2 text-sm text-parchment-100 focus:outline-none focus:border-accent-400"
+												>
+													<option>General</option>
+													<option>Quest</option>
+													<option>NPC</option>
+													<option>Location</option>
+													<option>Item</option>
+													<option>Combat</option>
+													<option>Other</option>
+												</select>
+											</div>
+											<div>
+												<label className="text-xs text-accent-400 uppercase tracking-wider block mb-1">
+													Title
+												</label>
+												<input
+													type="text"
+													value={noteTitle}
+													onChange={(e) => setNoteTitle(e.target.value)}
+													className="w-full bg-background-tertiary border border-accent-400/30 rounded px-3 py-2 text-sm text-parchment-100 focus:outline-none focus:border-accent-400"
+													placeholder="Note title..."
+												/>
+											</div>
+											<div>
+												<label className="text-xs text-accent-400 uppercase tracking-wider block mb-1">
+													Content
+												</label>
+												<textarea
+													value={noteContent}
+													onChange={(e) => setNoteContent(e.target.value)}
+													className="w-full bg-background-tertiary border border-accent-400/30 rounded px-3 py-2 text-sm text-parchment-100 focus:outline-none focus:border-accent-400 resize-none"
+													rows={4}
+													placeholder="Note content..."
+												/>
+											</div>
+											<button
+												onClick={addNote}
+												disabled={!noteTitle.trim()}
+												className={`w-full py-2 px-3 rounded text-xs font-semibold transition-colors ${
+													noteTitle.trim()
+														? "bg-accent-400/20 hover:bg-accent-400/30 border border-accent-400/40 text-accent-400"
+														: "bg-background-tertiary text-parchment-500 cursor-not-allowed"
+												}`}
+											>
+												Save Note
+											</button>
+										</div>
+									)}
+
+									{/* Display Notes by Category */}
+									{notes.length === 0 ? (
+										<div className="text-center py-8 text-parchment-400 text-sm">
+											No notes yet. Click "+ Add Note" to create your first note!
+										</div>
+									) : (
+										Object.entries(getNotesByCategory()).map(([category, categoryNotes]) => (
+											<div key={category} className="space-y-2">
+												<div className="text-xs text-accent-400 uppercase tracking-wider font-semibold">
+													{category} ({categoryNotes.length})
+												</div>
+												{categoryNotes.map(note => (
+													<div
+														key={note.id}
+														className="bg-background-secondary border border-accent-400/30 rounded-lg p-3"
+													>
+														<div className="flex items-start justify-between mb-2">
+															<h4 className="font-semibold text-parchment-100 text-sm">
+																{note.title}
+															</h4>
+															<button
+																onClick={() => deleteNote(note.id)}
+																className="text-red-400 hover:text-red-300 text-xs transition-colors"
+																title="Delete note"
+															>
+																×
+															</button>
+														</div>
+														{note.content && (
+															<p className="text-xs text-parchment-300 leading-relaxed whitespace-pre-wrap">
+																{note.content}
+															</p>
+														)}
+													</div>
+												))}
+											</div>
+										))
+									)}
 								</div>
 							)}
 						</div>
