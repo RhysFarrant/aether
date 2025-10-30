@@ -1,5 +1,5 @@
 {
-  "Padded": {
+  "Padded Armor": {
     "armorClass": 11,
     "dexModifier": "full",
     "category": "Light Armor",
@@ -8,7 +8,7 @@
     "weight": "8 lb",
     "strengthRequirement": null
   },
-  "Leather": {
+  "Leather Armor": {
     "armorClass": 11,
     "dexModifier": "full",
     "category": "Light Armor",
@@ -17,7 +17,7 @@
     "weight": "10 lb",
     "strengthRequirement": null
   },
-  "Studded leather": {
+  "Studded Leather Armor": {
     "armorClass": 12,
     "dexModifier": "full",
     "category": "Light Armor",
@@ -26,7 +26,7 @@
     "weight": "13 lb",
     "strengthRequirement": null
   },
-  "Hide": {
+  "Hide Armor": {
     "armorClass": 12,
     "dexModifier": "max2",
     "category": "Medium Armor",
@@ -35,7 +35,7 @@
     "weight": "12 lb",
     "strengthRequirement": null
   },
-  "Chain shirt": {
+  "Chain Shirt": {
     "armorClass": 13,
     "dexModifier": "max2",
     "category": "Medium Armor",
@@ -44,7 +44,7 @@
     "weight": "20 lb",
     "strengthRequirement": null
   },
-  "Scale mail": {
+  "Scale Mail": {
     "armorClass": 14,
     "dexModifier": "max2",
     "category": "Medium Armor",
@@ -62,7 +62,7 @@
     "weight": "20 lb",
     "strengthRequirement": null
   },
-  "Half plate": {
+  "Half Plate": {
     "armorClass": 15,
     "dexModifier": "max2",
     "category": "Medium Armor",
@@ -71,7 +71,7 @@
     "weight": "40 lb",
     "strengthRequirement": null
   },
-  "Ring mail": {
+  "Ring Mail": {
     "armorClass": 14,
     "dexModifier": "none",
     "category": "Heavy Armor",
@@ -80,7 +80,7 @@
     "weight": "40 lb",
     "strengthRequirement": null
   },
-  "Chain mail": {
+  "Chain Mail": {
     "armorClass": 16,
     "dexModifier": "none",
     "category": "Heavy Armor",
@@ -89,7 +89,7 @@
     "weight": "55 lb",
     "strengthRequirement": 13
   },
-  "Splint": {
+  "Splint Armor": {
     "armorClass": 17,
     "dexModifier": "none",
     "category": "Heavy Armor",
@@ -98,7 +98,7 @@
     "weight": "60 lb",
     "strengthRequirement": 15
   },
-  "Plate": {
+  "Plate Armor": {
     "armorClass": 18,
     "dexModifier": "none",
     "category": "Heavy Armor",

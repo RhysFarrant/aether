@@ -63,6 +63,9 @@ export interface Character {
     max: number;
   }>;
 
+  /** Ignored item warnings - key is "itemName:warningType" (e.g., "Plate Armor:blocks_fast_movement") */
+  ignoredItemWarnings?: string[];
+
   alignment?: string;
 
   personality?: {

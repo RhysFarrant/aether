@@ -20,8 +20,8 @@
       {
         "description": "Choose armor",
         "options": [
-          ["Chain mail"],
-          ["Leather armor", "Longbow", "20 arrows"]
+          ["Chain Mail"],
+          ["Leather Armor", "Longbow", "20 arrows"]
         ]
       },
       {
@@ -216,7 +216,7 @@
       "choose": 4,
       "from": ["Acrobatics", "Athletics", "Deception", "Insight", "Intimidation", "Investigation", "Perception", "Performance", "Persuasion", "Sleight of Hand", "Stealth"]
     },
-    "startingEquipment": ["Leather armor", "Dagger", "Dagger", "Thieves' tools"],
+    "startingEquipment": ["Leather Armor", "Dagger", "Dagger", "Thieves' tools"],
     "equipmentChoices": [
       {
         "description": "Choose primary weapon",
@@ -319,9 +319,9 @@
       {
         "description": "Choose armor",
         "options": [
-          ["Scale mail"],
-          ["Leather armor"],
-          ["Chain mail"]
+          ["Scale Mail"],
+          ["Leather Armor"],
+          ["Chain Mail"]
         ]
       },
       {
@@ -430,7 +430,7 @@
       "choose": 2,
       "from": ["Athletics", "Insight", "Intimidation", "Medicine", "Persuasion", "Religion"]
     },
-    "startingEquipment": ["Chain mail", "Holy symbol"],
+    "startingEquipment": ["Chain Mail", "Holy symbol"],
     "equipmentChoices": [
       {
         "description": "Choose weapon and shield",

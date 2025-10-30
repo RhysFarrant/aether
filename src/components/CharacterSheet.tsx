@@ -824,12 +824,21 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 	};
 
 	// Check if an equipped item is causing issues with features or spells
-	const isItemCausingIssues = (item: InventoryItem): boolean => {
+	// Get detailed list of what an item is blocking
+	const getItemBlockedFeatures = (item: InventoryItem): { type: string; name: string; id: string }[] => {
 		const isEquipped = equippedArmor === item.name || (item.armorData?.category === "Shield" && equippedShield);
-		if (!isEquipped || !item.armorData) return false;
+		if (!isEquipped || !item.armorData) return [];
+
+		const blocked: { type: string; name: string; id: string }[] = [];
+		const ignoredWarnings = character.ignoredItemWarnings || [];
 
 		// Check if armor is blocking spells
-		if (!isProficientWithArmor(item)) return true;
+		if (!isProficientWithArmor(item)) {
+			const warningId = `${item.name}:blocks_spellcasting`;
+			if (!ignoredWarnings.includes(warningId)) {
+				blocked.push({ type: "spellcasting", name: "Spellcasting", id: warningId });
+			}
+		}
 
 		// Check if armor is blocking any class features
 		if (character.classes && character.classes.length > 0) {
@@ -837,7 +846,10 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 				const features = cl.class.features?.filter((f: any) => f.level <= cl.level && f.condition) || [];
 				for (const feature of features) {
 					if (!isFeatureActive(feature)) {
-						return true;
+						const warningId = `${item.name}:blocks_${feature.name.toLowerCase().replace(/\s+/g, "_")}`;
+						if (!ignoredWarnings.includes(warningId)) {
+							blocked.push({ type: "feature", name: feature.name, id: warningId });
+						}
 					}
 				}
 			}
@@ -845,12 +857,32 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 			const features = charClass.features.filter((f: any) => f.level <= level && f.condition);
 			for (const feature of features) {
 				if (!isFeatureActive(feature)) {
-					return true;
+					const warningId = `${item.name}:blocks_${feature.name.toLowerCase().replace(/\s+/g, "_")}`;
+					if (!ignoredWarnings.includes(warningId)) {
+						blocked.push({ type: "feature", name: feature.name, id: warningId });
+					}
 				}
 			}
 		}
 
-		return false;
+		return blocked;
+	};
+
+	const isItemCausingIssues = (item: InventoryItem): boolean => {
+		return getItemBlockedFeatures(item).length > 0;
+	};
+
+	// Toggle ignored warning
+	const toggleIgnoreWarning = (warningId: string) => {
+		const ignoredWarnings = character.ignoredItemWarnings || [];
+		const newIgnored = ignoredWarnings.includes(warningId)
+			? ignoredWarnings.filter(id => id !== warningId)
+			: [...ignoredWarnings, warningId];
+
+		updateCharacter({
+			...character,
+			ignoredItemWarnings: newIgnored
+		});
 	};
 
 	// Extract weapons from inventory items
@@ -4614,12 +4646,28 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 																</button>
 															</div>
 														</div>
-														{causingIssues && (
-															<div className="mt-2 text-xs text-red-400 bg-red-400/10 border border-red-400 rounded px-2 py-1.5">
-																<span className="font-semibold">⚠ Warning: </span>
-																This item is blocking spells or features. Unequip to restore full capabilities.
-															</div>
-														)}
+														{causingIssues && (() => {
+															const blockedFeatures = getItemBlockedFeatures(item);
+															return blockedFeatures.length > 0 && (
+																<div className="mt-2 text-xs text-red-400 bg-red-400/10 border border-red-400 rounded px-2 py-1.5">
+																	<div className="font-semibold mb-1">⚠ Blocking:</div>
+																	<ul className="space-y-1 ml-4">
+																		{blockedFeatures.map(blocked => (
+																			<li key={blocked.id} className="flex items-center justify-between">
+																				<span>• {blocked.name}</span>
+																				<button
+																					onClick={() => toggleIgnoreWarning(blocked.id)}
+																					className="text-xs px-2 py-0.5 rounded bg-red-400/20 hover:bg-red-400/30 transition-colors ml-2"
+																					title="Ignore this warning"
+																				>
+																					Ignore
+																				</button>
+																			</li>
+																		))}
+																	</ul>
+																</div>
+															);
+														})()}
 													</div>
 												);
 											})
