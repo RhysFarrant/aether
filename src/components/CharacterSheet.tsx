@@ -2964,6 +2964,16 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 									Inventory
 								</button>
 								<button
+									onClick={() => setFeaturesTab("details")}
+									className={`flex-1 px-3 py-2 rounded transition-colors text-sm font-semibold uppercase ${
+										featuresTab === "details"
+											? "bg-accent-400 text-background-primary"
+											: "text-parchment-300 hover:bg-background-secondary"
+									}`}
+								>
+									Details
+								</button>
+								<button
 									onClick={() => setFeaturesTab("notes")}
 									className={`flex-1 px-3 py-2 rounded transition-colors text-sm font-semibold uppercase ${
 										featuresTab === "notes"
@@ -5265,6 +5275,184 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 												No equipment
 											</div>
 										)}
+									</div>
+								</div>
+							)}
+
+							{featuresTab === "details" && (
+								<div className="space-y-4">
+									{/* Equipped Items Summary */}
+									<div className="bg-background-secondary border border-accent-400/30 rounded-lg p-4">
+										<h3 className="text-accent-400 font-semibold mb-3 uppercase text-sm tracking-wider">
+											Equipped Items
+										</h3>
+										<div className="space-y-2 text-sm">
+											{/* Armor */}
+											<div className="flex items-center justify-between">
+												<span className="text-parchment-300">Armor:</span>
+												<span className="text-parchment-100">
+													{equippedArmor || "None"}
+												</span>
+											</div>
+											{/* Shield */}
+											<div className="flex items-center justify-between">
+												<span className="text-parchment-300">Shield:</span>
+												<span className="text-parchment-100">
+													{equippedShield ? "Equipped" : "None"}
+												</span>
+											</div>
+											{/* Weapons */}
+											<div className="flex items-center justify-between">
+												<span className="text-parchment-300">Weapons:</span>
+												<span className="text-parchment-100">
+													{weapons.length > 0
+														? weapons.map(w => w.name).join(", ")
+														: "None"}
+												</span>
+											</div>
+										</div>
+									</div>
+
+									{/* Character Background */}
+									<div className="bg-background-secondary border border-accent-400/30 rounded-lg p-4">
+										<h3 className="text-accent-400 font-semibold mb-3 uppercase text-sm tracking-wider">
+											Background & Personality
+										</h3>
+										<div className="space-y-3 text-sm text-parchment-300">
+											<div>
+												<label className="text-xs text-accent-400 uppercase tracking-wider block mb-1">
+													Personality Traits
+												</label>
+												<textarea
+													className="w-full bg-background-tertiary border border-accent-400/30 rounded px-3 py-2 text-parchment-100 focus:outline-none focus:border-accent-400 resize-none"
+													rows={3}
+													placeholder="Describe your character's personality traits..."
+												/>
+											</div>
+											<div>
+												<label className="text-xs text-accent-400 uppercase tracking-wider block mb-1">
+													Ideals
+												</label>
+												<textarea
+													className="w-full bg-background-tertiary border border-accent-400/30 rounded px-3 py-2 text-parchment-100 focus:outline-none focus:border-accent-400 resize-none"
+													rows={2}
+													placeholder="What ideals drive your character?"
+												/>
+											</div>
+											<div>
+												<label className="text-xs text-accent-400 uppercase tracking-wider block mb-1">
+													Bonds
+												</label>
+												<textarea
+													className="w-full bg-background-tertiary border border-accent-400/30 rounded px-3 py-2 text-parchment-100 focus:outline-none focus:border-accent-400 resize-none"
+													rows={2}
+													placeholder="What bonds tie your character to others?"
+												/>
+											</div>
+											<div>
+												<label className="text-xs text-accent-400 uppercase tracking-wider block mb-1">
+													Flaws
+												</label>
+												<textarea
+													className="w-full bg-background-tertiary border border-accent-400/30 rounded px-3 py-2 text-parchment-100 focus:outline-none focus:border-accent-400 resize-none"
+													rows={2}
+													placeholder="What flaws does your character have?"
+												/>
+											</div>
+										</div>
+									</div>
+
+									{/* Appearance & Description */}
+									<div className="bg-background-secondary border border-accent-400/30 rounded-lg p-4">
+										<h3 className="text-accent-400 font-semibold mb-3 uppercase text-sm tracking-wider">
+											Appearance
+										</h3>
+										<div className="space-y-3 text-sm text-parchment-300">
+											<div className="grid grid-cols-2 gap-3">
+												<div>
+													<label className="text-xs text-accent-400 uppercase tracking-wider block mb-1">
+														Age
+													</label>
+													<input
+														type="text"
+														className="w-full bg-background-tertiary border border-accent-400/30 rounded px-3 py-2 text-parchment-100 focus:outline-none focus:border-accent-400"
+														placeholder="e.g., 25"
+													/>
+												</div>
+												<div>
+													<label className="text-xs text-accent-400 uppercase tracking-wider block mb-1">
+														Height
+													</label>
+													<input
+														type="text"
+														className="w-full bg-background-tertiary border border-accent-400/30 rounded px-3 py-2 text-parchment-100 focus:outline-none focus:border-accent-400"
+														placeholder="e.g., 5'10\""
+													/>
+												</div>
+												<div>
+													<label className="text-xs text-accent-400 uppercase tracking-wider block mb-1">
+														Weight
+													</label>
+													<input
+														type="text"
+														className="w-full bg-background-tertiary border border-accent-400/30 rounded px-3 py-2 text-parchment-100 focus:outline-none focus:border-accent-400"
+														placeholder="e.g., 180 lbs"
+													/>
+												</div>
+												<div>
+													<label className="text-xs text-accent-400 uppercase tracking-wider block mb-1">
+														Eyes
+													</label>
+													<input
+														type="text"
+														className="w-full bg-background-tertiary border border-accent-400/30 rounded px-3 py-2 text-parchment-100 focus:outline-none focus:border-accent-400"
+														placeholder="e.g., Blue"
+													/>
+												</div>
+												<div>
+													<label className="text-xs text-accent-400 uppercase tracking-wider block mb-1">
+														Skin
+													</label>
+													<input
+														type="text"
+														className="w-full bg-background-tertiary border border-accent-400/30 rounded px-3 py-2 text-parchment-100 focus:outline-none focus:border-accent-400"
+														placeholder="e.g., Fair"
+													/>
+												</div>
+												<div>
+													<label className="text-xs text-accent-400 uppercase tracking-wider block mb-1">
+														Hair
+													</label>
+													<input
+														type="text"
+														className="w-full bg-background-tertiary border border-accent-400/30 rounded px-3 py-2 text-parchment-100 focus:outline-none focus:border-accent-400"
+														placeholder="e.g., Brown"
+													/>
+												</div>
+											</div>
+											<div>
+												<label className="text-xs text-accent-400 uppercase tracking-wider block mb-1">
+													Physical Description
+												</label>
+												<textarea
+													className="w-full bg-background-tertiary border border-accent-400/30 rounded px-3 py-2 text-parchment-100 focus:outline-none focus:border-accent-400 resize-none"
+													rows={4}
+													placeholder="Describe your character's appearance, distinguishing features, clothing, etc..."
+												/>
+											</div>
+										</div>
+									</div>
+
+									{/* Backstory */}
+									<div className="bg-background-secondary border border-accent-400/30 rounded-lg p-4">
+										<h3 className="text-accent-400 font-semibold mb-3 uppercase text-sm tracking-wider">
+											Backstory
+										</h3>
+										<textarea
+											className="w-full bg-background-tertiary border border-accent-400/30 rounded px-3 py-2 text-sm text-parchment-100 focus:outline-none focus:border-accent-400 resize-none"
+											rows={6}
+											placeholder="Tell your character's story..."
+										/>
 									</div>
 								</div>
 							)}
