@@ -675,17 +675,17 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 	const displayAC = calculateAC();
 
 	// Calculate spell attack modifier and spell save DC
-	const getSpellcastingAbility = (): number => {
+	const getSpellcastingAbility = (): { modifier: number; name: string; abbreviation: string } => {
 		// For multiclass, use the first spellcasting class found
 		if (character.classes && character.classes.length > 0) {
 			for (const cl of character.classes) {
 				if (cl.class.spellcasting?.ability) {
 					const abilityName = cl.class.spellcasting.ability.toLowerCase();
 					switch (abilityName) {
-						case 'intelligence': return intMod;
-						case 'wisdom': return wisMod;
-						case 'charisma': return chaMod;
-						default: return 0;
+						case 'intelligence': return { modifier: intMod, name: 'Intelligence', abbreviation: 'INT' };
+						case 'wisdom': return { modifier: wisMod, name: 'Wisdom', abbreviation: 'WIS' };
+						case 'charisma': return { modifier: chaMod, name: 'Charisma', abbreviation: 'CHA' };
+						default: return { modifier: 0, name: '', abbreviation: '' };
 					}
 				}
 			}
@@ -695,17 +695,18 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 		if (charClass.spellcasting?.ability) {
 			const abilityName = charClass.spellcasting.ability.toLowerCase();
 			switch (abilityName) {
-				case 'intelligence': return intMod;
-				case 'wisdom': return wisMod;
-				case 'charisma': return chaMod;
-				default: return 0;
+				case 'intelligence': return { modifier: intMod, name: 'Intelligence', abbreviation: 'INT' };
+				case 'wisdom': return { modifier: wisMod, name: 'Wisdom', abbreviation: 'WIS' };
+				case 'charisma': return { modifier: chaMod, name: 'Charisma', abbreviation: 'CHA' };
+				default: return { modifier: 0, name: '', abbreviation: '' };
 			}
 		}
 
-		return 0;
+		return { modifier: 0, name: '', abbreviation: '' };
 	};
 
-	const spellcastingAbilityMod = getSpellcastingAbility();
+	const spellcastingAbilityData = getSpellcastingAbility();
+	const spellcastingAbilityMod = spellcastingAbilityData.modifier;
 	const spellAttackModifier = proficiencyBonus + spellcastingAbilityMod;
 	const spellSaveDC = 8 + proficiencyBonus + spellcastingAbilityMod;
 
@@ -3390,14 +3391,24 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 									  (characterCantrips && characterCantrips.length > 0) ||
 									  (characterSpells && characterSpells.length > 0)) && (
 										<>
-											<div className="bg-background-secondary/30 border border-accent-400/20 rounded-lg p-3 flex gap-4 justify-center">
+											<div className="bg-background-secondary/30 border border-accent-400/20 rounded-lg p-3 flex gap-4 justify-center items-center">
+												<div className="text-center">
+													<div className="text-xs text-parchment-400 uppercase tracking-wider mb-1">Spellcasting Ability</div>
+													<div className="text-lg font-bold text-accent-400">
+														{spellcastingAbilityData.abbreviation}
+													</div>
+													<div className="text-xs text-parchment-400 mt-0.5">
+														{spellcastingAbilityMod >= 0 ? '+' : ''}{spellcastingAbilityMod}
+													</div>
+												</div>
+												<div className="border-l border-accent-400/20 h-12"></div>
 												<div className="text-center">
 													<div className="text-xs text-parchment-400 uppercase tracking-wider mb-1">Spell Attack</div>
 													<div className="text-lg font-bold text-accent-400">
 														{spellAttackModifier >= 0 ? '+' : ''}{spellAttackModifier}
 													</div>
 												</div>
-												<div className="border-l border-accent-400/20"></div>
+												<div className="border-l border-accent-400/20 h-12"></div>
 												<div className="text-center">
 													<div className="text-xs text-parchment-400 uppercase tracking-wider mb-1">Spell Save DC</div>
 													<div className="text-lg font-bold text-accent-400">{spellSaveDC}</div>
