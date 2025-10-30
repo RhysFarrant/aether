@@ -568,6 +568,8 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 	const [editingItemName, setEditingItemName] = useState("");
 	const [addingTagToIndex, setAddingTagToIndex] = useState<number | null>(null);
 	const [newTag, setNewTag] = useState("");
+	const [showBrowseItems, setShowBrowseItems] = useState(false);
+	const [selectedItemsToBrowse, setSelectedItemsToBrowse] = useState<Set<string>>(new Set());
 	const [isCustomItem, setIsCustomItem] = useState(false);
 	const [customItemType, setCustomItemType] = useState<
 		"weapon" | "armor" | "shield" | "other"
@@ -1718,6 +1720,28 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 		});
 	};
 
+	const toggleItemSelection = (itemName: string) => {
+		setSelectedItemsToBrowse(prev => {
+			const newSet = new Set(prev);
+			if (newSet.has(itemName)) {
+				newSet.delete(itemName);
+			} else {
+				newSet.add(itemName);
+			}
+			return newSet;
+		});
+	};
+
+	const addSelectedItems = () => {
+		const itemsToAdd = Array.from(selectedItemsToBrowse)
+			.map(itemName => lookupItemData(itemName))
+			.filter((item): item is InventoryItem => item !== null);
+
+		setInventoryItems(prev => [...prev, ...itemsToAdd]);
+		setSelectedItemsToBrowse(new Set());
+		setShowBrowseItems(false);
+	};
+
 	// All D&D 5e skills with their associated abilities
 	const allSkills = [
 		{ name: "Acrobatics", ability: "DEX", modifier: dexMod },
@@ -1749,6 +1773,75 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 				onConfirm={handleLevelUp}
 				onCancel={() => setShowLevelUpModal(false)}
 			/>
+
+			{/* Browse Items Modal */}
+			{showBrowseItems && (
+				<div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+					<div className="bg-background-primary border-2 border-accent-400 rounded-lg w-full max-w-4xl max-h-[90vh] flex flex-col">
+						<div className="p-4 border-b border-accent-400/30 flex items-center justify-between">
+							<h2 className="text-accent-400 font-bold text-lg uppercase tracking-wider">
+								Browse Items
+							</h2>
+							<button
+								onClick={() => {
+									setShowBrowseItems(false);
+									setSelectedItemsToBrowse(new Set());
+								}}
+								className="text-parchment-300 hover:text-accent-400 text-2xl transition-colors"
+							>
+								×
+							</button>
+						</div>
+						<div className="flex-1 overflow-y-auto p-4">
+							<div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+								{availableItems.map(itemName => (
+									<button
+										key={itemName}
+										onClick={() => toggleItemSelection(itemName)}
+										className={`p-3 rounded border text-left transition-all ${
+											selectedItemsToBrowse.has(itemName)
+												? "bg-accent-400/20 border-accent-400 text-accent-400"
+												: "bg-background-secondary border-accent-400/30 text-parchment-300 hover:border-accent-400/50"
+										}`}
+									>
+										<div className="font-semibold text-sm">{itemName}</div>
+										{selectedItemsToBrowse.has(itemName) && (
+											<div className="text-xs mt-1">✓ Selected</div>
+										)}
+									</button>
+								))}
+							</div>
+						</div>
+						<div className="p-4 border-t border-accent-400/30 flex justify-between items-center">
+							<div className="text-parchment-300 text-sm">
+								{selectedItemsToBrowse.size} item(s) selected
+							</div>
+							<div className="flex gap-2">
+								<button
+									onClick={() => {
+										setShowBrowseItems(false);
+										setSelectedItemsToBrowse(new Set());
+									}}
+									className="px-4 py-2 rounded bg-background-tertiary hover:bg-background-tertiary/70 text-parchment-300 text-sm font-semibold transition-colors"
+								>
+									Cancel
+								</button>
+								<button
+									onClick={addSelectedItems}
+									disabled={selectedItemsToBrowse.size === 0}
+									className={`px-4 py-2 rounded text-sm font-semibold transition-colors ${
+										selectedItemsToBrowse.size > 0
+											? "bg-accent-400/20 hover:bg-accent-400/30 border border-accent-400/40 text-accent-400"
+											: "bg-background-tertiary text-parchment-500 cursor-not-allowed"
+									}`}
+								>
+									Add {selectedItemsToBrowse.size} Item(s)
+								</button>
+							</div>
+						</div>
+					</div>
+				</div>
+			)}
 
 			<div className="h-screen bg-background-primary text-parchment-100 flex justify-center overflow-hidden">
 				<div
@@ -4576,13 +4669,21 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 										</div>
 									</div>
 
-									{/* Add Item Button */}
-									<button
-										onClick={() => setShowAddItem(true)}
-										className="w-full py-2 px-3 rounded bg-accent-400/20 hover:bg-accent-400/30 border border-accent-400/40 text-accent-400 text-xs font-semibold transition-colors"
-									>
-										+ Add Item
-									</button>
+									{/* Add Item Buttons */}
+									<div className="flex gap-2">
+										<button
+											onClick={() => setShowAddItem(true)}
+											className="flex-1 py-2 px-3 rounded bg-accent-400/20 hover:bg-accent-400/30 border border-accent-400/40 text-accent-400 text-xs font-semibold transition-colors"
+										>
+											+ Add Item
+										</button>
+										<button
+											onClick={() => setShowBrowseItems(true)}
+											className="flex-1 py-2 px-3 rounded bg-accent-400/20 hover:bg-accent-400/30 border border-accent-400/40 text-accent-400 text-xs font-semibold transition-colors"
+										>
+											Browse Items
+										</button>
+									</div>
 
 									{/* Add Item Dialog */}
 									{showAddItem && (
