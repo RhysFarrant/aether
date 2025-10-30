@@ -33,6 +33,7 @@ interface InventoryItem {
 	weight: number;
 	isCustom: boolean;
 	equipped?: boolean; // Whether the item is currently equipped
+	customName?: string; // User-provided custom name for personalization
 	weaponData?: WeaponProperties;
 	armorData?: ArmorProperties;
 	customStats?: {
@@ -560,6 +561,8 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 	const [newItemName, setNewItemName] = useState("");
 	const [selectedItem, setSelectedItem] = useState<string | null>(null);
 	const [showSuggestions, setShowSuggestions] = useState(false);
+	const [editingItemIndex, setEditingItemIndex] = useState<number | null>(null);
+	const [editingItemName, setEditingItemName] = useState("");
 	const [isCustomItem, setIsCustomItem] = useState(false);
 	const [customItemType, setCustomItemType] = useState<
 		"weapon" | "armor" | "shield" | "other"
@@ -1585,6 +1588,31 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 					: item
 			)
 		);
+	};
+
+	const startEditingItem = (index: number) => {
+		const item = inventoryItems[index];
+		setEditingItemIndex(index);
+		setEditingItemName(item.customName || "");
+	};
+
+	const saveItemName = (index: number) => {
+		if (editingItemName.trim()) {
+			setInventoryItems(prevItems =>
+				prevItems.map((item, i) =>
+					i === index
+						? { ...item, customName: editingItemName.trim() }
+						: item
+				)
+			);
+		}
+		setEditingItemIndex(null);
+		setEditingItemName("");
+	};
+
+	const cancelEditingItem = () => {
+		setEditingItemIndex(null);
+		setEditingItemName("");
 	};
 
 	// All D&D 5e skills with their associated abilities
@@ -4848,9 +4876,47 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 													>
 														<div className="flex items-center justify-between">
 															<div className="flex items-center gap-2 flex-1 min-w-0">
-																<span className="font-semibold text-parchment-100 text-sm truncate">
-																	{item.name}
-																</span>
+																{editingItemIndex === idx ? (
+																	<div className="flex items-center gap-2 flex-1">
+																		<input
+																			type="text"
+																			value={editingItemName}
+																			onChange={(e) => setEditingItemName(e.target.value)}
+																			onKeyDown={(e) => {
+																				if (e.key === "Enter") saveItemName(idx);
+																				if (e.key === "Escape") cancelEditingItem();
+																			}}
+																			className="flex-1 bg-background-tertiary border border-accent-400/30 rounded px-2 py-1 text-sm text-parchment-100 focus:outline-none focus:border-accent-400"
+																			placeholder={item.name}
+																			autoFocus
+																		/>
+																		<button
+																			onClick={() => saveItemName(idx)}
+																			className="px-2 py-1 rounded bg-accent-400/20 hover:bg-accent-400/30 text-accent-400 text-xs font-semibold"
+																		>
+																			✓
+																		</button>
+																		<button
+																			onClick={cancelEditingItem}
+																			className="px-2 py-1 rounded bg-background-tertiary hover:bg-background-tertiary/70 text-parchment-300 text-xs font-semibold"
+																		>
+																			✕
+																		</button>
+																	</div>
+																) : (
+																	<>
+																		<div className="flex flex-col">
+																			<span className="font-semibold text-parchment-100 text-sm truncate">
+																				{item.customName || item.name}
+																			</span>
+																			{item.customName && (
+																				<span className="text-xs text-parchment-400 truncate">
+																					{item.name}
+																				</span>
+																			)}
+																		</div>
+																	</>
+																)}
 																{isEquipped && (
 																	<span className="text-xs uppercase tracking-wider text-accent-400 bg-accent-400/20 px-1.5 py-0.5 rounded flex-shrink-0">
 																		Equipped
@@ -4954,6 +5020,15 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 																		{item.equipped
 																			? "Unequip"
 																			: "Equip"}
+																	</button>
+																)}
+																{editingItemIndex !== idx && (
+																	<button
+																		onClick={() => startEditingItem(idx)}
+																		className="px-2 py-1 rounded bg-background-tertiary hover:bg-background-tertiary/70 text-parchment-300 text-xs font-semibold transition-colors"
+																		title="Rename item"
+																	>
+																		✎
 																	</button>
 																)}
 																<button
