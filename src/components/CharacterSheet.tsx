@@ -2450,16 +2450,16 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 													>
 														{skill.name}
 													</span>
-													{hasStealthDisadvantage && (
-														<span className="text-xs text-red-400 font-semibold" title="Disadvantage from armor">
-															⚠
-														</span>
-													)}
 												</div>
 												<div className="flex items-center gap-2">
 													<span className="text-xs text-parchment-400 uppercase">
 														({skill.ability})
 													</span>
+													{hasStealthDisadvantage && (
+														<span className="text-xs text-red-400 font-semibold" title="Disadvantage from armor">
+															⚠
+														</span>
+													)}
 													<span className="text-accent-400 font-semibold min-w-[2rem] text-right text-sm">
 														{formatModifier(
 															totalModifier
