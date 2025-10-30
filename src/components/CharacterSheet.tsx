@@ -807,6 +807,39 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 	const hpBonus = calculateHPBonus();
 	const displayMaxHP = maxHitPoints + hpBonus;
 
+	// Collect all resistances, immunities, and condition immunities from traits and features
+	const collectDefenses = () => {
+		const resistances = new Set<string>();
+		const immunities = new Set<string>();
+		const conditionImmunities = new Set<string>();
+
+		// Check species traits
+		if (species.traits) {
+			species.traits.forEach(trait => {
+				trait.resistances?.forEach(r => resistances.add(r));
+				trait.immunities?.forEach(i => immunities.add(i));
+				trait.conditionImmunities?.forEach(ci => conditionImmunities.add(ci));
+			});
+		}
+
+		// Check subspecies traits
+		if (subspecies?.traits) {
+			subspecies.traits.forEach(trait => {
+				trait.resistances?.forEach(r => resistances.add(r));
+				trait.immunities?.forEach(i => immunities.add(i));
+				trait.conditionImmunities?.forEach(ci => conditionImmunities.add(ci));
+			});
+		}
+
+		return {
+			resistances: Array.from(resistances),
+			immunities: Array.from(immunities),
+			conditionImmunities: Array.from(conditionImmunities)
+		};
+	};
+
+	const defenses = collectDefenses();
+
 	// Calculate spell attack modifier and spell save DC
 	const getSpellcastingAbility = (): { modifier: number; name: string; abbreviation: string } => {
 		// For multiclass, use the first spellcasting class found
@@ -2466,9 +2499,17 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 												Resistances
 											</div>
 											<div className="flex flex-wrap gap-2">
-												<div className="bg-background-secondary/50 border border-accent-400/20 rounded px-2 py-1 text-xs text-parchment-200">
-													None
-												</div>
+												{defenses.resistances.length > 0 ? (
+													defenses.resistances.map(resistance => (
+														<div key={resistance} className="bg-background-secondary/50 border border-accent-400/20 rounded px-2 py-1 text-xs text-parchment-200 capitalize">
+															{resistance}
+														</div>
+													))
+												) : (
+													<div className="bg-background-secondary/50 border border-accent-400/20 rounded px-2 py-1 text-xs text-parchment-200">
+														None
+													</div>
+												)}
 											</div>
 										</div>
 										{/* Immunities */}
@@ -2477,9 +2518,17 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 												Immunities
 											</div>
 											<div className="flex flex-wrap gap-2">
-												<div className="bg-background-secondary/50 border border-accent-400/20 rounded px-2 py-1 text-xs text-parchment-200">
-													None
-												</div>
+												{defenses.immunities.length > 0 ? (
+													defenses.immunities.map(immunity => (
+														<div key={immunity} className="bg-background-secondary/50 border border-accent-400/20 rounded px-2 py-1 text-xs text-parchment-200 capitalize">
+															{immunity}
+														</div>
+													))
+												) : (
+													<div className="bg-background-secondary/50 border border-accent-400/20 rounded px-2 py-1 text-xs text-parchment-200">
+														None
+													</div>
+												)}
 											</div>
 										</div>
 									</div>
