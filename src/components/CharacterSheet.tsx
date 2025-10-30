@@ -2667,6 +2667,25 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 											skillProficiencies.includes(
 												skill.name
 											);
+
+										// Check for conditional proficiency/expertise
+										const conditionalBonus = (() => {
+											// Stonecunning - Double proficiency on Intelligence (History) for stonework
+											if (skill.name === "History" && skill.ability === "INT") {
+												const hasStonecunning = species.traits?.some(trait => trait.name === "Stonecunning") ||
+													subspecies?.traits?.some(trait => trait.name === "Stonecunning");
+												if (hasStonecunning) {
+													return {
+														type: "conditional expertise",
+														bonus: proficiencyBonus * 2,
+														description: "Stonecunning: Double proficiency on checks related to the origin of stonework"
+													};
+												}
+											}
+
+											return null;
+										})();
+
 										const totalModifier =
 											skill.modifier +
 											(isProficient
@@ -2683,13 +2702,9 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 										const skillAdvantage = (() => {
 											const advantages: string[] = [];
 
-											// Stonecunning - Advantage on Intelligence (History) checks related to stonework
-											if (skill.name === "History" && skill.ability === "INT") {
-												const hasStonecunning = species.traits?.some(trait => trait.name === "Stonecunning") ||
-													subspecies?.traits?.some(trait => trait.name === "Stonecunning");
-												if (hasStonecunning) {
-													advantages.push("Stonecunning: Advantage on checks related to the origin of stonework");
-												}
+											// Stonecunning also grants advantage
+											if (conditionalBonus) {
+												advantages.push(conditionalBonus.description);
 											}
 
 											return advantages;
@@ -2718,6 +2733,14 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 													>
 														{skill.name}
 													</span>
+													{conditionalBonus && (
+														<span
+															className="text-xs text-blue-400 font-semibold cursor-help"
+															title={conditionalBonus.description}
+														>
+															*
+														</span>
+													)}
 												</div>
 												<div className="flex items-center gap-2">
 													<span className="text-xs text-parchment-400 uppercase">
