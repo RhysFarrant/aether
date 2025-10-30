@@ -78,4 +78,10 @@ export interface ClassFeature {
     max: number | string; // Number or formula like "2 + proficiency bonus"
     period: "short rest" | "long rest" | "day"; // When uses refresh
   };
+  /** Conditional activation - feature only works when condition is met */
+  condition?: {
+    type: "no_armor" | "no_heavy_armor" | "custom"; // Predefined or custom conditions
+    description: string; // Human-readable description shown when inactive
+    customCheck?: string; // For custom conditions - JavaScript expression that evaluates to boolean
+  };
 }

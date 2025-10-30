@@ -605,13 +605,21 @@
         "uses": {
           "max": "level < 3 ? 2 : level < 6 ? 3 : level < 12 ? 4 : level < 17 ? 5 : 6",
           "period": "long rest"
+        },
+        "condition": {
+          "type": "no_heavy_armor",
+          "description": "You cannot benefit from Rage while wearing heavy armor."
         }
       },
       {
         "name": "Unarmored Defense",
         "level": 1,
         "description": "While you are not wearing any armor, your Armor Class equals 10 + your Dexterity modifier + your Constitution modifier. You can use a shield and still gain this benefit.",
-        "isPassive": true
+        "isPassive": true,
+        "condition": {
+          "type": "no_armor",
+          "description": "You must not be wearing any armor to benefit from this feature."
+        }
       },
       {
         "name": "Reckless Attack",
@@ -645,7 +653,11 @@
         "name": "Fast Movement",
         "level": 5,
         "description": "Starting at 5th level, your speed increases by 10 feet while you aren't wearing heavy armor.",
-        "isPassive": true
+        "isPassive": true,
+        "condition": {
+          "type": "no_heavy_armor",
+          "description": "You must not be wearing heavy armor to gain this speed increase."
+        }
       }
     ]
   }

@@ -32,6 +32,7 @@ interface InventoryItem {
 	name: string;
 	weight: number;
 	isCustom: boolean;
+	equipped?: boolean; // Whether the item is currently equipped
 	weaponData?: WeaponProperties;
 	armorData?: ArmorProperties;
 	customStats?: {
@@ -560,11 +561,77 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 		0
 	);
 
+	// Check if a feature's condition is met (feature is active)
+	const isFeatureActive = (feature: any): boolean => {
+		if (!feature.condition) return true; // No condition = always active
+
+		const condition = feature.condition;
+
+		switch (condition.type) {
+			case "no_armor": {
+				// Check if character is wearing any armor (excluding shields)
+				const isWearingArmor = equippedArmor !== null;
+				return !isWearingArmor;
+			}
+			case "no_heavy_armor": {
+				// Check if character is wearing heavy armor
+				if (!equippedArmor) return true; // Not wearing any armor
+
+				// Find the equipped armor in inventory
+				const equippedArmorItem = inventoryItems.find(
+					item => item.name === equippedArmor
+				);
+
+				// Check if it's heavy armor
+				const isHeavyArmor = equippedArmorItem?.armorData?.category === "Heavy" ||
+					equippedArmorItem?.armorData?.dexModifier === "none";
+
+				return !isHeavyArmor;
+			}
+			case "custom": {
+				// Evaluate custom condition
+				if (condition.customCheck) {
+					try {
+						// eslint-disable-next-line no-new-func
+						const evaluate = new Function('character', 'level', 'inventoryItems', `return ${condition.customCheck}`);
+						return evaluate(character, level, inventoryItems);
+					} catch (e) {
+						console.error('Error evaluating custom condition:', e);
+						return false;
+					}
+				}
+				return true;
+			}
+			default:
+				return true;
+		}
+	};
+
 	// Calculate AC based on equipped armor
 	const calculateAC = (): number => {
 		let calculatedAC = 10 + dexMod; // Base AC with DEX
 
-		// Find equipped armor
+		// Check for Unarmored Defense (Barbarian)
+		if (!equippedArmor) {
+			// Check if character has Barbarian Unarmored Defense
+			const barbarianClass = character.classes?.find(
+				(cl: any) => cl.class.name === "Barbarian"
+			);
+
+			if (barbarianClass) {
+				const unarmoredDefense = barbarianClass.class.features?.find(
+					(f: any) => f.name === "Unarmored Defense" && f.level <= barbarianClass.level
+				);
+
+				// If has Unarmored Defense and it's active (no armor condition is met)
+				if (unarmoredDefense && isFeatureActive(unarmoredDefense)) {
+					const conMod = getAbilityModifier(abilityScores.constitution);
+					calculatedAC = 10 + dexMod + conMod;
+				}
+			}
+		}
+
+		// Find equipped armor (overrides Unarmored Defense)
 		if (equippedArmor) {
 			const armorItem = inventoryItems.find(
 				(item) => item.name === equippedArmor
@@ -2480,13 +2547,27 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 														className="bg-background-secondary border border-accent-400/30 rounded-lg p-4"
 													>
 														<div className="flex items-center justify-between gap-2 mb-2">
-															<div className="flex items-center gap-2">
+															<div className="flex items-center gap-2 flex-wrap">
 																<span className="font-bold text-accent-400 uppercase text-sm">
 																	{feature.name}
 																</span>
 																<span className="text-xs uppercase tracking-wider text-parchment-400 bg-background-tertiary px-2 py-0.5 rounded">
 																	{cl.class.name} Feature
 																</span>
+																{feature.isPassive && (
+																	<span className="text-xs uppercase tracking-wider text-blue-400 bg-blue-400/10 px-2 py-0.5 rounded border border-blue-400/30">
+																		Passive
+																	</span>
+																)}
+																{feature.condition && (
+																	<span className={`text-xs uppercase tracking-wider px-2 py-0.5 rounded border-2 ${
+																		isFeatureActive(feature)
+																			? "text-green-500/80 bg-green-500/10 border-green-500/30"
+																			: "text-red-400 bg-red-400/10 border-red-400"
+																	}`}>
+																		{isFeatureActive(feature) ? "Active" : "Inactive"}
+																	</span>
+																)}
 															</div>
 															{feature.uses && featureUsage && (
 																<div className="flex items-center gap-2">
@@ -2530,6 +2611,12 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 														<div className="text-xs text-parchment-300 leading-relaxed">
 															{feature.description}
 														</div>
+														{feature.condition && !isFeatureActive(feature) && (
+															<div className="mt-3 text-xs text-red-400 bg-red-400/10 border border-red-400 rounded px-3 py-2">
+																<span className="font-semibold">⚠ Requirement: </span>
+																{feature.condition.description}
+															</div>
+														)}
 													</div>
 												);
 											});
@@ -2553,13 +2640,27 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 																className="bg-background-secondary border border-accent-400/30 rounded-lg p-4"
 															>
 																<div className="flex items-center justify-between gap-2 mb-2">
-																	<div className="flex items-center gap-2">
+																	<div className="flex items-center gap-2 flex-wrap">
 																		<span className="font-bold text-accent-400 uppercase text-sm">
 																			{feature.name}
 																		</span>
 																		<span className="text-xs uppercase tracking-wider text-parchment-400 bg-background-tertiary px-2 py-0.5 rounded">
 																			{charClass.name} Feature
 																		</span>
+																		{feature.isPassive && (
+																			<span className="text-xs uppercase tracking-wider text-blue-400 bg-blue-400/10 px-2 py-0.5 rounded border border-blue-400/30">
+																				Passive
+																			</span>
+																		)}
+																		{feature.condition && (
+																			<span className={`text-xs uppercase tracking-wider px-2 py-0.5 rounded border-2 ${
+																				isFeatureActive(feature)
+																					? "text-green-500/80 bg-green-500/10 border-green-500/30"
+																					: "text-red-400 bg-red-400/10 border-red-400"
+																			}`}>
+																				{isFeatureActive(feature) ? "Active" : "Inactive"}
+																			</span>
+																		)}
 																	</div>
 																	{feature.uses && featureUsage && (
 																		<div className="flex items-center gap-2">
@@ -2593,6 +2694,12 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 																<div className="text-xs text-parchment-300 leading-relaxed">
 																	{feature.description}
 																</div>
+																{feature.condition && !isFeatureActive(feature) && (
+																	<div className="mt-3 text-xs text-red-400 bg-red-400/10 border border-red-400 rounded px-3 py-2">
+																		<span className="font-semibold">⚠ Requirement: </span>
+																		{feature.condition.description}
+																	</div>
+																)}
 															</div>
 														);
 													})}
@@ -2859,13 +2966,27 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 														className="bg-background-secondary border border-accent-400/30 rounded-lg p-4"
 													>
 														<div className="flex items-center justify-between gap-2 mb-2">
-															<div className="flex items-center gap-2">
+															<div className="flex items-center gap-2 flex-wrap">
 																<span className="font-bold text-accent-400 uppercase text-sm">
 																	{feature.name}
 																</span>
 																<span className="text-xs uppercase tracking-wider text-parchment-400 bg-background-tertiary px-2 py-0.5 rounded">
 																	{cl.class.name} Feature
 																</span>
+																{feature.isPassive && (
+																	<span className="text-xs uppercase tracking-wider text-blue-400 bg-blue-400/10 px-2 py-0.5 rounded border border-blue-400/30">
+																		Passive
+																	</span>
+																)}
+																{feature.condition && (
+																	<span className={`text-xs uppercase tracking-wider px-2 py-0.5 rounded border-2 ${
+																		isFeatureActive(feature)
+																			? "text-green-500/80 bg-green-500/10 border-green-500/30"
+																			: "text-red-400 bg-red-400/10 border-red-400"
+																	}`}>
+																		{isFeatureActive(feature) ? "Active" : "Inactive"}
+																	</span>
+																)}
 															</div>
 															{feature.uses && featureUsage && (
 																<div className="flex items-center gap-2">
@@ -2909,6 +3030,12 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 														<div className="text-xs text-parchment-300 leading-relaxed">
 															{feature.description}
 														</div>
+														{feature.condition && !isFeatureActive(feature) && (
+															<div className="mt-3 text-xs text-red-400 bg-red-400/10 border border-red-400 rounded px-3 py-2">
+																<span className="font-semibold">⚠ Requirement: </span>
+																{feature.condition.description}
+															</div>
+														)}
 													</div>
 												);
 											});
@@ -2938,13 +3065,22 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 																className="bg-background-secondary border border-accent-400/30 rounded-lg p-4"
 															>
 																<div className="flex items-center justify-between gap-2 mb-2">
-																	<div className="flex items-center gap-2">
+																	<div className="flex items-center gap-2 flex-wrap">
 																		<span className="font-bold text-accent-400 uppercase text-sm">
 																			{feature.name}
 																		</span>
 																		<span className="text-xs uppercase tracking-wider text-parchment-400 bg-background-tertiary px-2 py-0.5 rounded">
 																			{charClass.name} Feature
 																		</span>
+																		{feature.condition && (
+																			<span className={`text-xs uppercase tracking-wider px-2 py-0.5 rounded border-2 ${
+																				isFeatureActive(feature)
+																					? "text-green-500/80 bg-green-500/10 border-green-500/30"
+																					: "text-red-400 bg-red-400/10 border-red-400"
+																			}`}>
+																				{isFeatureActive(feature) ? "Active" : "Inactive"}
+																			</span>
+																		)}
 																	</div>
 																	{feature.uses && featureUsage && (
 																		<div className="flex items-center gap-2">
@@ -2978,6 +3114,12 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 																<div className="text-xs text-parchment-300 leading-relaxed">
 																	{feature.description}
 																</div>
+																{feature.condition && !isFeatureActive(feature) && (
+																	<div className="mt-3 text-xs text-red-400 bg-red-400/10 border border-red-400 rounded px-3 py-2">
+																		<span className="font-semibold">⚠ Requirement: </span>
+																		{feature.condition.description}
+																	</div>
+																)}
 															</div>
 														);
 													})}
