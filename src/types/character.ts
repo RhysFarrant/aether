@@ -11,6 +11,7 @@ export interface ClassLevel {
   class: CharacterClass;
   level: number;
   hitDiceUsed?: number; // Track hit dice per class
+  subclassId?: string | null; // Subclass chosen for this class
 }
 
 export interface Character {

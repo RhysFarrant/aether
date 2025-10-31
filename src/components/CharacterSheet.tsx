@@ -8,6 +8,7 @@ import itemsDataImport from "../data/items.json";
 import classesDataImport from "../data/classes.json";
 import { updateCharacter } from "../utils/storage";
 import LevelUpModal from "./LevelUpModal";
+import { useSubclassById } from "../hooks/useSRD";
 
 interface WeaponProperties {
 	damage: string;
@@ -326,19 +327,35 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 	const classesData = classesDataImport as any[];
 	const refreshedClass = classesData.find(c => c.id === character.class.id) || character.class;
 
+	// Load subclass data for each class that has a subclass selected
+	const characterClasses = character.classes || [{ class: character.class, level: character.level, hitDiceUsed: 0 }];
+
+	// Load all subclasses using hooks (must be called unconditionally)
+	const subclassData = characterClasses.map(cl => {
+		// eslint-disable-next-line react-hooks/rules-of-hooks
+		return useSubclassById(cl.subclassId || undefined);
+	});
+
 	// Refresh multiclass data if present
 	const refreshedCharacter = character.classes
 		? {
 			...character,
 			class: refreshedClass,
-			classes: character.classes.map(cl => ({
+			classes: character.classes.map((cl, index) => ({
 				...cl,
-				class: classesData.find(c => c.id === cl.class.id) || cl.class
+				class: classesData.find(c => c.id === cl.class.id) || cl.class,
+				subclass: subclassData[index] // Add loaded subclass data
 			}))
 		}
 		: {
 			...character,
-			class: refreshedClass
+			class: refreshedClass,
+			classes: [{
+				class: refreshedClass,
+				level: character.level,
+				hitDiceUsed: 0,
+				subclass: subclassData[0] // Add loaded subclass data for single class
+			}]
 		};
 
 	const {
@@ -1509,7 +1526,7 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 	};
 
 	// Level up function
-	const handleLevelUp = (hpIncrease: number, selectedClass: any) => {
+	const handleLevelUp = (hpIncrease: number, selectedClass: any, subclass?: any) => {
 		if (level >= 20) return; // Max level is 20
 
 		const newLevel = level + 1;
@@ -1520,7 +1537,7 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 
 		// Initialize or update classes array for multiclassing
 		let updatedClasses = character.classes || [
-			{ class: charClass, level: level, hitDiceUsed: 0 }
+			{ class: charClass, level: level, hitDiceUsed: 0, subclassId: null }
 		];
 
 		if (isMulticlassing) {
@@ -1532,12 +1549,17 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 			if (existingClassIndex >= 0) {
 				// Level up existing multiclass
 				updatedClasses[existingClassIndex].level += 1;
+				// Update subclass if one was selected
+				if (subclass) {
+					updatedClasses[existingClassIndex].subclassId = subclass.id;
+				}
 			} else {
 				// Add new multiclass
 				updatedClasses.push({
 					class: selectedClass,
 					level: 1,
-					hitDiceUsed: 0
+					hitDiceUsed: 0,
+					subclassId: subclass?.id || null
 				});
 			}
 		} else {
@@ -1547,6 +1569,10 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 			);
 			if (primaryClassIndex >= 0) {
 				updatedClasses[primaryClassIndex].level += 1;
+				// Update subclass if one was selected
+				if (subclass) {
+					updatedClasses[primaryClassIndex].subclassId = subclass.id;
+				}
 			}
 		}
 
@@ -3954,7 +3980,112 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 												);
 											});
 										})
-									) : (
+									) : null}
+
+									{/* Subclass Features - All Classes */}
+									{refreshedCharacter.classes && refreshedCharacter.classes.length > 0 && (
+										refreshedCharacter.classes.map((cl: any) => {
+											const shouldShow = featureFilter === "all" || featureFilter === cl.class.id;
+											if (!shouldShow || !cl.subclass || !cl.subclass.features) return null;
+
+											const subclassFeatures = cl.subclass.features.filter((f: any) => {
+												if (f.level > cl.level) return false;
+												const isHidden = hiddenFeatures.has(f.name);
+												if (isHidden) return showingHidden;
+												return true;
+											});
+
+											if (subclassFeatures.length === 0) return null;
+
+											return subclassFeatures.map((feature: any) => {
+												const featureKey = getFeatureKey(cl.subclass.id, feature.name);
+												const featureUsage = featureUses[featureKey];
+												const isHidden = hiddenFeatures.has(feature.name);
+												const isCurrentlyVisible = !isHidden;
+
+												return (
+													<div
+														key={`${cl.subclass.id}-${feature.name}`}
+														className={`border rounded-lg p-4 ${
+															!isCurrentlyVisible
+																? "bg-background-secondary/50 border-parchment-400/20 opacity-60"
+																: "bg-background-secondary border-accent-500/40"
+														}`}
+													>
+														<div className="flex items-center justify-between gap-2 mb-2">
+															<div className="flex items-center gap-2 flex-wrap">
+																<span className={`font-bold uppercase text-sm ${
+																	!isCurrentlyVisible ? "text-parchment-400" : "text-accent-500"
+																}`}>
+																	{feature.name}
+																</span>
+																<span className="text-xs uppercase tracking-wider text-accent-500 bg-accent-500/10 px-2 py-0.5 rounded border border-accent-500/30">
+																	{cl.subclass.name} Feature
+																</span>
+																{isHidden && (
+																	<span className="text-xs uppercase tracking-wider text-red-400 bg-red-400/10 px-2 py-0.5 rounded border border-red-400/30">
+																		Hidden
+																	</span>
+																)}
+															</div>
+															<div className="flex items-center gap-2">
+																<button
+																	onClick={() => toggleFeatureVisibility(feature.name, false)}
+																	className="px-2 py-1 rounded bg-background-tertiary hover:bg-background-tertiary/70 text-parchment-300 text-xs font-semibold transition-colors"
+																	title={isCurrentlyVisible ? "Hide this feature" : "Show this feature"}
+																>
+																	{isCurrentlyVisible ? "Hide" : "Show"}
+																</button>
+																{feature.uses && featureUsage && (
+																	<>
+																	<span className="text-xs text-parchment-400 uppercase tracking-wider">
+																		Uses
+																	</span>
+																	<div className="flex gap-1">
+																		{Array.from({ length: featureUsage.max }).map((_, i) => (
+																			<button
+																				key={i}
+																				onClick={() => {
+																					const key = getFeatureKey(cl.subclass.id, feature.name);
+																					setFeatureUses((prev) => {
+																						const currentVal = prev[key]?.current ?? 0;
+																						const usedCount = featureUsage.max - currentVal;
+																						const clickedUsed = i < usedCount;
+																						const newVal = clickedUsed
+																							? featureUsage.max - i
+																							: featureUsage.max - i - 1;
+																						return {
+																							...prev,
+																							[key]: {
+																								...prev[key],
+																								current: newVal,
+																							},
+																						};
+																					});
+																				}}
+																				className={`w-6 h-6 rounded border-2 transition-colors ${
+																					i >= featureUsage.max - featureUsage.current
+																						? "bg-accent-400 border-accent-400"
+																						: "border-accent-400/40 hover:bg-accent-400/20"
+																				}`}
+																			/>
+																		))}
+																	</div>
+																	</>
+																)}
+															</div>
+														</div>
+														<div className="text-xs text-parchment-300 leading-relaxed">
+															{feature.description}
+														</div>
+													</div>
+												);
+											});
+										})
+									)}
+
+									{/* Legacy single-class support */}
+									{!character.classes && (
 										(featureFilter === "all" || featureFilter === charClass.id) &&
 										charClass.features &&
 										charClass.features.length > 0 && (
@@ -4427,6 +4558,102 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 																</button>
 															</div>
 														)}
+													</div>
+												);
+											});
+										})
+									}
+
+									{/* Non-passive Subclass Features - All Classes */}
+									{refreshedCharacter.classes && refreshedCharacter.classes.length > 0 &&
+										refreshedCharacter.classes.map((cl: any) => {
+											const shouldShow = actionFilter === "all" || actionFilter === cl.class.id;
+											if (!shouldShow || !cl.subclass || !cl.subclass.features) return null;
+
+											const subclassActions = cl.subclass.features.filter((f: any) => {
+												if (f.level > cl.level || f.isPassive) return false;
+												const isHidden = hiddenFeatures.has(f.name);
+												if (isHidden) return showingHidden;
+												return true;
+											});
+
+											if (subclassActions.length === 0) return null;
+
+											return subclassActions.map((feature: any) => {
+												const featureKey = getFeatureKey(cl.subclass.id, feature.name);
+												const featureUsage = featureUses[featureKey];
+												const isHidden = hiddenFeatures.has(feature.name);
+												const isCurrentlyVisible = !isHidden;
+
+												return (
+													<div
+														key={`${cl.subclass.id}-${feature.name}`}
+														className={`bg-background-secondary border border-accent-500/40 rounded-lg p-4 ${!isCurrentlyVisible ? "opacity-60" : ""}`}
+													>
+														<div className="flex items-center justify-between gap-2 mb-2">
+															<div className="flex items-center gap-2 flex-wrap">
+																<span className="font-bold text-accent-500 uppercase text-sm">
+																	{feature.name}
+																</span>
+																<span className="text-xs uppercase tracking-wider text-accent-500 bg-accent-500/10 px-2 py-0.5 rounded border border-accent-500/30">
+																	{cl.subclass.name} Feature
+																</span>
+																{isHidden && (
+																	<span className="text-xs uppercase tracking-wider text-red-400 bg-red-400/10 px-2 py-0.5 rounded border border-red-400/30">
+																		Hidden
+																	</span>
+																)}
+															</div>
+															<div className="flex items-center gap-2">
+																<button
+																	onClick={() => toggleFeatureVisibility(feature.name, false)}
+																	className="px-2 py-1 rounded bg-background-tertiary hover:bg-background-tertiary/70 text-parchment-300 text-xs font-semibold transition-colors"
+																	title={isCurrentlyVisible ? "Hide this feature" : "Show this feature"}
+																>
+																	{isCurrentlyVisible ? "Hide" : "Show"}
+																</button>
+																{feature.uses && featureUsage && (
+																	<>
+																	<span className="text-xs text-parchment-400 uppercase tracking-wider">
+																		Uses
+																	</span>
+																	<div className="flex gap-1">
+																		{Array.from({ length: featureUsage.max }).map((_, i) => (
+																			<button
+																				key={i}
+																				onClick={() => {
+																					const key = getFeatureKey(cl.subclass.id, feature.name);
+																					setFeatureUses((prev) => {
+																						const currentVal = prev[key]?.current ?? 0;
+																						const usedCount = featureUsage.max - currentVal;
+																						const clickedUsed = i < usedCount;
+																						const newVal = clickedUsed
+																							? featureUsage.max - i
+																							: featureUsage.max - i - 1;
+																						return {
+																							...prev,
+																							[key]: {
+																								...prev[key],
+																								current: newVal,
+																							},
+																						};
+																					});
+																				}}
+																				className={`w-6 h-6 rounded border-2 transition-colors ${
+																					i >= featureUsage.max - featureUsage.current
+																						? "bg-accent-400 border-accent-400"
+																						: "border-accent-400/40 hover:bg-accent-400/20"
+																				}`}
+																			/>
+																		))}
+																	</div>
+																	</>
+																)}
+															</div>
+														</div>
+														<div className="text-xs text-parchment-300 leading-relaxed">
+															{feature.description}
+														</div>
 													</div>
 												);
 											});

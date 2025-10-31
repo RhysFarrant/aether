@@ -1,13 +1,15 @@
 import { useState } from "react";
 import type { Character, ClassLevel } from "../types/character";
 import type { CharacterClass } from "../types/class";
+import type { Subclass } from "../types/subclass";
 import { useResponsiveZoom } from "../hooks/useResponsiveZoom";
 import { getClasses } from "../data";
+import { useSubclassesByParent, useSubclassById } from "../hooks/useSRD";
 
 interface LevelUpModalProps {
 	isOpen: boolean;
 	character: Character;
-	onConfirm: (hpIncrease: number, selectedClass: CharacterClass) => void;
+	onConfirm: (hpIncrease: number, selectedClass: CharacterClass, subclass?: Subclass | null) => void;
 	onCancel: () => void;
 }
 
@@ -28,12 +30,11 @@ export default function LevelUpModal({
 	const [rolledHP, setRolledHP] = useState<number | null>(null);
 	const [selectedClass, setSelectedClass] = useState<CharacterClass | null>(null);
 	const [showClassSelection, setShowClassSelection] = useState(false);
+	const [selectedSubclass, setSelectedSubclass] = useState<Subclass | null>(null);
 
 	const availableClasses = getClasses();
 
-	if (!isOpen) return null;
-
-	// Get all character classes (multiclass support)
+	// Get all character classes (multiclass support) - must be before any conditional logic
 	const characterClasses: ClassLevel[] = character.classes || [
 		{ class: character.class, level: character.level, hitDiceUsed: 0 }
 	];
@@ -41,6 +42,18 @@ export default function LevelUpModal({
 	// Default to continuing with primary class
 	const classToLevelUp = selectedClass || character.class;
 	const isMulticlassing = selectedClass && selectedClass.id !== character.class.id;
+
+	// IMPORTANT: ALL HOOKS MUST BE CALLED BEFORE ANY EARLY RETURNS
+	// Call hooks unconditionally to prevent "Rendered more hooks" error
+	const availableSubclasses = useSubclassesByParent(classToLevelUp.id);
+
+	// Get currently selected subclass for this class (from character.classes)
+	const classLevelData = characterClasses.find(cl => cl.class.id === classToLevelUp.id);
+	const currentSubclassId = classLevelData?.subclassId;
+	const currentSubclass = useSubclassById(currentSubclassId || undefined);
+
+	// Early return AFTER all hooks have been called
+	if (!isOpen) return null;
 
 	// Calculate class level (1 if multiclassing, otherwise current level + 1)
 	const currentClassLevel = characterClasses.find(
@@ -156,6 +169,19 @@ export default function LevelUpModal({
 		(feature) => feature.level === newClassLevel
 	);
 
+	// Check if this is a subclass selection level
+	const subclassSelectionLevel = availableSubclasses.length > 0 ? availableSubclasses[0].subclassLevel : null;
+	const needsSubclassSelection = subclassSelectionLevel === newClassLevel;
+
+	// Determine if user has already chosen a subclass for this class
+	const hasSubclass = !!currentSubclassId;
+
+	// Get subclass features if subclass is selected
+	const subclassFeatures = selectedSubclass?.features || currentSubclass?.features || [];
+	const newSubclassFeatures = subclassFeatures.filter(
+		(feature) => feature.level === newClassLevel
+	);
+
 	return (
 		<div
 			className="fixed inset-0 z-50 flex items-center justify-center"
@@ -258,6 +284,43 @@ export default function LevelUpModal({
 							</div>
 						</div>
 					)}
+
+					{/* Subclass Selection */}
+					{needsSubclassSelection && !hasSubclass && availableSubclasses.length > 0 && (
+						<div className="p-4 bg-accent-500/10 rounded-lg border-2 border-accent-500/30 mb-4">
+							<h3 className="text-lg font-semibold text-accent-400 mb-2">
+								Choose Your Subclass
+							</h3>
+							<p className="text-parchment-200 text-sm mb-3">
+								At level {subclassSelectionLevel}, you must choose a subclass:
+							</p>
+							<div className="space-y-2">
+								{availableSubclasses.map((subclass) => (
+									<button
+										key={subclass.id}
+										onClick={() => setSelectedSubclass(subclass)}
+										className={`w-full text-left p-4 rounded-lg border-2 transition-all ${
+											selectedSubclass?.id === subclass.id
+												? "border-accent-400 bg-accent-400/20 shadow-lg"
+												: "border-accent-400/20 bg-background-tertiary/30 hover:border-accent-400/40"
+										}`}
+									>
+										<div className="font-semibold text-parchment-100 mb-1">
+											{subclass.name}
+										</div>
+										<p className="text-parchment-300 text-sm line-clamp-2">
+											{subclass.description}
+										</p>
+									</button>
+								))}
+							</div>
+							{!selectedSubclass && (
+								<p className="text-accent-400 text-xs mt-3 font-semibold">
+									⚠ You must select a subclass to continue
+								</p>
+							)}
+						</div>
+					)}
 				</div>
 
 				{/* HP Selection */}
@@ -349,7 +412,7 @@ export default function LevelUpModal({
 				</div>
 
 				{/* New Class Features */}
-				{newLevelFeatures.length > 0 && (
+				{(newLevelFeatures.length > 0 || newSubclassFeatures.length > 0) && (
 					<div className="mb-6">
 						<h3 className="text-xl font-semibold text-parchment-100 mb-3">
 							New Class Features
@@ -357,11 +420,24 @@ export default function LevelUpModal({
 						<div className="space-y-4">
 							{newLevelFeatures.map((feature, index) => (
 								<div
-									key={index}
+									key={`class-${index}`}
 									className="p-4 bg-accent-400/5 rounded-lg border border-accent-400/20"
 								>
 									<h4 className="text-lg font-semibold text-accent-400 mb-2">
 										{feature.name}
+									</h4>
+									<p className="text-parchment-300 text-sm">
+										{feature.description}
+									</p>
+								</div>
+							))}
+							{newSubclassFeatures.map((feature, index) => (
+								<div
+									key={`subclass-${index}`}
+									className="p-4 bg-accent-500/10 rounded-lg border-2 border-accent-500/30"
+								>
+									<h4 className="text-lg font-semibold text-accent-500 mb-2">
+										{feature.name} <span className="text-xs text-parchment-400">(Subclass)</span>
 									</h4>
 									<p className="text-parchment-300 text-sm">
 										{feature.description}
@@ -381,8 +457,9 @@ export default function LevelUpModal({
 						Cancel
 					</button>
 					<button
-						onClick={() => onConfirm(finalHPIncrease, classToLevelUp)}
-						className="px-6 py-2.5 bg-accent-400 hover:bg-accent-500 text-background-primary font-semibold rounded transition-colors"
+						onClick={() => onConfirm(finalHPIncrease, classToLevelUp, selectedSubclass)}
+						disabled={needsSubclassSelection && !hasSubclass && !selectedSubclass}
+						className="px-6 py-2.5 bg-accent-400 hover:bg-accent-500 disabled:bg-accent-400/30 disabled:cursor-not-allowed text-background-primary font-semibold rounded transition-colors"
 					>
 						Confirm Level Up
 					</button>
