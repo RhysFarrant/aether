@@ -39,6 +39,7 @@ interface InventoryItem {
 	containerId?: string; // ID of the container this item is stored in (if any)
 	isContainer?: boolean; // Whether this item is a container
 	containerCapacity?: number; // Max weight capacity for containers (in lbs)
+	onPerson?: boolean; // Whether the container is on the person (only applies to containers)
 	weaponData?: WeaponProperties;
 	armorData?: ArmorProperties;
 	customStats?: {
@@ -275,11 +276,37 @@ function lookupItemData(itemName: string): InventoryItem | null {
 			isCustom: false,
 			isContainer: itemData.isContainer,
 			containerCapacity: itemData.capacity,
+			onPerson: itemData.isContainer ? true : undefined, // Containers default to on person
 		};
 	}
 
 	// Not found in database
 	return null;
+}
+
+/**
+ * Helper function to get container weight including contents
+ */
+function getContainerTotalWeight(container: InventoryItem, allItems: InventoryItem[]): number {
+	let totalWeight = container.weight; // Start with container's own weight
+
+	// Find all items in this container
+	const containerItems = allItems.filter(item => item.containerId === container.customName);
+
+	// Add weight of all items in container
+	containerItems.forEach(item => {
+		totalWeight += item.weight;
+	});
+
+	return totalWeight;
+}
+
+/**
+ * Helper function to calculate container capacity usage
+ */
+function getContainerCapacityUsed(containerName: string, allItems: InventoryItem[]): number {
+	const containerItems = allItems.filter(item => item.containerId === containerName);
+	return containerItems.reduce((total, item) => total + item.weight, 0);
 }
 
 /**
@@ -630,6 +657,10 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 	const [selectedItemsToBrowse, setSelectedItemsToBrowse] = useState<Set<string>>(new Set());
 	const [browseSearch, setBrowseSearch] = useState("");
 	const [browseCategory, setBrowseCategory] = useState("All");
+	const [showAddContainer, setShowAddContainer] = useState(false);
+	const [newContainerName, setNewContainerName] = useState("");
+	const [newContainerCapacity, setNewContainerCapacity] = useState("");
+	const [assigningToContainer, setAssigningToContainer] = useState<number | null>(null); // Index of item being assigned to container
 	const [isCustomItem, setIsCustomItem] = useState(false);
 	const [customItemType, setCustomItemType] = useState<
 		"weapon" | "armor" | "shield" | "other"
@@ -656,10 +687,23 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 	const maxCarryingCapacity = abilityScores.strength * 15;
 
 	// Calculate total weight from inventory items
-	const currentWeight = inventoryItems.reduce(
-		(total, item) => total + item.weight,
-		0
-	);
+	// Only count items that are on person (not in containers marked as off-person)
+	const currentWeight = inventoryItems.reduce((total, item) => {
+		// If item is in a container, check if that container is on person
+		if (item.containerId) {
+			const container = inventoryItems.find(c => c.isContainer && c.customName === item.containerId);
+			if (container && container.onPerson === false) {
+				return total; // Skip items in containers not on person
+			}
+		}
+
+		// If item is a container not on person, don't count its weight
+		if (item.isContainer && item.onPerson === false) {
+			return total;
+		}
+
+		return total + item.weight;
+	}, 0);
 
 	// Get human-readable description of feature condition
 	const getFeatureConditionDescription = (feature: any): string => {
@@ -1670,7 +1714,49 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 		if (equippedArmor === itemToRemove.name) {
 			setEquippedArmor(null);
 		}
-		setInventoryItems(inventoryItems.filter((_, i) => i !== index));
+		// If removing a container, remove items from it
+		if (itemToRemove.isContainer && itemToRemove.customName) {
+			setInventoryItems(inventoryItems.filter((_, i) => i !== index && inventoryItems[i].containerId !== itemToRemove.customName));
+		} else {
+			setInventoryItems(inventoryItems.filter((_, i) => i !== index));
+		}
+	};
+
+	// Add a new container
+	const addContainer = () => {
+		if (!newContainerName.trim()) return;
+
+		const capacity = newContainerCapacity ? parseFloat(newContainerCapacity) : undefined;
+
+		const newContainer: InventoryItem = {
+			name: "Container",
+			customName: newContainerName.trim(),
+			weight: 0, // Containers from user have 0 weight unless they specify
+			isCustom: true,
+			isContainer: true,
+			containerCapacity: capacity,
+			onPerson: true,
+		};
+
+		setInventoryItems([...inventoryItems, newContainer]);
+		setNewContainerName("");
+		setNewContainerCapacity("");
+		setShowAddContainer(false);
+	};
+
+	// Toggle container on/off person
+	const toggleContainerOnPerson = (index: number) => {
+		const updatedItems = [...inventoryItems];
+		updatedItems[index].onPerson = !updatedItems[index].onPerson;
+		setInventoryItems(updatedItems);
+	};
+
+	// Assign item to container
+	const assignItemToContainer = (itemIndex: number, containerName: string | null) => {
+		const updatedItems = [...inventoryItems];
+		updatedItems[itemIndex].containerId = containerName || undefined;
+		setInventoryItems(updatedItems);
+		setAssigningToContainer(null);
 	};
 
 	const toggleEquipArmor = (itemName: string) => {
@@ -4874,7 +4960,80 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 										>
 											Browse Items
 										</button>
+										<button
+											onClick={() => setShowAddContainer(true)}
+											className="flex-1 py-2 px-3 rounded bg-accent-400/20 hover:bg-accent-400/30 border border-accent-400/40 text-accent-400 text-xs font-semibold transition-colors"
+										>
+											+ Container
+										</button>
 									</div>
+
+									{/* Add Container Dialog */}
+									{showAddContainer && (
+										<div className="bg-background-secondary/50 border border-accent-400/20 rounded-lg p-4">
+											<div className="text-sm text-accent-400 uppercase tracking-wider mb-3 font-semibold">
+												Add New Container
+											</div>
+											<div className="space-y-3">
+												<div>
+													<label className="text-xs text-parchment-400 uppercase tracking-wider block mb-1">
+														Container Name
+													</label>
+													<input
+														type="text"
+														value={newContainerName}
+														onChange={(e) => setNewContainerName(e.target.value)}
+														onKeyDown={(e) => {
+															if (e.key === "Enter") addContainer();
+														}}
+														className="w-full bg-background-tertiary border border-accent-400/30 rounded px-3 py-2 text-sm text-parchment-100 focus:outline-none focus:border-accent-400"
+														placeholder="e.g., Backpack, Bag of Holding..."
+													/>
+												</div>
+												<div>
+													<label className="text-xs text-parchment-400 uppercase tracking-wider block mb-1">
+														Capacity (lbs) - Optional
+													</label>
+													<input
+														type="number"
+														value={newContainerCapacity}
+														onChange={(e) => setNewContainerCapacity(e.target.value)}
+														onKeyDown={(e) => {
+															if (e.key === "Enter") addContainer();
+														}}
+														className="w-full bg-background-tertiary border border-accent-400/30 rounded px-3 py-2 text-sm text-parchment-100 focus:outline-none focus:border-accent-400"
+														placeholder="Leave empty for unlimited capacity"
+													/>
+													<p className="text-xs text-parchment-400 mt-1">
+														Set a capacity limit in pounds, or leave empty for unlimited storage
+													</p>
+												</div>
+												<div className="flex gap-2">
+													<button
+														onClick={addContainer}
+														disabled={!newContainerName.trim()}
+														className={`flex-1 py-2 px-3 rounded text-xs font-semibold transition-colors ${
+															newContainerName.trim()
+																? "bg-accent-400/20 hover:bg-accent-400/30 border border-accent-400/40 text-accent-400"
+																: "bg-background-tertiary border border-accent-400/10 text-parchment-500 cursor-not-allowed"
+														}`}
+													>
+														Add Container
+													</button>
+													<button
+														onClick={() => {
+															setShowAddContainer(false);
+															setNewContainerName("");
+															setNewContainerCapacity("");
+														}}
+														className="flex-1 py-2 px-3 rounded bg-background-tertiary border border-accent-400/20 text-parchment-300 text-xs font-semibold transition-colors hover:bg-background-tertiary/70"
+													>
+														Cancel
+													</button>
+												</div>
+											</div>
+										</div>
+									)}
 
 									{/* Add Item Dialog */}
 									{showAddItem && (
