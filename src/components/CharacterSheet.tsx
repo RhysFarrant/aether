@@ -336,6 +336,7 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 	const [actionFilter, setActionFilter] = useState<string>("all");
 	const [hiddenFeatures, setHiddenFeatures] = useState<Set<string>>(new Set());
 	const [_hiddenActions, _setHiddenActions] = useState<Set<string>>(new Set());
+	const [showingHidden, setShowingHidden] = useState(false);
 
 	// Notes state
 	interface Note {
@@ -3339,21 +3340,31 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 									{/* Hidden Features */}
 									{hiddenFeatures.size > 0 && (
 										<div className="bg-background-tertiary border border-accent-400/20 rounded-lg p-3">
-											<div className="text-xs text-accent-400 uppercase tracking-wider mb-2">
-												Hidden Features ({hiddenFeatures.size})
+											<div className="flex items-center justify-between mb-2">
+												<div className="text-xs text-accent-400 uppercase tracking-wider">
+													Hidden Features ({hiddenFeatures.size})
+												</div>
+												<button
+													onClick={() => setShowingHidden(!showingHidden)}
+													className="px-3 py-1 rounded bg-accent-400/20 hover:bg-accent-400/30 text-accent-400 text-xs font-semibold transition-colors"
+												>
+													{showingHidden ? "Hide Hidden" : "Show Hidden"}
+												</button>
 											</div>
-											<div className="flex flex-wrap gap-2">
-												{Array.from(hiddenFeatures).map(featureName => (
-													<button
-														key={featureName}
-														onClick={() => toggleFeatureVisibility(featureName)}
-														className="px-2 py-1 rounded bg-background-secondary hover:bg-accent-400/20 text-parchment-300 text-xs font-semibold transition-colors"
-														title="Click to show this feature"
-													>
-														{featureName} ×
-													</button>
-												))}
-											</div>
+											{showingHidden && (
+												<div className="flex flex-wrap gap-2">
+													{Array.from(hiddenFeatures).map(featureName => (
+														<button
+															key={featureName}
+															onClick={() => toggleFeatureVisibility(featureName)}
+															className="px-2 py-1 rounded bg-background-secondary hover:bg-accent-400/20 text-parchment-300 text-xs font-semibold transition-colors"
+															title="Click to unhide this feature"
+														>
+															{featureName} ×
+														</button>
+													))}
+												</div>
+											)}
 										</div>
 									)}
 
@@ -3363,34 +3374,60 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 										species.traits &&
 										species.traits.length > 0 && (
 											<>
-												{species.traits.filter((trait) => trait.showOnSheet !== false && !hiddenFeatures.has(trait.name)).map((trait) => (
+												{species.traits.filter((trait) => {
+													const isHidden = hiddenFeatures.has(trait.name);
+													const isHideOnSheet = trait.showOnSheet === false;
+													// Show if: not hidden, OR if showing hidden mode
+													if (isHidden) return showingHidden;
+													if (isHideOnSheet) return showingHidden;
+													return true;
+												}).map((trait) => {
+													const isHidden = hiddenFeatures.has(trait.name);
+													const isHideOnSheet = trait.showOnSheet === false;
+													return (
 													<div
 														key={trait.name}
-														className="bg-background-secondary border border-accent-400/30 rounded-lg p-4"
+														className={`border rounded-lg p-4 ${
+															isHidden || isHideOnSheet
+																? "bg-background-secondary/50 border-parchment-400/20 opacity-60"
+																: "bg-background-secondary border-accent-400/30"
+														}`}
 													>
 														<div className="flex items-center justify-between mb-2">
-															<div className="flex items-center gap-2">
-																<span className="font-bold text-accent-400 uppercase text-sm">
+															<div className="flex items-center gap-2 flex-wrap">
+																<span className={`font-bold uppercase text-sm ${
+																	isHidden || isHideOnSheet ? "text-parchment-400" : "text-accent-400"
+																}`}>
 																	{trait.name}
 																</span>
 																<span className="text-xs uppercase tracking-wider text-parchment-400 bg-background-tertiary px-2 py-0.5 rounded">
 																	{species.name}{" "}
 																	Trait
 																</span>
+																{isHidden && (
+																	<span className="text-xs uppercase tracking-wider text-red-400 bg-red-400/10 px-2 py-0.5 rounded border border-red-400/30">
+																		Hidden
+																	</span>
+																)}
+																{isHideOnSheet && (
+																	<span className="text-xs uppercase tracking-wider text-yellow-400 bg-yellow-400/10 px-2 py-0.5 rounded border border-yellow-400/30">
+																		Auto-Hidden
+																	</span>
+																)}
 															</div>
 															<button
 																onClick={() => toggleFeatureVisibility(trait.name)}
 																className="px-2 py-1 rounded bg-background-tertiary hover:bg-background-tertiary/70 text-parchment-300 text-xs font-semibold transition-colors"
-																title="Hide this feature"
+																title={isHidden ? "Show this feature" : "Hide this feature"}
 															>
-																Hide
+																{isHidden ? "Show" : "Hide"}
 															</button>
 														</div>
 														<div className="text-xs text-parchment-300 leading-relaxed">
 															{trait.description}
 														</div>
 													</div>
-												))}
+												)})}
 											</>
 										)}
 
