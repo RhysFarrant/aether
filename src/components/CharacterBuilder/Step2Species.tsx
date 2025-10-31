@@ -1,12 +1,14 @@
 import { useState, useRef } from "react";
 import type { CharacterBuilderState } from "../../types/characterBuilder";
 import { useSpecies, useSubspeciesByParent } from "../../hooks/useSRD";
+import ConfirmationModal from "../ConfirmationModal";
 
 interface Step2SpeciesProps {
 	state: CharacterBuilderState;
 	onUpdate: (updates: Partial<CharacterBuilderState>) => void;
 	onNext: () => void;
 	onPrevious: () => void;
+	onExpandedChange?: (expandedId: string | null) => void;
 }
 
 /**
@@ -15,7 +17,7 @@ interface Step2SpeciesProps {
  * Items smoothly slide to position when selected/deselected
  */
 export default function Step2Species(props: Step2SpeciesProps) {
-	const { state, onUpdate, onNext } = props;
+	const { state, onUpdate, onNext, onExpandedChange } = props;
 	const allSpecies = useSpecies();
 	const [expandedSpeciesId, setExpandedSpeciesId] = useState<string | null>(
 		state.speciesId
@@ -23,6 +25,18 @@ export default function Step2Species(props: Step2SpeciesProps) {
 	const [slideDistance, setSlideDistance] = useState<number>(0);
 	const itemRefs = useRef<Map<string, HTMLDivElement>>(new Map());
 	const subspecies = useSubspeciesByParent(expandedSpeciesId || undefined);
+	const [showModal, setShowModal] = useState(false);
+	const [modalConfig, setModalConfig] = useState<{
+		title: string;
+		message: string;
+		onConfirm: () => void;
+		showSelectOption?: boolean;
+		onSelectAndContinue?: () => void;
+		selectOptionText?: string;
+	} | null>(null);
+	const [selectedSubspeciesId, setSelectedSubspeciesId] = useState<
+		string | null
+	>(state.subspeciesId || null);
 
 	const handleSpeciesClick = (speciesId: string) => {
 		// Calculate slide distance before expanding
@@ -40,9 +54,11 @@ export default function Step2Species(props: Step2SpeciesProps) {
 		// If clicking the already expanded species, collapse it
 		if (expandedSpeciesId === speciesId) {
 			setExpandedSpeciesId(null);
+			onExpandedChange?.(null);
 		} else {
 			// Expand the clicked species
 			setExpandedSpeciesId(speciesId);
+			onExpandedChange?.(speciesId);
 		}
 	};
 
@@ -58,6 +74,29 @@ export default function Step2Species(props: Step2SpeciesProps) {
 				// Need to select subspecies first
 				return;
 			}
+
+			// Check if user is selecting a different species than currently selected
+			if (state.speciesId && expandedSpeciesId !== state.speciesId) {
+				const expandedSpecies = allSpecies.find((s) => s.id === expandedSpeciesId);
+				setModalConfig({
+					title: "Change Species?",
+					message: `You're about to change from your currently selected species. Select ${expandedSpecies?.name} and continue?`,
+					onConfirm: () => {
+						onUpdate({
+							speciesId: expandedSpeciesId,
+							subspeciesId: selectedSubspeciesId || null,
+						});
+						setShowModal(false);
+						setTimeout(() => {
+							onNext();
+						}, 500);
+					},
+					showSelectOption: false,
+				});
+				setShowModal(true);
+				return;
+			}
+
 			onUpdate({
 				speciesId: expandedSpeciesId,
 				subspeciesId: selectedSubspeciesId || null,
@@ -67,10 +106,6 @@ export default function Step2Species(props: Step2SpeciesProps) {
 			}, 500);
 		}
 	};
-
-	const [selectedSubspeciesId, setSelectedSubspeciesId] = useState<
-		string | null
-	>(state.subspeciesId || null);
 
 	const handleSubspeciesSelect = (subspeciesId: string) => {
 		// Just store the selection, don't update state yet
@@ -303,6 +338,20 @@ export default function Step2Species(props: Step2SpeciesProps) {
 						Click on a species to view its details and traits
 					</p>
 				</div>
+			)}
+
+			{/* Confirmation Modal */}
+			{modalConfig && (
+				<ConfirmationModal
+					isOpen={showModal}
+					onClose={() => setShowModal(false)}
+					onConfirm={modalConfig.onConfirm}
+					title={modalConfig.title}
+					message={modalConfig.message}
+					showSelectOption={modalConfig.showSelectOption}
+					onSelectAndContinue={modalConfig.onSelectAndContinue}
+					selectOptionText={modalConfig.selectOptionText}
+				/>
 			)}
 		</div>
 	);

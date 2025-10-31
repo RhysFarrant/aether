@@ -6,6 +6,7 @@ interface Step1ClassProps {
 	state: CharacterBuilderState;
 	onUpdate: (updates: Partial<CharacterBuilderState>) => void;
 	onNext: () => void;
+	onExpandedChange?: (expandedId: string | null) => void;
 }
 
 /**
@@ -17,6 +18,7 @@ export default function Step1Class({
 	state,
 	onUpdate,
 	onNext,
+	onExpandedChange,
 }: Step1ClassProps) {
 	const classes = useClasses();
 	const [expandedClassId, setExpandedClassId] = useState<string | null>(
@@ -41,9 +43,11 @@ export default function Step1Class({
 		// If clicking the already expanded class, collapse it
 		if (expandedClassId === classId) {
 			setExpandedClassId(null);
+			onExpandedChange?.(null);
 		} else {
 			// Expand the clicked class
 			setExpandedClassId(classId);
+			onExpandedChange?.(classId);
 		}
 	};
 
@@ -55,6 +59,7 @@ export default function Step1Class({
 			}, 500);
 		}
 	};
+
 
 	const selectedClass = classes.find((c) => c.id === expandedClassId);
 	const isClassSelected = state.classId === expandedClassId;

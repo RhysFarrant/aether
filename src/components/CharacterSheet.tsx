@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import type { Character } from "../types/character";
 import weaponDataImport from "../data/weapons.json";
 import conditionsDataImport from "../data/conditions.json";
@@ -758,7 +758,7 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 				);
 
 				// Check if it's heavy armor
-				const isHeavyArmor = equippedArmorItem?.armorData?.category === "Heavy" ||
+				const isHeavyArmor = equippedArmorItem?.armorData?.category === "Heavy Armor" ||
 					equippedArmorItem?.armorData?.dexModifier === "none";
 
 				return !isHeavyArmor;
@@ -847,7 +847,7 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 		return calculatedAC;
 	};
 
-	const displayAC = calculateAC();
+	const displayAC = useMemo(() => calculateAC(), [equippedArmor, equippedShield, inventoryItems, abilityScores, character.classes]);
 
 	// Calculate total speed including feature bonuses
 	const calculateSpeed = (): number => {
@@ -858,6 +858,7 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 		if (character.classes && character.classes.length > 0) {
 			character.classes.forEach(cl => {
 				const features = cl.class.features?.filter((f: any) => f.level <= cl.level && f.speedBonus) || [];
+				console.log('Checking speed features for single class:', features);
 				features.forEach(feature => {
 					// Only add bonus if feature is active (condition met)
 					if (isFeatureActive(feature)) {
@@ -877,7 +878,7 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 		return baseSpeed + speedBonus;
 	};
 
-	const displaySpeed = calculateSpeed();
+	const displaySpeed = useMemo(() => calculateSpeed(), [character.classes, charClass, level, species.speed, equippedArmor, inventoryItems]);
 
 	// Calculate HP bonuses from features and traits
 	const calculateHPBonus = (): number => {
@@ -1055,16 +1056,6 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 
 		const armorCategory = armorItem.armorData.category;
 
-		// Debug logging
-		console.log(`Checking armor proficiency for ${armorItem.name}:`, {
-			armorCategory,
-			armorProficiencies,
-			hasAllArmor: armorProficiencies.includes("All armor"),
-			hasLightArmor: armorProficiencies.includes("Light armor"),
-			hasMediumArmor: armorProficiencies.includes("Medium armor"),
-			hasHeavyArmor: armorProficiencies.includes("Heavy armor"),
-		});
-
 		// Check for "All armor" proficiency
 		if (armorProficiencies.includes("All armor")) return true;
 
@@ -1074,7 +1065,6 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 		if (armorCategory === "Heavy Armor" && armorProficiencies.includes("Heavy armor")) return true;
 		if (armorCategory === "Shield" && armorProficiencies.includes("Shields")) return true;
 
-		console.log(`${armorItem.name} is NOT proficient`);
 		return false;
 	};
 
@@ -3897,11 +3887,11 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 															</div>
 															<div className="flex items-center gap-2">
 																<button
-																	onClick={() => toggleFeatureVisibility(feature.name)}
+																	onClick={() => toggleFeatureVisibility(feature.name, isHideOnSheet)}
 																	className="px-2 py-1 rounded bg-background-tertiary hover:bg-background-tertiary/70 text-parchment-300 text-xs font-semibold transition-colors"
-																	title={isHidden ? "Show this feature" : "Hide this feature"}
+																	title={isCurrentlyVisible ? "Hide this feature" : "Show this feature"}
 																>
-																	{isHidden ? "Show" : "Hide"}
+																	{isCurrentlyVisible ? "Hide" : "Show"}
 																</button>
 																{feature.uses && featureUsage && (
 																	<>
@@ -4315,8 +4305,9 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 												if (f.level > cl.level || f.isPassive) return false;
 												const isHidden = hiddenFeatures.has(f.name);
 												const isHideOnSheet = f.showOnSheet === false;
+												const isExplicitlyShown = shownFeatures.has(f.name);
 												if (isHidden) return showingHidden;
-												if (isHideOnSheet) return showingHidden;
+												if (isHideOnSheet) return showingHidden || isExplicitlyShown;
 												return true;
 											}) || [];
 
@@ -4327,11 +4318,13 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 												const featureUsage = featureUses[featureKey];
 												const isHidden = hiddenFeatures.has(feature.name);
 												const isHideOnSheet = feature.showOnSheet === false;
+												const isExplicitlyShown = shownFeatures.has(feature.name);
+												const isCurrentlyVisible = !isHidden && (!isHideOnSheet || isExplicitlyShown);
 
 												return (
 													<div
 														key={`${cl.class.id}-${feature.name}`}
-														className={`bg-background-secondary border border-accent-400/30 rounded-lg p-4 ${isHidden || isHideOnSheet ? "opacity-60" : ""}`}
+														className={`bg-background-secondary border border-accent-400/30 rounded-lg p-4 ${!isCurrentlyVisible ? "opacity-60" : ""}`}
 													>
 														<div className="flex items-center justify-between gap-2 mb-2">
 															<div className="flex items-center gap-2 flex-wrap">
@@ -4346,7 +4339,7 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 																		Hidden
 																	</span>
 																)}
-																{isHideOnSheet && (
+																{isHideOnSheet && !isExplicitlyShown && (
 																	<span className="text-xs uppercase tracking-wider text-yellow-400 bg-yellow-400/10 px-2 py-0.5 rounded border border-yellow-400/30">
 																		Auto-Hidden
 																	</span>
@@ -4371,11 +4364,11 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 															</div>
 															<div className="flex items-center gap-2">
 																<button
-																	onClick={() => toggleFeatureVisibility(feature.name)}
+																	onClick={() => toggleFeatureVisibility(feature.name, isHideOnSheet)}
 																	className="px-2 py-1 rounded bg-background-tertiary hover:bg-background-tertiary/70 text-parchment-300 text-xs font-semibold transition-colors"
-																	title={isHidden ? "Show this feature" : "Hide this feature"}
+																	title={isCurrentlyVisible ? "Hide this feature" : "Show this feature"}
 																>
-																	{isHidden ? "Show" : "Hide"}
+																	{isCurrentlyVisible ? "Hide" : "Show"}
 																</button>
 																{feature.uses && featureUsage && (
 																	<>
