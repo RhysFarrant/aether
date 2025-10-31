@@ -222,6 +222,22 @@ function getAllAvailableItems(): string[] {
 }
 
 /**
+ * Get items by category
+ */
+function getItemsByCategory(category: string): string[] {
+	if (category === "All") {
+		return getAllAvailableItems();
+	} else if (category === "Weapons") {
+		return Object.keys(WEAPON_DATA).sort();
+	} else if (category === "Armor") {
+		return Object.keys(ARMOR_DATA).sort();
+	} else if (category === "Adventuring Gear") {
+		return Object.keys(ITEMS_DATA).sort();
+	}
+	return [];
+}
+
+/**
  * Look up item data from weapons or armor databases
  */
 function lookupItemData(itemName: string): InventoryItem | null {
@@ -611,6 +627,8 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 	const [newTag, setNewTag] = useState("");
 	const [showBrowseItems, setShowBrowseItems] = useState(false);
 	const [selectedItemsToBrowse, setSelectedItemsToBrowse] = useState<Set<string>>(new Set());
+	const [browseSearch, setBrowseSearch] = useState("");
+	const [browseCategory, setBrowseCategory] = useState("All");
 	const [isCustomItem, setIsCustomItem] = useState(false);
 	const [customItemType, setCustomItemType] = useState<
 		"weapon" | "armor" | "shield" | "other"
@@ -1875,24 +1893,59 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 			{/* Browse Items Modal */}
 			{showBrowseItems && (
 				<div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-					<div className="bg-background-primary border-2 border-accent-400 rounded-lg w-full max-w-4xl max-h-[90vh] flex flex-col">
-						<div className="p-4 border-b border-accent-400/30 flex items-center justify-between">
-							<h2 className="text-accent-400 font-bold text-lg uppercase tracking-wider">
-								Browse Items
-							</h2>
-							<button
-								onClick={() => {
-									setShowBrowseItems(false);
-									setSelectedItemsToBrowse(new Set());
-								}}
-								className="text-parchment-300 hover:text-accent-400 text-2xl transition-colors"
-							>
-								×
-							</button>
+					<div className="bg-background-primary border-2 border-accent-400 rounded-lg w-full max-w-6xl max-h-[90vh] flex flex-col">
+						<div className="p-4 border-b border-accent-400/30">
+							<div className="flex items-center justify-between mb-3">
+								<h2 className="text-accent-400 font-bold text-lg uppercase tracking-wider">
+									Browse Items
+								</h2>
+								<button
+									onClick={() => {
+										setShowBrowseItems(false);
+										setSelectedItemsToBrowse(new Set());
+										setBrowseSearch("");
+										setBrowseCategory("All");
+									}}
+									className="text-parchment-300 hover:text-accent-400 text-2xl transition-colors"
+								>
+									×
+								</button>
+							</div>
+							{/* Search Bar */}
+							<input
+								type="text"
+								value={browseSearch}
+								onChange={(e) => setBrowseSearch(e.target.value)}
+								placeholder="Search items..."
+								className="w-full bg-background-tertiary border border-accent-400/30 rounded px-3 py-2 text-sm text-parchment-100 focus:outline-none focus:border-accent-400"
+							/>
 						</div>
-						<div className="flex-1 overflow-y-auto p-4">
-							<div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-								{availableItems.map(itemName => (
+						<div className="flex-1 overflow-hidden flex">
+							{/* Category Sidebar */}
+							<div className="w-48 border-r border-accent-400/30 p-4 overflow-y-auto">
+								<div className="text-xs text-accent-400 uppercase tracking-wider mb-2">Categories</div>
+								{["All", "Weapons", "Armor", "Adventuring Gear"].map(category => (
+									<button
+										key={category}
+										onClick={() => setBrowseCategory(category)}
+										className={`w-full text-left px-3 py-2 rounded text-sm transition-colors mb-1 ${
+											browseCategory === category
+												? "bg-accent-400/20 text-accent-400 font-semibold"
+												: "text-parchment-300 hover:bg-background-tertiary"
+										}`}
+									>
+										{category}
+									</button>
+								))}
+							</div>
+							{/* Items Grid */}
+							<div className="flex-1 overflow-y-auto p-4">
+								<div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+									{getItemsByCategory(browseCategory)
+										.filter(itemName =>
+											itemName.toLowerCase().includes(browseSearch.toLowerCase())
+										)
+										.map(itemName => (
 									<button
 										key={itemName}
 										onClick={() => toggleItemSelection(itemName)}
@@ -1908,6 +1961,7 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 										)}
 									</button>
 								))}
+								</div>
 							</div>
 						</div>
 						<div className="p-4 border-t border-accent-400/30 flex justify-between items-center">
@@ -4352,20 +4406,21 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 																					cantripName
 																				}
 																			</span>
-																			<span className="text-xs uppercase tracking-wider text-parchment-400 bg-background-tertiary px-2 py-0.5 rounded">
-																				Cantrip
-																			</span>
 																			{character.spellMetadata?.[cantripName]?.grantedBy && (
 																				<span className="text-xs uppercase tracking-wider text-blue-400 bg-blue-400/10 px-2 py-0.5 rounded border border-blue-400/30">
 																					{character.spellMetadata[cantripName].grantedBy}
 																				</span>
 																			)}
-																			{character.spellMetadata?.[cantripName]?.abilityOverride && (
+																			{character.spellMetadata?.[cantripName]?.abilityOverride &&
+																			 character.spellMetadata[cantripName].abilityOverride !== spellcastingAbilityData.name.toLowerCase() && (
 																				<span className="text-xs uppercase tracking-wider text-purple-400 bg-purple-400/10 px-2 py-0.5 rounded border border-purple-400/30">
 																					{character.spellMetadata[cantripName].abilityOverride === 'intelligence' ? 'INT' :
 																					 character.spellMetadata[cantripName].abilityOverride === 'wisdom' ? 'WIS' : 'CHA'}
 																				</span>
 																			)}
+																			<span className="text-xs uppercase tracking-wider text-parchment-400 bg-background-tertiary px-2 py-0.5 rounded">
+																				Cantrip
+																			</span>
 																		</div>
 																		<button
 																			className="px-3 py-1 rounded bg-accent-400/20 hover:bg-accent-400/30 border border-accent-400/40 text-accent-400 text-xs font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
@@ -4516,21 +4571,22 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 																					spellName
 																				}
 																			</span>
-																			<span className="text-xs uppercase tracking-wider text-parchment-400 bg-background-tertiary px-2 py-0.5 rounded">
-																				Level
-																				1
-																			</span>
 																			{character.spellMetadata?.[spellName]?.grantedBy && (
 																				<span className="text-xs uppercase tracking-wider text-blue-400 bg-blue-400/10 px-2 py-0.5 rounded border border-blue-400/30">
 																					{character.spellMetadata[spellName].grantedBy}
 																				</span>
 																			)}
-																			{character.spellMetadata?.[spellName]?.abilityOverride && (
+																			{character.spellMetadata?.[spellName]?.abilityOverride &&
+																			 character.spellMetadata[spellName].abilityOverride !== spellcastingAbilityData.name.toLowerCase() && (
 																				<span className="text-xs uppercase tracking-wider text-purple-400 bg-purple-400/10 px-2 py-0.5 rounded border border-purple-400/30">
 																					{character.spellMetadata[spellName].abilityOverride === 'intelligence' ? 'INT' :
 																					 character.spellMetadata[spellName].abilityOverride === 'wisdom' ? 'WIS' : 'CHA'}
 																				</span>
 																			)}
+																			<span className="text-xs uppercase tracking-wider text-parchment-400 bg-background-tertiary px-2 py-0.5 rounded">
+																				Level
+																				1
+																			</span>
 																			{spellData?.concentration && (
 																				<span className="text-xs uppercase tracking-wider text-parchment-400 bg-background-tertiary px-2 py-0.5 rounded">
 																					Concentration
