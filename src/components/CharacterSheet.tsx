@@ -672,6 +672,8 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 	const [selectedContainer, setSelectedContainer] = useState<string | null>(null);
 	const [isCustomContainer, setIsCustomContainer] = useState(false);
 	const [showContainerSuggestions, setShowContainerSuggestions] = useState(false);
+	const [editingContainerIndex, setEditingContainerIndex] = useState<number | null>(null);
+	const [editingContainerName, setEditingContainerName] = useState("");
 	const [assigningToContainer, setAssigningToContainer] = useState<number | null>(null); // Index of item being assigned to container
 	const [isCustomItem, setIsCustomItem] = useState(false);
 	const [customItemType, setCustomItemType] = useState<
@@ -1806,6 +1808,47 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 		updatedItems[itemIndex].containerId = containerName || undefined;
 		setInventoryItems(updatedItems);
 		setAssigningToContainer(null);
+	};
+
+	// Start editing container name
+	const startEditingContainer = (index: number) => {
+		const container = inventoryItems[index];
+		setEditingContainerIndex(index);
+		setEditingContainerName(container.customName || "");
+	};
+
+	// Save container name
+	const saveContainerName = (index: number) => {
+		if (!editingContainerName.trim()) {
+			setEditingContainerIndex(null);
+			setEditingContainerName("");
+			return;
+		}
+
+		const oldName = inventoryItems[index].customName;
+		const newName = editingContainerName.trim();
+
+		// Update container name and all items that reference this container
+		const updatedItems = inventoryItems.map((item, i) => {
+			if (i === index) {
+				// Update the container itself
+				return { ...item, customName: newName };
+			} else if (item.containerId === oldName) {
+				// Update items that reference this container
+				return { ...item, containerId: newName };
+			}
+			return item;
+		});
+
+		setInventoryItems(updatedItems);
+		setEditingContainerIndex(null);
+		setEditingContainerName("");
+	};
+
+	// Cancel editing container name
+	const cancelEditingContainer = () => {
+		setEditingContainerIndex(null);
+		setEditingContainerName("");
 	};
 
 	// Helper to render a single item card
@@ -5725,42 +5768,84 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 														<div key={containerIdx} className="border border-accent-400/30 rounded-lg p-3 space-y-2">
 															{/* Container Header */}
 															<div className="flex items-center justify-between">
-																<div className="flex items-center gap-2">
-																	<span className="text-sm font-semibold text-accent-400 uppercase tracking-wider">
-																		{container.customName || container.name}
-																	</span>
-																	{container.containerCapacity ? (
-																		<span className={`text-xs ${isOverCapacity ? 'text-red-400' : 'text-parchment-400'}`}>
-																			{capacityUsed} / {container.containerCapacity} lbs
-																			{isOverCapacity && ' ⚠'}
-																		</span>
+																<div className="flex items-center gap-2 flex-1">
+																	{editingContainerIndex === inventoryItems.indexOf(container) ? (
+																		<div className="flex items-center gap-2">
+																			<input
+																				type="text"
+																				value={editingContainerName}
+																				onChange={(e) => setEditingContainerName(e.target.value)}
+																				onKeyDown={(e) => {
+																					if (e.key === "Enter") saveContainerName(inventoryItems.indexOf(container));
+																					if (e.key === "Escape") cancelEditingContainer();
+																				}}
+																				className="bg-background-tertiary border border-accent-400/30 rounded px-2 py-1 text-sm text-parchment-100 focus:outline-none focus:border-accent-400"
+																				placeholder={container.name}
+																				autoFocus
+																			/>
+																			<button
+																				onClick={() => saveContainerName(inventoryItems.indexOf(container))}
+																				className="px-2 py-1 rounded bg-accent-400/20 hover:bg-accent-400/30 text-accent-400 text-xs font-semibold"
+																			>
+																				✓
+																			</button>
+																			<button
+																				onClick={cancelEditingContainer}
+																				className="px-2 py-1 rounded bg-background-tertiary hover:bg-background-tertiary/70 text-parchment-300 text-xs font-semibold"
+																			>
+																				✕
+																			</button>
+																		</div>
 																	) : (
-																		<span className="text-xs text-parchment-400">
-																			{capacityUsed} lbs (unlimited)
-																		</span>
+																		<>
+																			<span className="text-sm font-semibold text-accent-400 uppercase tracking-wider">
+																				{container.customName || container.name}
+																			</span>
+																			{container.containerCapacity ? (
+																				<span className={`text-xs ${isOverCapacity ? 'text-red-400' : 'text-parchment-400'}`}>
+																					{capacityUsed} / {container.containerCapacity} lbs
+																					{isOverCapacity && ' ⚠'}
+																				</span>
+																			) : (
+																				<span className="text-xs text-parchment-400">
+																					{capacityUsed} lbs (unlimited)
+																				</span>
+																			)}
+																			<span className="text-xs text-parchment-500">
+																				(Total: {totalWeight} lb)
+																			</span>
+																		</>
 																	)}
-																	<span className="text-xs text-parchment-500">
-																		(Total: {totalWeight} lb)
-																	</span>
 																</div>
 																<div className="flex gap-2">
-																	<button
-																		onClick={() => toggleContainerOnPerson(inventoryItems.indexOf(container))}
-																		className={`px-2 py-1 rounded text-xs font-semibold transition-colors ${
-																			container.onPerson
-																				? "bg-accent-400/20 text-accent-400 border border-accent-400/40"
-																				: "bg-background-tertiary text-parchment-400 border border-parchment-400/20"
-																		}`}
-																		title={container.onPerson ? "On person (counts toward carry capacity)" : "Stored away (doesn't count toward carry capacity)"}
-																	>
-																		{container.onPerson ? "On Person" : "Stored"}
-																	</button>
-																	<button
-																		onClick={() => removeItem(inventoryItems.indexOf(container))}
-																		className="px-2 py-1 rounded bg-red-900/20 hover:bg-red-900/30 text-red-400 text-xs font-semibold transition-colors"
-																	>
-																		×
-																	</button>
+																	{editingContainerIndex !== inventoryItems.indexOf(container) && (
+																		<>
+																			<button
+																				onClick={() => startEditingContainer(inventoryItems.indexOf(container))}
+																				className="px-2 py-1 rounded bg-background-tertiary hover:bg-background-tertiary/70 text-parchment-300 text-xs font-semibold transition-colors"
+																				title="Rename container"
+																			>
+																				✎
+																			</button>
+																			<button
+																				onClick={() => toggleContainerOnPerson(inventoryItems.indexOf(container))}
+																				className={`px-2 py-1 rounded text-xs font-semibold transition-colors ${
+																					container.onPerson
+																						? "bg-accent-400/20 text-accent-400 border border-accent-400/40"
+																						: "bg-background-tertiary text-parchment-400 border border-parchment-400/20"
+																				}`}
+																				title={container.onPerson ? "On person (counts toward carry capacity)" : "Stored away (doesn't count toward carry capacity)"}
+																			>
+																				{container.onPerson ? "On Person" : "Stored"}
+																			</button>
+																			<button
+																				onClick={() => removeItem(inventoryItems.indexOf(container))}
+																				className="px-2 py-1 rounded bg-red-900/20 hover:bg-red-900/30 text-red-400 text-xs font-semibold transition-colors"
+																			>
+																				×
+																			</button>
+																		</>
+																	)}
 																</div>
 															</div>
 
