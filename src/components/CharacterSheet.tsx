@@ -371,6 +371,7 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 	const [featureFilter, setFeatureFilter] = useState<string>("all");
 	const [actionFilter, setActionFilter] = useState<string>("all");
 	const [hiddenFeatures, setHiddenFeatures] = useState<Set<string>>(new Set());
+	const [shownFeatures, setShownFeatures] = useState<Set<string>>(new Set()); // For explicitly showing auto-hidden features
 	const [_hiddenActions, _setHiddenActions] = useState<Set<string>>(new Set());
 	const [showingHidden, setShowingHidden] = useState(false);
 
@@ -2044,16 +2045,30 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 	// 	);
 	// };
 
-	const toggleFeatureVisibility = (featureName: string) => {
-		setHiddenFeatures(prev => {
-			const newSet = new Set(prev);
-			if (newSet.has(featureName)) {
-				newSet.delete(featureName);
-			} else {
-				newSet.add(featureName);
-			}
-			return newSet;
-		});
+	const toggleFeatureVisibility = (featureName: string, isAutoHidden: boolean = false) => {
+		if (isAutoHidden) {
+			// For auto-hidden features, toggle the shownFeatures set
+			setShownFeatures(prev => {
+				const newSet = new Set(prev);
+				if (newSet.has(featureName)) {
+					newSet.delete(featureName); // Remove from shown = hide again
+				} else {
+					newSet.add(featureName); // Add to shown = show despite auto-hide
+				}
+				return newSet;
+			});
+		} else {
+			// For regular features, toggle the hiddenFeatures set
+			setHiddenFeatures(prev => {
+				const newSet = new Set(prev);
+				if (newSet.has(featureName)) {
+					newSet.delete(featureName);
+				} else {
+					newSet.add(featureName);
+				}
+				return newSet;
+			});
+		}
 	};
 
 	// Future: Toggle action visibility (not yet implemented in UI)
@@ -3628,33 +3643,52 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 									</div>
 
 									{/* Hidden Features */}
-									{hiddenFeatures.size > 0 && (
-										<div className="bg-background-tertiary border border-accent-400/20 rounded-lg p-3">
-											<div className="flex items-center justify-between mb-2">
-												<div className="text-xs text-accent-400 uppercase tracking-wider">
-													Hidden Features ({hiddenFeatures.size})
-												</div>
-												<button
-													onClick={() => setShowingHidden(!showingHidden)}
-													className="px-3 py-1 rounded bg-accent-400/20 hover:bg-accent-400/30 text-accent-400 text-xs font-semibold transition-colors"
-												>
-													{showingHidden ? "Hide Hidden" : "Show Hidden"}
-												</button>
+									{(() => {
+										// Count auto-hidden features (showOnSheet: false) that aren't explicitly shown
+										let autoHiddenCount = 0;
+										if (species && species.traits) {
+											autoHiddenCount += species.traits.filter(t => t.showOnSheet === false && !shownFeatures.has(t.name)).length;
+										}
+										if (subspecies && subspecies.traits) {
+											autoHiddenCount += subspecies.traits.filter(t => t.showOnSheet === false && !shownFeatures.has(t.name)).length;
+										}
+										if (character.classes) {
+											character.classes.forEach(cl => {
+												if (cl.class.features) {
+													autoHiddenCount += cl.class.features.filter(f =>
+														f.level <= cl.level && f.showOnSheet === false && !shownFeatures.has(f.name)
+													).length;
+												}
+											});
+										}
+										const totalHiddenCount = hiddenFeatures.size + autoHiddenCount;
+
+										return totalHiddenCount > 0 && (
+											<div className="flex items-center justify-between px-2 py-1.5 bg-background-tertiary/50 border border-accent-400/10 rounded">
+												<div className="text-xs text-parchment-400 uppercase tracking-wider">
+													Hidden Features ({totalHiddenCount})
 											</div>
-											{showingHidden && (
-												<div className="flex flex-wrap gap-2">
-													{Array.from(hiddenFeatures).map(featureName => (
-														<button
-															key={featureName}
-															onClick={() => toggleFeatureVisibility(featureName)}
-															className="px-2 py-1 rounded bg-background-secondary hover:bg-accent-400/20 text-parchment-300 text-xs font-semibold transition-colors"
-															title="Click to unhide this feature"
-														>
-															{featureName} ×
-														</button>
-													))}
-												</div>
-											)}
+											<button
+												onClick={() => setShowingHidden(!showingHidden)}
+												className="text-xs text-accent-400 hover:text-accent-300 transition-colors"
+											>
+												{showingHidden ? "Hide" : "Show"}
+											</button>
+										</div>
+										);
+									})()}
+									{showingHidden && hiddenFeatures.size > 0 && (
+										<div className="flex flex-wrap gap-2 px-2">
+											{Array.from(hiddenFeatures).map(featureName => (
+												<button
+													key={featureName}
+													onClick={() => toggleFeatureVisibility(featureName)}
+													className="px-2 py-1 rounded bg-background-tertiary/50 hover:bg-accent-400/20 text-parchment-300 text-xs transition-colors"
+													title="Click to unhide this feature"
+												>
+													{featureName} ×
+												</button>
+											))}
 										</div>
 									)}
 
@@ -3667,18 +3701,22 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 												{species.traits.filter((trait) => {
 													const isHidden = hiddenFeatures.has(trait.name);
 													const isHideOnSheet = trait.showOnSheet === false;
-													// Show if: not hidden, OR if showing hidden mode
+													const isExplicitlyShown = shownFeatures.has(trait.name);
+													// Show if: not hidden, OR if showing hidden mode, OR if explicitly shown by user
 													if (isHidden) return showingHidden;
-													if (isHideOnSheet) return showingHidden;
+													if (isHideOnSheet) return showingHidden || isExplicitlyShown;
 													return true;
 												}).map((trait) => {
 													const isHidden = hiddenFeatures.has(trait.name);
 													const isHideOnSheet = trait.showOnSheet === false;
+													const isExplicitlyShown = shownFeatures.has(trait.name);
+													// Determine if currently visible (not greyed out)
+													const isCurrentlyVisible = !isHidden && (!isHideOnSheet || isExplicitlyShown);
 													return (
 													<div
 														key={trait.name}
 														className={`border rounded-lg p-4 ${
-															isHidden || isHideOnSheet
+															!isCurrentlyVisible
 																? "bg-background-secondary/50 border-parchment-400/20 opacity-60"
 																: "bg-background-secondary border-accent-400/30"
 														}`}
@@ -3686,7 +3724,7 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 														<div className="flex items-center justify-between mb-2">
 															<div className="flex items-center gap-2 flex-wrap">
 																<span className={`font-bold uppercase text-sm ${
-																	isHidden || isHideOnSheet ? "text-parchment-400" : "text-accent-400"
+																	!isCurrentlyVisible ? "text-parchment-400" : "text-accent-400"
 																}`}>
 																	{trait.name}
 																</span>
@@ -3699,18 +3737,18 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 																		Hidden
 																	</span>
 																)}
-																{isHideOnSheet && (
+																{isHideOnSheet && !isExplicitlyShown && (
 																	<span className="text-xs uppercase tracking-wider text-yellow-400 bg-yellow-400/10 px-2 py-0.5 rounded border border-yellow-400/30">
 																		Auto-Hidden
 																	</span>
 																)}
 															</div>
 															<button
-																onClick={() => toggleFeatureVisibility(trait.name)}
+																onClick={() => toggleFeatureVisibility(trait.name, isHideOnSheet)}
 																className="px-2 py-1 rounded bg-background-tertiary hover:bg-background-tertiary/70 text-parchment-300 text-xs font-semibold transition-colors"
-																title={isHidden ? "Show this feature" : "Hide this feature"}
+																title={isCurrentlyVisible ? "Hide this feature" : "Show this feature"}
 															>
-																{isHidden ? "Show" : "Hide"}
+																{isCurrentlyVisible ? "Hide" : "Show"}
 															</button>
 														</div>
 														<div className="text-xs text-parchment-300 leading-relaxed">
@@ -3727,31 +3765,62 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 										subspecies?.traits &&
 										subspecies.traits.length > 0 && (
 											<>
-												{subspecies.traits.filter((trait) => trait.showOnSheet !== false).map(
-													(trait) => (
+												{subspecies.traits.filter((trait) => {
+													const isHidden = hiddenFeatures.has(trait.name);
+													const isHideOnSheet = trait.showOnSheet === false;
+													const isExplicitlyShown = shownFeatures.has(trait.name);
+													if (isHidden) return showingHidden;
+													if (isHideOnSheet) return showingHidden || isExplicitlyShown;
+													return true;
+												}).map((trait) => {
+													const isHidden = hiddenFeatures.has(trait.name);
+													const isHideOnSheet = trait.showOnSheet === false;
+													const isExplicitlyShown = shownFeatures.has(trait.name);
+													const isCurrentlyVisible = !isHidden && (!isHideOnSheet || isExplicitlyShown);
+													return (
 														<div
 															key={trait.name}
-															className="bg-background-secondary border border-accent-400/30 rounded-lg p-4"
+															className={`border rounded-lg p-4 ${
+																!isCurrentlyVisible
+																	? "bg-background-secondary/50 border-parchment-400/20 opacity-60"
+																	: "bg-background-secondary border-accent-400/30"
+															}`}
 														>
-															<div className="flex items-center gap-2 mb-2">
-																<span className="font-bold text-accent-400 uppercase text-sm">
-																	{trait.name}
-																</span>
-																<span className="text-xs uppercase tracking-wider text-parchment-400 bg-background-tertiary px-2 py-0.5 rounded">
-																	{
-																		subspecies.name
-																	}{" "}
-																	Trait
-																</span>
+															<div className="flex items-center justify-between mb-2">
+																<div className="flex items-center gap-2 flex-wrap">
+																	<span className={`font-bold uppercase text-sm ${
+																		!isCurrentlyVisible ? "text-parchment-400" : "text-accent-400"
+																	}`}>
+																		{trait.name}
+																	</span>
+																	<span className="text-xs uppercase tracking-wider text-parchment-400 bg-background-tertiary px-2 py-0.5 rounded">
+																		{subspecies.name} Trait
+																	</span>
+																	{isHidden && (
+																		<span className="text-xs uppercase tracking-wider text-red-400 bg-red-400/10 px-2 py-0.5 rounded border border-red-400/30">
+																			Hidden
+																		</span>
+																	)}
+																	{isHideOnSheet && !isExplicitlyShown && (
+																		<span className="text-xs uppercase tracking-wider text-yellow-400 bg-yellow-400/10 px-2 py-0.5 rounded border border-yellow-400/30">
+																			Auto-Hidden
+																		</span>
+																	)}
+																</div>
+																<button
+																	onClick={() => toggleFeatureVisibility(trait.name, isHideOnSheet)}
+																	className="px-2 py-1 rounded bg-background-tertiary hover:bg-background-tertiary/70 text-parchment-300 text-xs font-semibold transition-colors"
+																	title={isCurrentlyVisible ? "Hide this feature" : "Show this feature"}
+																>
+																	{isCurrentlyVisible ? "Hide" : "Show"}
+																</button>
 															</div>
 															<div className="text-xs text-parchment-300 leading-relaxed">
-																{
-																	trait.description
-																}
+																{trait.description}
 															</div>
 														</div>
-													)
-												)}
+													);
+												})}
 											</>
 										)}
 
@@ -3759,22 +3828,40 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 									{character.classes && character.classes.length > 0 ? (
 										character.classes.map((cl) => {
 											const shouldShow = featureFilter === "all" || featureFilter === cl.class.id;
-											const classFeatures = cl.class.features?.filter((f) => f.level <= cl.level && f.showOnSheet !== false) || [];
+											const classFeatures = cl.class.features?.filter((f) => {
+												if (f.level > cl.level) return false;
+												const isHidden = hiddenFeatures.has(f.name);
+												const isHideOnSheet = f.showOnSheet === false;
+												const isExplicitlyShown = shownFeatures.has(f.name);
+												if (isHidden) return showingHidden;
+												if (isHideOnSheet) return showingHidden || isExplicitlyShown;
+												return true;
+											}) || [];
 
 											if (!shouldShow || classFeatures.length === 0) return null;
 
 											return classFeatures.map((feature) => {
 												const featureKey = getFeatureKey(cl.class.id, feature.name);
 												const featureUsage = featureUses[featureKey];
+												const isHidden = hiddenFeatures.has(feature.name);
+												const isHideOnSheet = feature.showOnSheet === false;
+												const isExplicitlyShown = shownFeatures.has(feature.name);
+												const isCurrentlyVisible = !isHidden && (!isHideOnSheet || isExplicitlyShown);
 
 												return (
 													<div
 														key={`${cl.class.id}-${feature.name}`}
-														className="bg-background-secondary border border-accent-400/30 rounded-lg p-4"
+														className={`border rounded-lg p-4 ${
+															!isCurrentlyVisible
+																? "bg-background-secondary/50 border-parchment-400/20 opacity-60"
+																: "bg-background-secondary border-accent-400/30"
+														}`}
 													>
 														<div className="flex items-center justify-between gap-2 mb-2">
 															<div className="flex items-center gap-2 flex-wrap">
-																<span className="font-bold text-accent-400 uppercase text-sm">
+																<span className={`font-bold uppercase text-sm ${
+																	!isCurrentlyVisible ? "text-parchment-400" : "text-accent-400"
+																}`}>
 																	{feature.name}
 																</span>
 																<span className="text-xs uppercase tracking-wider text-parchment-400 bg-background-tertiary px-2 py-0.5 rounded">
@@ -3783,6 +3870,16 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 																{feature.isPassive && (
 																	<span className="text-xs uppercase tracking-wider text-blue-400 bg-blue-400/10 px-2 py-0.5 rounded border border-blue-400/30">
 																		Passive
+																	</span>
+																)}
+																{isHidden && (
+																	<span className="text-xs uppercase tracking-wider text-red-400 bg-red-400/10 px-2 py-0.5 rounded border border-red-400/30">
+																		Hidden
+																	</span>
+																)}
+																{isHideOnSheet && !isExplicitlyShown && (
+																	<span className="text-xs uppercase tracking-wider text-yellow-400 bg-yellow-400/10 px-2 py-0.5 rounded border border-yellow-400/30">
+																		Auto-Hidden
 																	</span>
 																)}
 																{feature.condition && (
@@ -3798,8 +3895,16 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 																	</span>
 																)}
 															</div>
-															{feature.uses && featureUsage && (
-																<div className="flex items-center gap-2">
+															<div className="flex items-center gap-2">
+																<button
+																	onClick={() => toggleFeatureVisibility(feature.name)}
+																	className="px-2 py-1 rounded bg-background-tertiary hover:bg-background-tertiary/70 text-parchment-300 text-xs font-semibold transition-colors"
+																	title={isHidden ? "Show this feature" : "Hide this feature"}
+																>
+																	{isHidden ? "Show" : "Hide"}
+																</button>
+																{feature.uses && featureUsage && (
+																	<>
 																	<span className="text-xs text-parchment-400 uppercase tracking-wider">
 																		Uses
 																	</span>
@@ -3834,8 +3939,9 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 																			/>
 																		))}
 																	</div>
-																</div>
-															)}
+																	</>
+																)}
+															</div>
 														</div>
 														<div className="text-xs text-parchment-300 leading-relaxed">
 															{feature.description}
@@ -4202,21 +4308,30 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 										)}
 
 									{/* Non-passive Class Features - All Classes */}
-									{character.classes && character.classes.length > 0 ? (
+									{character.classes && character.classes.length > 0 &&
 										character.classes.map((cl) => {
 											const shouldShow = actionFilter === "all" || actionFilter === cl.class.id;
-											const classActions = cl.class.features?.filter((f) => f.level <= cl.level && !f.isPassive && f.showOnSheet !== false) || [];
+											const classActions = cl.class.features?.filter((f) => {
+												if (f.level > cl.level || f.isPassive) return false;
+												const isHidden = hiddenFeatures.has(f.name);
+												const isHideOnSheet = f.showOnSheet === false;
+												if (isHidden) return showingHidden;
+												if (isHideOnSheet) return showingHidden;
+												return true;
+											}) || [];
 
 											if (!shouldShow || classActions.length === 0) return null;
 
 											return classActions.map((feature) => {
 												const featureKey = getFeatureKey(cl.class.id, feature.name);
 												const featureUsage = featureUses[featureKey];
+												const isHidden = hiddenFeatures.has(feature.name);
+												const isHideOnSheet = feature.showOnSheet === false;
 
 												return (
 													<div
 														key={`${cl.class.id}-${feature.name}`}
-														className="bg-background-secondary border border-accent-400/30 rounded-lg p-4"
+														className={`bg-background-secondary border border-accent-400/30 rounded-lg p-4 ${isHidden || isHideOnSheet ? "opacity-60" : ""}`}
 													>
 														<div className="flex items-center justify-between gap-2 mb-2">
 															<div className="flex items-center gap-2 flex-wrap">
@@ -4226,6 +4341,16 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 																<span className="text-xs uppercase tracking-wider text-parchment-400 bg-background-tertiary px-2 py-0.5 rounded">
 																	{cl.class.name} Feature
 																</span>
+																{isHidden && (
+																	<span className="text-xs uppercase tracking-wider text-red-400 bg-red-400/10 px-2 py-0.5 rounded border border-red-400/30">
+																		Hidden
+																	</span>
+																)}
+																{isHideOnSheet && (
+																	<span className="text-xs uppercase tracking-wider text-yellow-400 bg-yellow-400/10 px-2 py-0.5 rounded border border-yellow-400/30">
+																		Auto-Hidden
+																	</span>
+																)}
 																{feature.isPassive && (
 																	<span className="text-xs uppercase tracking-wider text-blue-400 bg-blue-400/10 px-2 py-0.5 rounded border border-blue-400/30">
 																		Passive
@@ -4244,8 +4369,16 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 																	</span>
 																)}
 															</div>
-															{feature.uses && featureUsage && (
-																<div className="flex items-center gap-2">
+															<div className="flex items-center gap-2">
+																<button
+																	onClick={() => toggleFeatureVisibility(feature.name)}
+																	className="px-2 py-1 rounded bg-background-tertiary hover:bg-background-tertiary/70 text-parchment-300 text-xs font-semibold transition-colors"
+																	title={isHidden ? "Show this feature" : "Hide this feature"}
+																>
+																	{isHidden ? "Show" : "Hide"}
+																</button>
+																{feature.uses && featureUsage && (
+																	<>
 																	<span className="text-xs text-parchment-400 uppercase tracking-wider">
 																		Uses
 																	</span>
@@ -4280,8 +4413,9 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 																			/>
 																		))}
 																	</div>
-																</div>
-															)}
+																	</>
+																)}
+															</div>
 														</div>
 														<div className="text-xs text-parchment-300 leading-relaxed">
 															{feature.description}
@@ -4304,103 +4438,7 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 												);
 											});
 										})
-									) : (
-										(actionFilter === "all" || actionFilter === charClass.id) &&
-										charClass.features &&
-										charClass.features.filter(
-											(f: any) =>
-												f.level <= level && !f.isPassive
-										).length > 0 && (
-											<>
-												{charClass.features
-													.filter(
-														(f: any) =>
-															f.level <= level &&
-															!f.isPassive &&
-															f.showOnSheet !== false
-													)
-													.map((feature: any) => {
-														const featureKey = getFeatureKey(charClass.id, feature.name);
-														const featureUsage = featureUses[featureKey];
-
-														return (
-															<div
-																key={feature.name}
-																className="bg-background-secondary border border-accent-400/30 rounded-lg p-4"
-															>
-																<div className="flex items-center justify-between gap-2 mb-2">
-																	<div className="flex items-center gap-2 flex-wrap">
-																		<span className="font-bold text-accent-400 uppercase text-sm">
-																			{feature.name}
-																		</span>
-																		<span className="text-xs uppercase tracking-wider text-parchment-400 bg-background-tertiary px-2 py-0.5 rounded">
-																			{charClass.name} Feature
-																		</span>
-																		{feature.condition && (
-																			<span
-																				className={`text-xs uppercase tracking-wider px-2 py-0.5 rounded border-2 cursor-help ${
-																					isFeatureActive(feature)
-																						? "text-green-500/80 bg-green-500/10 border-green-500/30"
-																						: "text-red-400 bg-red-400/10 border-red-400"
-																				}`}
-																				title={getFeatureConditionDescription(feature)}
-																			>
-																				{isFeatureActive(feature) ? "Active" : "Inactive"}
-																			</span>
-																		)}
-																	</div>
-																	{feature.uses && featureUsage && (
-																		<div className="flex items-center gap-2">
-																			<span className="text-xs text-parchment-400 uppercase tracking-wider">
-																				Uses
-																			</span>
-																			<div className="flex gap-1">
-																				{Array.from({ length: featureUsage.max }).map((_, i) => (
-																					<button
-																						key={i}
-																						onClick={() => {
-																							setFeatureUses((prev) => ({
-																								...prev,
-																								[getFeatureKey(charClass.id, feature.name)]: {
-																									...prev[getFeatureKey(charClass.id, feature.name)],
-																									current: i + 1,
-																								},
-																							}));
-																						}}
-																						className={`w-6 h-6 rounded border-2 transition-colors ${
-																							i < featureUsage.current
-																								? "bg-accent-400 border-accent-400"
-																								: "border-accent-400/40 hover:bg-accent-400/20"
-																						}`}
-																					/>
-																				))}
-																			</div>
-																		</div>
-																	)}
-																</div>
-																<div className="text-xs text-parchment-300 leading-relaxed">
-																	{feature.description}
-																</div>
-																{feature.condition && !isFeatureActive(feature) && (
-																	<div className="mt-3 text-xs text-red-400 bg-red-400/10 border border-red-400 rounded px-3 py-3">
-																		<div className="mb-2">
-																			<span className="font-semibold">⚠ Requirement: </span>
-																			{feature.condition.description}
-																		</div>
-																		<button
-																			onClick={() => setFeaturesTab("inventory")}
-																			className="w-full py-1.5 px-3 rounded bg-red-400/20 hover:bg-red-400/30 border border-red-400/60 text-red-400 text-xs font-semibold transition-colors"
-																		>
-																			Go to Inventory →
-																		</button>
-																	</div>
-																)}
-															</div>
-														);
-													})}
-											</>
-										)
-									)}
+									}
 								</div>
 							)}
 
