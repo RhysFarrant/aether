@@ -1,12 +1,14 @@
 import { useState, useRef } from "react";
 import type { CharacterBuilderState } from "../../types/characterBuilder";
 import { useOrigins } from "../../hooks/useSRD";
+import ConfirmationModal from "../ConfirmationModal";
 
 interface Step3OriginProps {
 	state: CharacterBuilderState;
 	onUpdate: (updates: Partial<CharacterBuilderState>) => void;
 	onNext: () => void;
 	onPrevious: () => void;
+	onExpandedChange?: (expandedId: string | null) => void;
 }
 
 /**
@@ -15,13 +17,22 @@ interface Step3OriginProps {
  * Items smoothly slide to position when selected/deselected
  */
 export default function Step3Origin(props: Step3OriginProps) {
-	const { state, onUpdate, onNext } = props;
+	const { state, onUpdate, onNext, onExpandedChange } = props;
 	const origins = useOrigins();
 	const [expandedOriginId, setExpandedOriginId] = useState<string | null>(
 		state.originId
 	);
 	const [slideDistance, setSlideDistance] = useState<number>(0);
 	const itemRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+	const [showModal, setShowModal] = useState(false);
+	const [modalConfig, setModalConfig] = useState<{
+		title: string;
+		message: string;
+		onConfirm: () => void;
+		showSelectOption?: boolean;
+		onSelectAndContinue?: () => void;
+		selectOptionText?: string;
+	} | null>(null);
 
 	const handleOriginClick = (originId: string) => {
 		// Calculate slide distance before expanding
@@ -39,14 +50,35 @@ export default function Step3Origin(props: Step3OriginProps) {
 		// If clicking the already expanded origin, collapse it
 		if (expandedOriginId === originId) {
 			setExpandedOriginId(null);
+			onExpandedChange?.(null);
 		} else {
 			// Expand the clicked origin
 			setExpandedOriginId(originId);
+			onExpandedChange?.(originId);
 		}
 	};
 
 	const handleSelectOrigin = () => {
 		if (expandedOriginId) {
+			// Check if user is selecting a different origin than currently selected
+			if (state.originId && expandedOriginId !== state.originId) {
+				const expandedOrigin = origins.find((o) => o.id === expandedOriginId);
+				setModalConfig({
+					title: "Change Background?",
+					message: `You're about to change from your currently selected background. Select ${expandedOrigin?.name} and continue?`,
+					onConfirm: () => {
+						onUpdate({ originId: expandedOriginId });
+						setShowModal(false);
+						setTimeout(() => {
+							onNext();
+						}, 500);
+					},
+					showSelectOption: false,
+				});
+				setShowModal(true);
+				return;
+			}
+
 			onUpdate({ originId: expandedOriginId });
 			setTimeout(() => {
 				onNext();
@@ -252,6 +284,20 @@ export default function Step3Origin(props: Step3OriginProps) {
 						Click on a background to view its details and features
 					</p>
 				</div>
+			)}
+
+			{/* Confirmation Modal */}
+			{modalConfig && (
+				<ConfirmationModal
+					isOpen={showModal}
+					onClose={() => setShowModal(false)}
+					onConfirm={modalConfig.onConfirm}
+					title={modalConfig.title}
+					message={modalConfig.message}
+					showSelectOption={modalConfig.showSelectOption}
+					onSelectAndContinue={modalConfig.onSelectAndContinue}
+					selectOptionText={modalConfig.selectOptionText}
+				/>
 			)}
 		</div>
 	);
