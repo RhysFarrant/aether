@@ -658,10 +658,10 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 	const [newItemName, setNewItemName] = useState("");
 	const [selectedItem, setSelectedItem] = useState<string | null>(null);
 	const [showSuggestions, setShowSuggestions] = useState(false);
-	const [editingItemIndex, setEditingItemIndex] = useState<number | null>(null);
-	const [editingItemName, setEditingItemName] = useState("");
-	const [addingTagToIndex, setAddingTagToIndex] = useState<number | null>(null);
-	const [newTag, setNewTag] = useState("");
+	// const [editingItemIndex, setEditingItemIndex] = useState<number | null>(null);
+	// const [editingItemName, setEditingItemName] = useState("");
+	// const [addingTagToIndex, setAddingTagToIndex] = useState<number | null>(null);
+	// const [newTag, setNewTag] = useState("");
 	const [showBrowseItems, setShowBrowseItems] = useState(false);
 	const [selectedItemsToBrowse, setSelectedItemsToBrowse] = useState<Set<string>>(new Set());
 	const [browseSearch, setBrowseSearch] = useState("");
@@ -1165,17 +1165,17 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 		return getItemBlockedFeatures(item).length > 0;
 	};
 
-	// Toggle ignored warning
-	const toggleIgnoreWarning = (warningId: string) => {
-		const ignoredWarnings = character.ignoredItemWarnings || [];
-		const newIgnored = ignoredWarnings.includes(warningId)
-			? ignoredWarnings.filter(id => id !== warningId)
-			: [...ignoredWarnings, warningId];
+	// Simplified inventory - this function not currently used
+	// const toggleIgnoreWarning = (warningId: string) => {
+	// 	const ignoredWarnings = character.ignoredItemWarnings || [];
+	// 	const newIgnored = ignoredWarnings.includes(warningId)
+	// 		? ignoredWarnings.filter(id => id !== warningId)
+	// 		: [...ignoredWarnings, warningId];
 
-		updateCharacter(character.id, {
-			ignoredItemWarnings: newIgnored
-		});
-	};
+	// 	updateCharacter(character.id, {
+	// 		ignoredItemWarnings: newIgnored
+	// 	});
+	// };
 
 	// Group inventory items by name (excluding custom named items)
 	const groupedInventoryItems = inventoryItems.reduce((acc, item, originalIndex) => {
@@ -1216,6 +1216,13 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 	groupedInventoryItems.forEach(group => {
 		if (group.count > 1) group.isGroup = true;
 	});
+
+	// Organize items by container
+	const containers = inventoryItems.filter(item => item.isContainer);
+	const itemsOnPerson = groupedInventoryItems.filter(group => !group.item.containerId && !group.item.isContainer);
+	const getItemsInContainer = (containerName: string) => {
+		return groupedInventoryItems.filter(group => group.item.containerId === containerName);
+	};
 
 	// Extract equipped weapons from inventory items
 	const weapons = inventoryItems
@@ -1801,6 +1808,117 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 		setAssigningToContainer(null);
 	};
 
+	// Helper to render a single item card
+	const renderItemCard = (group: { item: InventoryItem; count: number; indices: number[]; isGroup: boolean }, showContainerControl: boolean = false) => {
+		const item = group.item;
+		const idx = group.indices[0];
+		const isShield = item.armorData?.category === "Shield" || item.name.toLowerCase().includes("shield");
+		const isArmor = (item.armorData !== undefined && !isShield) || (item.customStats?.armorClass !== undefined && !isShield) ||
+			(!isShield && (item.name.toLowerCase().includes("armor") || item.name.toLowerCase().includes("leather") ||
+			item.name.toLowerCase().includes("chain") || item.name.toLowerCase().includes("plate")));
+		const isWeapon = item.weaponData !== undefined || item.customStats?.damage !== undefined;
+		const isEquipped = equippedArmor === item.name || (isShield && equippedShield);
+		const causingIssues = isItemCausingIssues(item);
+		const isArmorNotProficient = (isArmor || isShield) && !isProficientWithArmor(item);
+		const isWeaponNotProficient = isWeapon && !isArmor && !isProficientWithWeapon(item);
+
+		return (
+			<div
+				key={idx}
+				className={`bg-background-secondary border rounded-lg p-2 ${
+					causingIssues
+						? "border-red-400 border-2 bg-red-400/5"
+						: isEquipped
+						? "border-accent-400 bg-accent-400/10"
+						: "border-accent-400/30"
+				}`}
+			>
+				<div className="flex items-center justify-between">
+					<div className="flex items-center gap-2 flex-1 min-w-0">
+						<div className="flex flex-col">
+							<span className="font-semibold text-parchment-100 text-sm truncate">
+								{item.customName || item.name}
+								{group.count > 1 && (
+									<span className="ml-2 text-accent-400 font-bold">
+										×{group.count}
+									</span>
+								)}
+							</span>
+							{item.customName && (
+								<span className="text-xs text-parchment-400 truncate">
+									{item.name}
+								</span>
+							)}
+						</div>
+						{isEquipped && (
+							<span className="text-xs uppercase tracking-wider text-accent-400 bg-accent-400/20 px-1.5 py-0.5 rounded flex-shrink-0">
+								Equipped
+							</span>
+						)}
+						{isArmorNotProficient && (
+							<span className="text-xs uppercase tracking-wider text-red-400 bg-red-400/20 px-1.5 py-0.5 rounded border border-red-400/40 flex-shrink-0">
+								Not Proficient
+							</span>
+						)}
+						{isWeaponNotProficient && (
+							<span className="text-xs uppercase tracking-wider text-red-400 bg-red-400/20 px-1.5 py-0.5 rounded border border-red-400/40 flex-shrink-0">
+								Not Proficient
+							</span>
+						)}
+						<span className="text-xs text-parchment-400 flex-shrink-0">
+							{item.weight} lb
+						</span>
+					</div>
+					<div className="flex gap-1 ml-2">
+						{(isArmor || isShield) && (
+							<button
+								onClick={() =>
+									isShield
+										? toggleEquipShield()
+										: toggleEquipArmor(item.name)
+								}
+								className={`px-2 py-1 rounded text-xs font-semibold transition-colors ${
+									isEquipped
+										? "bg-background-tertiary hover:bg-background-tertiary/70 text-parchment-300"
+										: "bg-accent-400/20 hover:bg-accent-400/30 text-accent-400"
+								}`}
+							>
+								{isEquipped ? "Unequip" : "Equip"}
+							</button>
+						)}
+						{isWeapon && !isArmor && !isShield && (
+							<button
+								onClick={() => toggleEquipWeapon(item.name)}
+								className={`px-2 py-1 rounded text-xs font-semibold transition-colors ${
+									item.equipped
+										? "bg-background-tertiary hover:bg-background-tertiary/70 text-parchment-300"
+										: "bg-accent-400/20 hover:bg-accent-400/30 text-accent-400"
+								}`}
+							>
+								{item.equipped ? "Unequip" : "Equip"}
+							</button>
+						)}
+						{showContainerControl && !item.isContainer && (
+							<button
+								onClick={() => setAssigningToContainer(idx)}
+								className="px-2 py-1 rounded bg-background-tertiary hover:bg-background-tertiary/70 text-parchment-300 text-xs font-semibold transition-colors"
+								title="Move to container"
+							>
+								📦
+							</button>
+						)}
+						<button
+							onClick={() => removeItem(idx)}
+							className="px-2 py-1 rounded bg-red-900/20 hover:bg-red-900/30 text-red-400 text-xs font-semibold transition-colors"
+						>
+							×
+						</button>
+					</div>
+				</div>
+			</div>
+		);
+	};
+
 	const toggleEquipArmor = (itemName: string) => {
 		if (equippedArmor === itemName) {
 			setEquippedArmor(null);
@@ -1823,64 +1941,65 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 		);
 	};
 
-	const startEditingItem = (index: number) => {
-		const item = inventoryItems[index];
-		setEditingItemIndex(index);
-		setEditingItemName(item.customName || "");
-	};
+	// Simplified inventory - these functions not currently used
+	// const startEditingItem = (index: number) => {
+	// 	const item = inventoryItems[index];
+	// 	setEditingItemIndex(index);
+	// 	setEditingItemName(item.customName || "");
+	// };
 
-	const saveItemName = (index: number) => {
-		if (editingItemName.trim()) {
-			setInventoryItems(prevItems =>
-				prevItems.map((item, i) =>
-					i === index
-						? { ...item, customName: editingItemName.trim() }
-						: item
-				)
-			);
-		}
-		setEditingItemIndex(null);
-		setEditingItemName("");
-	};
+	// const saveItemName = (index: number) => {
+	// 	if (editingItemName.trim()) {
+	// 		setInventoryItems(prevItems =>
+	// 			prevItems.map((item, i) =>
+	// 				i === index
+	// 					? { ...item, customName: editingItemName.trim() }
+	// 					: item
+	// 			)
+	// 		);
+	// 	}
+	// 	setEditingItemIndex(null);
+	// 	setEditingItemName("");
+	// };
 
-	const cancelEditingItem = () => {
-		setEditingItemIndex(null);
-		setEditingItemName("");
-	};
+	// const cancelEditingItem = () => {
+	// 	setEditingItemIndex(null);
+	// 	setEditingItemName("");
+	// };
 
-	const startAddingTag = (index: number) => {
-		setAddingTagToIndex(index);
-		setNewTag("");
-	};
+	// const startAddingTag = (index: number) => {
+	// 	setAddingTagToIndex(index);
+	// 	setNewTag("");
+	// };
 
-	const saveTag = (index: number) => {
-		if (!newTag.trim()) return;
+	// const saveTag = (index: number) => {
+	// 	if (!newTag.trim()) return;
 
-		setInventoryItems(prevItems =>
-			prevItems.map((item, i) =>
-				i === index
-					? { ...item, tags: [...(item.tags || []), newTag.trim()] }
-					: item
-			)
-		);
-		setAddingTagToIndex(null);
-		setNewTag("");
-	};
+	// 	setInventoryItems(prevItems =>
+	// 		prevItems.map((item, i) =>
+	// 			i === index
+	// 				? { ...item, tags: [...(item.tags || []), newTag.trim()] }
+	// 				: item
+	// 		)
+	// 	);
+	// 	setAddingTagToIndex(null);
+	// 	setNewTag("");
+	// };
 
-	const cancelAddingTag = () => {
-		setAddingTagToIndex(null);
-		setNewTag("");
-	};
+	// const cancelAddingTag = () => {
+	// 	setAddingTagToIndex(null);
+	// 	setNewTag("");
+	// };
 
-	const removeTag = (index: number, tagToRemove: string) => {
-		setInventoryItems(prevItems =>
-			prevItems.map((item, i) =>
-				i === index
-					? { ...item, tags: (item.tags || []).filter(tag => tag !== tagToRemove) }
-					: item
-			)
-		);
-	};
+	// const removeTag = (index: number, tagToRemove: string) => {
+	// 	setInventoryItems(prevItems =>
+	// 		prevItems.map((item, i) =>
+	// 			i === index
+	// 				? { ...item, tags: (item.tags || []).filter(tag => tag !== tagToRemove) }
+	// 				: item
+	// 		)
+	// 	);
+	// };
 
 	const toggleFeatureVisibility = (featureName: string) => {
 		setHiddenFeatures(prev => {
@@ -5581,332 +5700,123 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 									)}
 
 									{/* Inventory Items */}
-									<div className="space-y-2">
+									<div className="space-y-4">
 										{inventoryItems &&
 										inventoryItems.length > 0 ? (
-											groupedInventoryItems.map((group) => {
-												const item = group.item;
-												const idx = group.indices[0]; // Use first index for operations
-												const isShield =
-													item.armorData?.category ===
-														"Shield" ||
-													item.name
-														.toLowerCase()
-														.includes("shield");
-												const isArmor =
-													(item.armorData !==
-														undefined &&
-														!isShield) ||
-													(item.customStats
-														?.armorClass !==
-														undefined &&
-														!isShield) ||
-													(!isShield &&
-														(item.name
-															.toLowerCase()
-															.includes(
-																"armor"
-															) ||
-															item.name
-																.toLowerCase()
-																.includes(
-																	"leather"
-																) ||
-															item.name
-																.toLowerCase()
-																.includes(
-																	"chain"
-																) ||
-															item.name
-																.toLowerCase()
-																.includes(
-																	"plate"
-																)));
-												const isWeapon =
-													item.weaponData !==
-														undefined ||
-													item.customStats?.damage !==
-														undefined;
-												const isEquipped =
-													equippedArmor ===
-														item.name ||
-													(isShield &&
-														equippedShield);
-												const causingIssues = isItemCausingIssues(item);
-												const isArmorNotProficient = (isArmor || isShield) && !isProficientWithArmor(item);
-												const isWeaponNotProficient = isWeapon && !isArmor && !isProficientWithWeapon(item);
-
-												return (
-													<div
-														key={idx}
-														className={`bg-background-secondary border rounded-lg p-2 ${
-															causingIssues
-																? "border-red-400 border-2 bg-red-400/5"
-																: isEquipped
-																? "border-accent-400 bg-accent-400/10"
-																: "border-accent-400/30"
-														}`}
-													>
-														<div className="flex items-center justify-between">
-															<div className="flex items-center gap-2 flex-1 min-w-0">
-																{editingItemIndex === idx ? (
-																	<div className="flex items-center gap-2 flex-1">
-																		<input
-																			type="text"
-																			value={editingItemName}
-																			onChange={(e) => setEditingItemName(e.target.value)}
-																			onKeyDown={(e) => {
-																				if (e.key === "Enter") saveItemName(idx);
-																				if (e.key === "Escape") cancelEditingItem();
-																			}}
-																			className="flex-1 bg-background-tertiary border border-accent-400/30 rounded px-2 py-1 text-sm text-parchment-100 focus:outline-none focus:border-accent-400"
-																			placeholder={item.name}
-																			autoFocus
-																		/>
-																		<button
-																			onClick={() => saveItemName(idx)}
-																			className="px-2 py-1 rounded bg-accent-400/20 hover:bg-accent-400/30 text-accent-400 text-xs font-semibold"
-																		>
-																			✓
-																		</button>
-																		<button
-																			onClick={cancelEditingItem}
-																			className="px-2 py-1 rounded bg-background-tertiary hover:bg-background-tertiary/70 text-parchment-300 text-xs font-semibold"
-																		>
-																			✕
-																		</button>
-																	</div>
-																) : (
-																	<>
-																		<div className="flex items-center gap-2">
-																			<div className="flex flex-col">
-																				<span className="font-semibold text-parchment-100 text-sm truncate">
-																					{item.customName || item.name}
-																					{group.count > 1 && (
-																						<span className="ml-2 text-accent-400 font-bold">
-																							×{group.count}
-																						</span>
-																					)}
-																				</span>
-																				{item.customName && (
-																					<span className="text-xs text-parchment-400 truncate">
-																						{item.name}
-																					</span>
-																				)}
-																			</div>
-																		</div>
-																	</>
-																)}
-																{isEquipped && (
-																	<span className="text-xs uppercase tracking-wider text-accent-400 bg-accent-400/20 px-1.5 py-0.5 rounded flex-shrink-0">
-																		Equipped
-																	</span>
-																)}
-																{isArmorNotProficient && (
-																	<span className="text-xs uppercase tracking-wider text-red-400 bg-red-400/20 px-1.5 py-0.5 rounded border border-red-400/40 flex-shrink-0">
-																		Not Proficient
-																	</span>
-																)}
-																{isWeaponNotProficient && (
-																	<span className="text-xs uppercase tracking-wider text-red-400 bg-red-400/20 px-1.5 py-0.5 rounded border border-red-400/40 flex-shrink-0">
-																		Not Proficient
-																	</span>
-																)}
-																{isArmor &&
-																	!isShield && (
-																		<span className="text-xs text-parchment-400 flex-shrink-0">
-																			(Armor,
-																			AC{" "}
-																			{item
-																				.armorData
-																				?.armorClass ||
-																				item
-																					.customStats
-																					?.armorClass}
-																			)
-																		</span>
-																	)}
-																{isShield && (
-																	<span className="text-xs text-parchment-400 flex-shrink-0">
-																		(Shield,
-																		+
-																		{item
-																			.armorData
-																			?.armorClass ||
-																			2}
-																		)
-																	</span>
-																)}
-																{isWeapon &&
-																	!isArmor && (
-																		<span className="text-xs text-parchment-400 flex-shrink-0">
-																			(Weapon,{" "}
-																			{item
-																				.weaponData
-																				?.damage ||
-																				item
-																					.customStats
-																					?.damage}
-																			)
-																		</span>
-																	)}
-																{item.isCustom && (
-																	<span className="text-xs text-parchment-400 bg-background-tertiary px-1.5 py-0.5 rounded flex-shrink-0">
-																		Custom
-																	</span>
-																)}
-																<span className="text-xs text-parchment-400 flex-shrink-0">
-																	{
-																		item.weight
-																	}{" "}
-																	lb
-																</span>
-															</div>
-															<div className="flex gap-1 ml-2">
-																{(isArmor ||
-																	isShield) && (
-																	<button
-																		onClick={() =>
-																			isShield
-																				? toggleEquipShield()
-																				: toggleEquipArmor(
-																						item.name
-																				  )
-																		}
-																		className={`px-2 py-1 rounded text-xs font-semibold transition-colors ${
-																			isEquipped
-																				? "bg-background-tertiary hover:bg-background-tertiary/70 text-parchment-300"
-																				: "bg-accent-400/20 hover:bg-accent-400/30 text-accent-400"
-																		}`}
-																	>
-																		{isEquipped
-																			? "Unequip"
-																			: "Equip"}
-																	</button>
-																)}
-																{isWeapon && !isArmor && !isShield && (
-																	<button
-																		onClick={() =>
-																			toggleEquipWeapon(
-																				item.name
-																			)
-																		}
-																		className={`px-2 py-1 rounded text-xs font-semibold transition-colors ${
-																			item.equipped
-																				? "bg-background-tertiary hover:bg-background-tertiary/70 text-parchment-300"
-																				: "bg-accent-400/20 hover:bg-accent-400/30 text-accent-400"
-																		}`}
-																	>
-																		{item.equipped
-																			? "Unequip"
-																			: "Equip"}
-																	</button>
-																)}
-																{editingItemIndex !== idx && (
-																	<button
-																		onClick={() => startEditingItem(idx)}
-																		className="px-2 py-1 rounded bg-background-tertiary hover:bg-background-tertiary/70 text-parchment-300 text-xs font-semibold transition-colors"
-																		title="Rename item"
-																	>
-																		✎
-																	</button>
-																)}
-																<button
-																	onClick={() =>
-																		removeItem(
-																			idx
-																		)
-																	}
-																	className="px-2 py-1 rounded bg-red-900/20 hover:bg-red-900/30 text-red-400 text-xs font-semibold transition-colors"
-																>
-																	×
-																</button>
-															</div>
+											<>
+												{/* On-Person Items (not in containers) */}
+												{itemsOnPerson.length > 0 && (
+													<div className="space-y-2">
+														<div className="text-xs text-accent-400 uppercase tracking-wider font-semibold">
+															On Person
 														</div>
-														{causingIssues && (() => {
-															const blockedFeatures = getItemBlockedFeatures(item);
-															return blockedFeatures.length > 0 && (
-																<div className="mt-2 text-xs text-red-400 bg-red-400/10 border border-red-400 rounded px-2 py-1.5">
-																	<div className="font-semibold mb-1">⚠ Blocking:</div>
-																	<ul className="space-y-1 ml-4">
-																		{blockedFeatures.map(blocked => (
-																			<li key={blocked.id} className="flex items-center justify-between">
-																				<span>• {blocked.name}</span>
-																				<button
-																					onClick={() => toggleIgnoreWarning(blocked.id)}
-																					className="text-xs px-2 py-0.5 rounded bg-red-400/20 hover:bg-red-400/30 transition-colors ml-2"
-																					title="Ignore this warning"
-																				>
-																					Ignore
-																				</button>
-																			</li>
-																		))}
-																	</ul>
-																</div>
-															);
-														})()}
+														{itemsOnPerson.map((group) => renderItemCard(group, true))}
+													</div>
+												)}
 
-														{/* Tags Section */}
-														<div className="mt-2 space-y-1">
-															{item.tags && item.tags.length > 0 && (
-																<div className="flex flex-wrap gap-1">
-																	{item.tags.map((tag, tagIdx) => (
-																		<span
-																			key={tagIdx}
-																			className="inline-flex items-center gap-1 text-xs bg-accent-400/20 text-accent-400 px-2 py-0.5 rounded border border-accent-400/30"
-																		>
-																			{tag}
-																			<button
-																				onClick={() => removeTag(idx, tag)}
-																				className="hover:text-red-400 transition-colors"
-																				title="Remove tag"
-																			>
-																				×
-																			</button>
-																		</span>
-																	))}
-																</div>
-															)}
+												{/* Container Sections */}
+												{containers.map((container, containerIdx) => {
+													const itemsInContainer = getItemsInContainer(container.customName!);
+													const capacityUsed = getContainerCapacityUsed(container.customName!, inventoryItems);
+													const totalWeight = getContainerTotalWeight(container, inventoryItems);
+													const isOverCapacity = container.containerCapacity && capacityUsed > container.containerCapacity;
 
-															{addingTagToIndex === idx ? (
+													return (
+														<div key={containerIdx} className="border border-accent-400/30 rounded-lg p-3 space-y-2">
+															{/* Container Header */}
+															<div className="flex items-center justify-between">
 																<div className="flex items-center gap-2">
-																	<input
-																		type="text"
-																		value={newTag}
-																		onChange={(e) => setNewTag(e.target.value)}
-																		onKeyDown={(e) => {
-																			if (e.key === "Enter") saveTag(idx);
-																			if (e.key === "Escape") cancelAddingTag();
-																		}}
-																		className="flex-1 bg-background-tertiary border border-accent-400/30 rounded px-2 py-1 text-xs text-parchment-100 focus:outline-none focus:border-accent-400"
-																		placeholder="Enter tag name..."
-																		autoFocus
-																	/>
+																	<span className="text-sm font-semibold text-accent-400 uppercase tracking-wider">
+																		{container.customName || container.name}
+																	</span>
+																	{container.containerCapacity ? (
+																		<span className={`text-xs ${isOverCapacity ? 'text-red-400' : 'text-parchment-400'}`}>
+																			{capacityUsed} / {container.containerCapacity} lbs
+																			{isOverCapacity && ' ⚠'}
+																		</span>
+																	) : (
+																		<span className="text-xs text-parchment-400">
+																			{capacityUsed} lbs (unlimited)
+																		</span>
+																	)}
+																	<span className="text-xs text-parchment-500">
+																		(Total: {totalWeight} lb)
+																	</span>
+																</div>
+																<div className="flex gap-2">
 																	<button
-																		onClick={() => saveTag(idx)}
-																		className="px-2 py-1 rounded bg-accent-400/20 hover:bg-accent-400/30 text-accent-400 text-xs font-semibold"
+																		onClick={() => toggleContainerOnPerson(inventoryItems.indexOf(container))}
+																		className={`px-2 py-1 rounded text-xs font-semibold transition-colors ${
+																			container.onPerson
+																				? "bg-accent-400/20 text-accent-400 border border-accent-400/40"
+																				: "bg-background-tertiary text-parchment-400 border border-parchment-400/20"
+																		}`}
+																		title={container.onPerson ? "On person (counts toward carry capacity)" : "Stored away (doesn't count toward carry capacity)"}
 																	>
-																		✓
+																		{container.onPerson ? "On Person" : "Stored"}
 																	</button>
 																	<button
-																		onClick={cancelAddingTag}
-																		className="px-2 py-1 rounded bg-background-tertiary hover:bg-background-tertiary/70 text-parchment-300 text-xs font-semibold"
+																		onClick={() => removeItem(inventoryItems.indexOf(container))}
+																		className="px-2 py-1 rounded bg-red-900/20 hover:bg-red-900/30 text-red-400 text-xs font-semibold transition-colors"
 																	>
-																		✕
+																		×
 																	</button>
+																</div>
+															</div>
+
+															{/* Items in Container */}
+															{itemsInContainer.length > 0 ? (
+																<div className="space-y-1 pl-4 border-l-2 border-accent-400/20">
+																	{itemsInContainer.map((group) => renderItemCard(group, false))}
 																</div>
 															) : (
-																<button
-																	onClick={() => startAddingTag(idx)}
-																	className="text-xs px-2 py-1 rounded bg-background-tertiary hover:bg-background-tertiary/70 text-parchment-300 font-semibold transition-colors"
-																>
-																	+ Add Tag
-																</button>
+																<div className="text-xs text-parchment-500 italic pl-4">
+																	Empty
+																</div>
 															)}
 														</div>
+													);
+												})}
+
+												{/* Move to Container Modal */}
+												{assigningToContainer !== null && (
+													<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+														<div className="bg-background-primary border-2 border-accent-400 rounded-lg p-4 max-w-md w-full mx-4">
+															<div className="text-sm text-accent-400 uppercase tracking-wider mb-3 font-semibold">
+																Move Item to Container
+															</div>
+															<div className="space-y-2">
+																<button
+																	onClick={() => assignItemToContainer(assigningToContainer, null)}
+																	className="w-full text-left px-3 py-2 rounded bg-background-secondary hover:bg-background-tertiary border border-accent-400/30 text-parchment-200 text-sm transition-colors"
+																>
+																	On Person (No Container)
+																</button>
+																{containers.map((container, idx) => (
+																	<button
+																		key={idx}
+																		onClick={() => assignItemToContainer(assigningToContainer, container.customName!)}
+																		className="w-full text-left px-3 py-2 rounded bg-background-secondary hover:bg-background-tertiary border border-accent-400/30 text-parchment-200 text-sm transition-colors"
+																	>
+																		{container.customName || container.name}
+																		{container.containerCapacity && (
+																			<span className="text-xs text-parchment-400 ml-2">
+																				({getContainerCapacityUsed(container.customName!, inventoryItems)} / {container.containerCapacity} lbs)
+																			</span>
+																		)}
+																	</button>
+																))}
+																<button
+																	onClick={() => setAssigningToContainer(null)}
+																	className="w-full px-3 py-2 rounded bg-background-tertiary border border-accent-400/20 text-parchment-300 text-sm font-semibold transition-colors hover:bg-background-tertiary/70 mt-2"
+																>
+																	Cancel
+																</button>
+															</div>
+														</div>
 													</div>
-												);
-											})
+												)}
+											</>
 										) : (
 											<div className="text-center py-8 text-parchment-400 text-sm">
 												No equipment
