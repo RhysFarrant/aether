@@ -1,14 +1,15 @@
 /**
  * Router Configuration
  */
-import { createBrowserRouter } from "react-router-dom";
+import { createBrowserRouter, Navigate } from "react-router-dom";
 import App from "./App";
 import {
-	HomePage,
 	CharacterListPage,
 	CreateCharacterPage,
 	CharacterSheetPage,
+	LoginPage,
 } from "./pages";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 /**
  * Route definitions
@@ -20,19 +21,35 @@ export const router = createBrowserRouter([
 		children: [
 			{
 				index: true,
-				element: <HomePage />,
+				element: <Navigate to="/login" replace />,
+			},
+			{
+				path: "login",
+				element: <LoginPage />,
 			},
 			{
 				path: "characters",
-				element: <CharacterListPage />,
+				element: (
+					<ProtectedRoute>
+						<CharacterListPage />
+					</ProtectedRoute>
+				),
 			},
 			{
 				path: "create",
-				element: <CreateCharacterPage />,
+				element: (
+					<ProtectedRoute>
+						<CreateCharacterPage />
+					</ProtectedRoute>
+				),
 			},
 			{
 				path: "characters/:id",
-				element: <CharacterSheetPage />,
+				element: (
+					<ProtectedRoute>
+						<CharacterSheetPage />
+					</ProtectedRoute>
+				),
 			},
 		],
 	},

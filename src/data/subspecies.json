@@ -9,15 +9,18 @@
     "traits": [
       {
         "name": "Elf Weapon Training",
-        "description": "You have proficiency with the longsword, shortsword, shortbow, and longbow."
+        "description": "You have proficiency with the longsword, shortsword, shortbow, and longbow.",
+        "showOnSheet": false
       },
       {
         "name": "Cantrip",
-        "description": "You know one cantrip of your choice from the wizard spell list. Intelligence is your spellcasting ability for it."
+        "description": "You know one cantrip of your choice from the wizard spell list. Intelligence is your spellcasting ability for it.",
+        "showOnSheet": false
       },
       {
         "name": "Extra Language",
-        "description": "You can speak, read, and write one extra language of your choice."
+        "description": "You can speak, read, and write one extra language of your choice.",
+        "showOnSheet": false
       }
     ],
     "proficiencies": ["Longsword", "Shortsword", "Shortbow", "Longbow"],
@@ -37,7 +40,9 @@
     "traits": [
       {
         "name": "Dwarven Toughness",
-        "description": "Your hit point maximum increases by 1, and it increases by 1 every time you gain a level."
+        "description": "Your hit point maximum increases by 1, and it increases by 1 every time you gain a level.",
+        "isPassive": true,
+        "hpBonus": "level"
       }
     ],
     "description": "As a hill dwarf, you have keen senses, deep intuition, and remarkable resilience. The gold dwarves of Faerûn in their mighty southern kingdom are hill dwarves, as are the exiled Neidar and the debased Klar of Krynn in the Dragonlance setting."
@@ -52,7 +57,8 @@
     "traits": [
       {
         "name": "Naturally Stealthy",
-        "description": "You can attempt to hide even when you are obscured only by a creature that is at least one size larger than you."
+        "description": "You can attempt to hide even when you are obscured only by a creature that is at least one size larger than you.",
+        "isPassive": true
       }
     ],
     "description": "As a lightfoot halfling, you can easily hide from notice, even using other people as cover. You're inclined to be affable and get along well with others. In the Forgotten Realms, lightfoot halflings have spread the farthest and thus are the most common variety. Lightfoot halflings are more prone to wanderlust than other halflings, and often dwell alongside other races or take up a nomadic life."

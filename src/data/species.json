@@ -33,15 +33,19 @@
     "traits": [
       {
         "name": "Darkvision",
-        "description": "Accustomed to twilit forests and the night sky, you have superior vision in dark and dim conditions. You can see in dim light within 60 feet of you as if it were bright light, and in darkness as if it were dim light. You can't discern color in darkness, only shades of gray."
+        "description": "Accustomed to twilit forests and the night sky, you have superior vision in dark and dim conditions. You can see in dim light within 60 feet of you as if it were bright light, and in darkness as if it were dim light. You can't discern color in darkness, only shades of gray.",
+        "isPassive": true
       },
       {
         "name": "Fey Ancestry",
-        "description": "You have advantage on saving throws against being charmed, and magic can't put you to sleep."
+        "description": "You have advantage on saving throws against being charmed, and magic can't put you to sleep.",
+        "isPassive": true
       },
       {
         "name": "Trance",
-        "description": "Elves don't need to sleep. Instead, they meditate deeply, remaining semiconscious, for 4 hours a day."
+        "description": "Elves don't need to sleep. Instead, they meditate deeply, remaining semiconscious, for 4 hours a day.",
+        "isPassive": true,
+        "showOnSheet": false
       }
     ],
     "proficiencies": ["Perception"],
@@ -62,15 +66,19 @@
     "traits": [
       {
         "name": "Darkvision",
-        "description": "Accustomed to life underground, you have superior vision in dark and dim conditions. You can see in dim light within 60 feet of you as if it were bright light, and in darkness as if it were dim light. You can't discern color in darkness, only shades of gray."
+        "description": "Accustomed to life underground, you have superior vision in dark and dim conditions. You can see in dim light within 60 feet of you as if it were bright light, and in darkness as if it were dim light. You can't discern color in darkness, only shades of gray.",
+        "isPassive": true
       },
       {
         "name": "Dwarven Resilience",
-        "description": "You have advantage on saving throws against poison, and you have resistance against poison damage."
+        "description": "You have advantage on saving throws against poison, and you have resistance against poison damage.",
+        "isPassive": true,
+        "resistances": ["poison"]
       },
       {
         "name": "Stonecunning",
-        "description": "Whenever you make an Intelligence (History) check related to the origin of stonework, you are considered proficient in the History skill and add double your proficiency bonus to the check, instead of your normal proficiency bonus."
+        "description": "Whenever you make an Intelligence (History) check related to the origin of stonework, you are considered proficient in the History skill and add double your proficiency bonus to the check, instead of your normal proficiency bonus.",
+        "isPassive": true
       }
     ],
     "proficiencies": ["Battleaxe", "Handaxe", "Light Hammer", "Warhammer"],
@@ -96,15 +104,18 @@
     "traits": [
       {
         "name": "Lucky",
-        "description": "When you roll a 1 on the d20 for an attack roll, ability check, or saving throw, you can reroll the die and must use the new roll."
+        "description": "When you roll a 1 on the d20 for an attack roll, ability check, or saving throw, you can reroll the die and must use the new roll.",
+        "isPassive": true
       },
       {
         "name": "Brave",
-        "description": "You have advantage on saving throws against being frightened."
+        "description": "You have advantage on saving throws against being frightened.",
+        "isPassive": true
       },
       {
         "name": "Halfling Nimbleness",
-        "description": "You can move through the space of any creature that is of a size larger than yours."
+        "description": "You can move through the space of any creature that is of a size larger than yours.",
+        "isPassive": true
       }
     ],
     "languages": ["Common", "Halfling"],

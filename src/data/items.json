@@ -1,0 +1,370 @@
+{
+  "Backpack": {
+    "weight": "5 lb",
+    "cost": "2 gp",
+    "description": "A backpack can hold 30 pounds of gear",
+    "isContainer": true,
+    "capacity": 30
+  },
+  "Bedroll": {
+    "weight": "7 lb",
+    "cost": "1 gp",
+    "description": "A bedroll for sleeping"
+  },
+  "Rope, hempen (50 feet)": {
+    "weight": "10 lb",
+    "cost": "1 gp",
+    "description": "50 feet of hempen rope"
+  },
+  "Rope, silk (50 feet)": {
+    "weight": "5 lb",
+    "cost": "10 gp",
+    "description": "50 feet of silk rope"
+  },
+  "Torch": {
+    "weight": "1 lb",
+    "cost": "1 cp",
+    "description": "A torch burns for 1 hour, providing bright light in a 20-foot radius and dim light for an additional 20 feet"
+  },
+  "Tinderbox": {
+    "weight": "1 lb",
+    "cost": "5 sp",
+    "description": "A tinderbox for starting fires"
+  },
+  "Rations (1 day)": {
+    "weight": "2 lb",
+    "cost": "5 sp",
+    "description": "One day of rations"
+  },
+  "Waterskin": {
+    "weight": "5 lb",
+    "cost": "2 sp",
+    "description": "A waterskin holds 4 pints of liquid"
+  },
+  "Potion of Healing": {
+    "weight": "0.5 lb",
+    "cost": "50 gp",
+    "description": "You regain 2d4 + 2 hit points when you drink this potion"
+  },
+  "Crowbar": {
+    "weight": "5 lb",
+    "cost": "2 gp",
+    "description": "Using a crowbar grants advantage to Strength checks where the crowbar's leverage can be applied"
+  },
+  "Hammer": {
+    "weight": "3 lb",
+    "cost": "1 gp",
+    "description": "A hammer for driving pitons or other purposes"
+  },
+  "Piton": {
+    "weight": "0.25 lb",
+    "cost": "5 cp",
+    "description": "A metal spike for climbing"
+  },
+  "Oil (flask)": {
+    "weight": "1 lb",
+    "cost": "1 sp",
+    "description": "Oil usually comes in a clay flask that holds 1 pint"
+  },
+  "Lantern, hooded": {
+    "weight": "2 lb",
+    "cost": "5 gp",
+    "description": "A hooded lantern casts bright light in a 30-foot radius and dim light for an additional 30 feet"
+  },
+  "Lantern, bullseye": {
+    "weight": "2 lb",
+    "cost": "10 gp",
+    "description": "A bullseye lantern casts bright light in a 60-foot cone and dim light for an additional 60 feet"
+  },
+  "Shovel": {
+    "weight": "5 lb",
+    "cost": "2 gp",
+    "description": "A shovel for digging"
+  },
+  "Grappling hook": {
+    "weight": "4 lb",
+    "cost": "2 gp",
+    "description": "A grappling hook for climbing"
+  },
+  "Ball bearings (bag of 1,000)": {
+    "weight": "2 lb",
+    "cost": "1 gp",
+    "description": "A bag of 1,000 ball bearings can cover a 10-foot square area"
+  },
+  "Caltrops (bag of 20)": {
+    "weight": "2 lb",
+    "cost": "1 gp",
+    "description": "A bag of 20 caltrops can cover a 5-foot square area"
+  },
+  "Manacles": {
+    "weight": "6 lb",
+    "cost": "2 gp",
+    "description": "Manacles can bind a Small or Medium creature"
+  },
+  "Mirror, steel": {
+    "weight": "0.5 lb",
+    "cost": "5 gp",
+    "description": "A steel mirror useful for looking around corners"
+  },
+  "Holy symbol": {
+    "weight": "1 lb",
+    "cost": "5 gp",
+    "description": "A holy symbol is a representation of a god or pantheon"
+  },
+  "Spellbook": {
+    "weight": "3 lb",
+    "cost": "50 gp",
+    "description": "Essential for wizards, a spellbook is a leather-bound tome with 100 blank vellum pages"
+  },
+  "Component pouch": {
+    "weight": "2 lb",
+    "cost": "25 gp",
+    "description": "A component pouch is a small, watertight leather belt pouch that has compartments to hold all the material components and other special items you need to cast your spells"
+  },
+  "Arcane focus": {
+    "weight": "1 lb",
+    "cost": "10 gp",
+    "description": "An arcane focus is a special item designed to channel the power of arcane spells"
+  },
+  "Druidic focus": {
+    "weight": "1 lb",
+    "cost": "10 gp",
+    "description": "A druidic focus might be a sprig of mistletoe or holly, a wand or scepter made of yew or another special wood, a staff drawn whole out of a living tree, or a totem object incorporating feathers, fur, bones, and teeth"
+  },
+  "Holy water (flask)": {
+    "weight": "1 lb",
+    "cost": "25 gp",
+    "description": "As an action, you can splash the contents of this flask onto a creature within 5 feet of you or throw it up to 20 feet"
+  },
+  "Healer's kit": {
+    "weight": "3 lb",
+    "cost": "5 gp",
+    "description": "This kit is a leather pouch containing bandages, salves, and splints. The kit has ten uses"
+  },
+  "Thieves' tools": {
+    "weight": "1 lb",
+    "cost": "25 gp",
+    "description": "This set of tools includes a small file, a set of lock picks, a small mirror mounted on a metal handle, a set of narrow-bladed scissors, and a pair of pliers"
+  },
+  "Disguise kit": {
+    "weight": "3 lb",
+    "cost": "25 gp",
+    "description": "This pouch of cosmetics, hair dye, and small props lets you create disguises that change your physical appearance"
+  },
+  "Herbalism kit": {
+    "weight": "3 lb",
+    "cost": "5 gp",
+    "description": "This kit contains a variety of instruments such as clippers, mortar and pestle, and pouches and vials used by herbalists to create remedies and potions"
+  },
+  "Poisoner's kit": {
+    "weight": "2 lb",
+    "cost": "50 gp",
+    "description": "A poisoner's kit includes the vials, chemicals, and other equipment necessary for the creation of poisons"
+  },
+  "Alchemist's supplies": {
+    "weight": "8 lb",
+    "cost": "50 gp",
+    "description": "These special tools include the items needed to pursue a craft or trade"
+  },
+  "Brewer's supplies": {
+    "weight": "9 lb",
+    "cost": "20 gp",
+    "description": "These special tools include the items needed to pursue a craft or trade"
+  },
+  "Mason's tools": {
+    "weight": "8 lb",
+    "cost": "10 gp",
+    "description": "These special tools include the items needed to pursue a craft or trade"
+  },
+  "Smith's tools": {
+    "weight": "8 lb",
+    "cost": "20 gp",
+    "description": "These special tools include the items needed to pursue a craft or trade"
+  },
+  "Climber's kit": {
+    "weight": "12 lb",
+    "cost": "25 gp",
+    "description": "A climber's kit includes special pitons, boot tips, gloves, and a harness"
+  },
+  "Mess kit": {
+    "weight": "1 lb",
+    "cost": "2 sp",
+    "description": "This tin box contains a cup and simple cutlery"
+  },
+  "Tent, two-person": {
+    "weight": "20 lb",
+    "cost": "2 gp",
+    "description": "A simple and portable canvas shelter"
+  },
+  "Burglar's Pack": {
+    "weight": "46 lb",
+    "cost": "16 gp",
+    "description": "Includes a backpack, a bag of 1,000 ball bearings, 10 feet of string, a bell, 5 candles, a crowbar, a hammer, 10 pitons, a hooded lantern, 2 flasks of oil, 5 days rations, a tinderbox, and a waterskin. The pack also has 50 feet of hempen rope strapped to the side of it"
+  },
+  "Diplomat's Pack": {
+    "weight": "39 lb",
+    "cost": "39 gp",
+    "description": "Includes a chest, 2 cases for maps and scrolls, a set of fine clothes, a bottle of ink, an ink pen, a lamp, 2 flasks of oil, 5 sheets of paper, a vial of perfume, sealing wax, and soap"
+  },
+  "Dungeoneer's Pack": {
+    "weight": "61.5 lb",
+    "cost": "12 gp",
+    "description": "Includes a backpack, a crowbar, a hammer, 10 pitons, 10 torches, a tinderbox, 10 days of rations, and a waterskin. The pack also has 50 feet of hempen rope strapped to the side of it"
+  },
+  "Entertainer's Pack": {
+    "weight": "40 lb",
+    "cost": "40 gp",
+    "description": "Includes a backpack, a bedroll, 2 costumes, 5 candles, 5 days of rations, a waterskin, and a disguise kit"
+  },
+  "Explorer's Pack": {
+    "weight": "59 lb",
+    "cost": "10 gp",
+    "description": "Includes a backpack, a bedroll, a mess kit, a tinderbox, 10 torches, 10 days of rations, and a waterskin. The pack also has 50 feet of hempen rope strapped to the side of it"
+  },
+  "Priest's Pack": {
+    "weight": "29 lb",
+    "cost": "19 gp",
+    "description": "Includes a backpack, a blanket, 10 candles, a tinderbox, an alms box, 2 blocks of incense, a censer, vestments, 2 days of rations, and a waterskin"
+  },
+  "Scholar's Pack": {
+    "weight": "22 lb",
+    "cost": "40 gp",
+    "description": "Includes a backpack, a book of lore, a bottle of ink, an ink pen, 10 sheets of parchment, a little bag of sand, and a small knife"
+  },
+  "Arrows (20)": {
+    "weight": "1 lb",
+    "cost": "1 gp",
+    "description": "20 arrows for use with bows"
+  },
+  "Crossbow bolts (20)": {
+    "weight": "1.5 lb",
+    "cost": "1 gp",
+    "description": "20 bolts for use with crossbows"
+  },
+  "Quiver": {
+    "weight": "1 lb",
+    "cost": "1 gp",
+    "description": "A quiver can hold up to 20 arrows"
+  },
+  "Ammunition case": {
+    "weight": "1 lb",
+    "cost": "1 gp",
+    "description": "A case can hold up to 20 crossbow bolts"
+  },
+  "Candle": {
+    "weight": "0 lb",
+    "cost": "1 cp",
+    "description": "For 1 hour, a candle sheds bright light in a 5-foot radius and dim light for an additional 5 feet"
+  },
+  "Chain (10 feet)": {
+    "weight": "10 lb",
+    "cost": "5 gp",
+    "description": "A chain has 10 hit points. It can be burst with a successful DC 20 Strength check"
+  },
+  "Fishing tackle": {
+    "weight": "4 lb",
+    "cost": "1 gp",
+    "description": "This kit includes a wooden rod, silken line, corkwood bobbers, steel hooks, lead sinkers, velvet lures, and narrow netting"
+  },
+  "Ink (1 ounce bottle)": {
+    "weight": "0 lb",
+    "cost": "10 gp",
+    "description": "A bottle of ink"
+  },
+  "Ink pen": {
+    "weight": "0 lb",
+    "cost": "2 cp",
+    "description": "A pen for writing"
+  },
+  "Parchment (one sheet)": {
+    "weight": "0 lb",
+    "cost": "1 sp",
+    "description": "A sheet of parchment"
+  },
+  "Paper (one sheet)": {
+    "weight": "0 lb",
+    "cost": "2 sp",
+    "description": "A sheet of paper"
+  },
+  "Book": {
+    "weight": "5 lb",
+    "cost": "25 gp",
+    "description": "A book might contain poetry, historical accounts, information pertaining to a particular field of lore, diagrams and notes on gnomish contraptions, or just about anything else that can be represented using text or pictures"
+  },
+  "Bottle, glass": {
+    "weight": "2 lb",
+    "cost": "2 gp",
+    "description": "A glass bottle"
+  },
+  "Chest": {
+    "weight": "25 lb",
+    "cost": "5 gp",
+    "description": "A chest can hold 12 cubic feet or 300 pounds",
+    "isContainer": true,
+    "capacity": 300
+  },
+  "Clothes, common": {
+    "weight": "3 lb",
+    "cost": "5 sp",
+    "description": "Common clothes"
+  },
+  "Clothes, costume": {
+    "weight": "4 lb",
+    "cost": "5 gp",
+    "description": "Costume clothes"
+  },
+  "Clothes, fine": {
+    "weight": "6 lb",
+    "cost": "15 gp",
+    "description": "Fine clothes"
+  },
+  "Clothes, traveler's": {
+    "weight": "4 lb",
+    "cost": "2 gp",
+    "description": "Traveler's clothes"
+  },
+  "Pouch": {
+    "weight": "1 lb",
+    "cost": "5 sp",
+    "description": "A cloth or leather pouch can hold up to 6 pounds",
+    "isContainer": true,
+    "capacity": 6
+  },
+  "Sack": {
+    "weight": "0.5 lb",
+    "cost": "1 cp",
+    "description": "A sack can hold 30 pounds",
+    "isContainer": true,
+    "capacity": 30
+  },
+  "Signal whistle": {
+    "weight": "0 lb",
+    "cost": "5 cp",
+    "description": "A signal whistle"
+  },
+  "Spellcasting focus (crystal)": {
+    "weight": "1 lb",
+    "cost": "10 gp",
+    "description": "An arcane focus is a special item—an orb, a crystal, a rod, a specially constructed staff, a wand-like length of wood, or some similar item—designed to channel the power of arcane spells"
+  },
+  "Spellcasting focus (orb)": {
+    "weight": "3 lb",
+    "cost": "20 gp",
+    "description": "An orb arcane focus"
+  },
+  "Spellcasting focus (rod)": {
+    "weight": "2 lb",
+    "cost": "10 gp",
+    "description": "A rod arcane focus"
+  },
+  "Spellcasting focus (staff)": {
+    "weight": "4 lb",
+    "cost": "5 gp",
+    "description": "A staff arcane focus"
+  },
+  "Spellcasting focus (wand)": {
+    "weight": "1 lb",
+    "cost": "10 gp",
+    "description": "A wand arcane focus"
+  }
+}

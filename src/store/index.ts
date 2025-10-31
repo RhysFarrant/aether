@@ -6,3 +6,5 @@ export {
 	useCharacters,
 	useCharacterById,
 } from "./CharacterContext";
+
+export { AuthProvider, useAuth } from "./AuthContext";

@@ -72,4 +72,20 @@ export interface ClassFeature {
   level: number;
   description: string;
   isPassive?: boolean; // Default false - passive features don't show in Actions
+  showOnSheet?: boolean; // Default true - set to false to hide redundant features (e.g., proficiency grants, languages)
+  /** Limited use feature tracking */
+  uses?: {
+    max: number | string; // Number or formula like "2 + proficiency bonus"
+    period: "short rest" | "long rest" | "day"; // When uses refresh
+  };
+  /** Conditional activation - feature only works when condition is met */
+  condition?: {
+    type: "no_armor" | "no_heavy_armor" | "custom"; // Predefined or custom conditions
+    description: string; // Human-readable description shown when inactive
+    customCheck?: string; // For custom conditions - JavaScript expression that evaluates to boolean
+  };
+  /** Speed bonus granted by this feature (in feet) */
+  speedBonus?: number;
+  /** HP bonus granted by this feature */
+  hpBonus?: number | string; // Number or formula like "level" for per-level bonuses
 }

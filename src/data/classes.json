@@ -20,8 +20,8 @@
       {
         "description": "Choose armor",
         "options": [
-          ["Chain mail"],
-          ["Leather armor", "Longbow", "20 arrows"]
+          ["Chain Mail"],
+          ["Leather Armor", "Longbow", "20 arrows"]
         ]
       },
       {
@@ -79,12 +79,14 @@
       {
         "name": "Martial Archetype",
         "level": 3,
-        "description": "At 3rd level, you choose an archetype that you strive to emulate in your combat styles and techniques. The archetype you choose grants you features at 3rd level and again at 7th, 10th, 15th, and 18th level."
+        "description": "At 3rd level, you choose an archetype that you strive to emulate in your combat styles and techniques. The archetype you choose grants you features at 3rd level and again at 7th, 10th, 15th, and 18th level.",
+        "showOnSheet": false
       },
       {
         "name": "Ability Score Improvement",
         "level": 4,
-        "description": "When you reach 4th level, and again at 6th, 8th, 12th, 14th, 16th, and 19th level, you can increase one ability score of your choice by 2, or you can increase two ability scores of your choice by 1. As normal, you can't increase an ability score above 20 using this feature."
+        "description": "When you reach 4th level, and again at 6th, 8th, 12th, 14th, 16th, and 19th level, you can increase one ability score of your choice by 2, or you can increase two ability scores of your choice by 1. As normal, you can't increase an ability score above 20 using this feature.",
+        "showOnSheet": false
       },
       {
         "name": "Extra Attack",
@@ -177,7 +179,8 @@
       {
         "name": "Spellcasting",
         "level": 1,
-        "description": "As a student of arcane magic, you have a spellbook containing spells that show the first glimmerings of your true power. At 1st level, you know three cantrips of your choice from the wizard spell list. You learn additional wizard cantrips of your choice at higher levels."
+        "description": "As a student of arcane magic, you have a spellbook containing spells that show the first glimmerings of your true power. At 1st level, you know three cantrips of your choice from the wizard spell list. You learn additional wizard cantrips of your choice at higher levels.",
+        "showOnSheet": false
       },
       {
         "name": "Arcane Recovery",
@@ -192,7 +195,8 @@
       {
         "name": "Ability Score Improvement",
         "level": 4,
-        "description": "When you reach 4th level, and again at 8th, 12th, 16th, and 19th level, you can increase one ability score of your choice by 2, or you can increase two ability scores of your choice by 1. As normal, you can't increase an ability score above 20 using this feature."
+        "description": "When you reach 4th level, and again at 8th, 12th, 16th, and 19th level, you can increase one ability score of your choice by 2, or you can increase two ability scores of your choice by 1. As normal, you can't increase an ability score above 20 using this feature.",
+        "showOnSheet": false
       }
     ]
   },
@@ -212,7 +216,7 @@
       "choose": 4,
       "from": ["Acrobatics", "Athletics", "Deception", "Insight", "Intimidation", "Investigation", "Perception", "Performance", "Persuasion", "Sleight of Hand", "Stealth"]
     },
-    "startingEquipment": ["Leather armor", "Dagger", "Dagger", "Thieves' tools"],
+    "startingEquipment": ["Leather Armor", "Dagger", "Dagger", "Thieves' tools"],
     "equipmentChoices": [
       {
         "description": "Choose primary weapon",
@@ -271,12 +275,14 @@
       {
         "name": "Roguish Archetype",
         "level": 3,
-        "description": "At 3rd level, you choose an archetype that you emulate in the exercise of your rogue abilities. Your archetype choice grants you features at 3rd level and then again at 9th, 13th, and 17th level."
+        "description": "At 3rd level, you choose an archetype that you emulate in the exercise of your rogue abilities. Your archetype choice grants you features at 3rd level and then again at 9th, 13th, and 17th level.",
+        "showOnSheet": false
       },
       {
         "name": "Ability Score Improvement",
         "level": 4,
-        "description": "When you reach 4th level, and again at 8th, 10th, 12th, 16th, and 19th level, you can increase one ability score of your choice by 2, or you can increase two ability scores of your choice by 1. As normal, you can't increase an ability score above 20 using this feature."
+        "description": "When you reach 4th level, and again at 8th, 10th, 12th, 16th, and 19th level, you can increase one ability score of your choice by 2, or you can increase two ability scores of your choice by 1. As normal, you can't increase an ability score above 20 using this feature.",
+        "showOnSheet": false
       },
       {
         "name": "Uncanny Dodge",
@@ -313,9 +319,9 @@
       {
         "description": "Choose armor",
         "options": [
-          ["Scale mail"],
-          ["Leather armor"],
-          ["Chain mail"]
+          ["Scale Mail"],
+          ["Leather Armor"],
+          ["Chain Mail"]
         ]
       },
       {
@@ -376,12 +382,14 @@
       {
         "name": "Spellcasting",
         "level": 1,
-        "description": "As a conduit for divine power, you can cast cleric spells. At 1st level, you know three cantrips of your choice from the cleric spell list. You prepare the list of cleric spells that are available for you to cast, choosing from the cleric spell list. The number of spells you can prepare equals your Wisdom modifier + your cleric level (minimum of one spell)."
+        "description": "As a conduit for divine power, you can cast cleric spells. At 1st level, you know three cantrips of your choice from the cleric spell list. You prepare the list of cleric spells that are available for you to cast, choosing from the cleric spell list. The number of spells you can prepare equals your Wisdom modifier + your cleric level (minimum of one spell).",
+        "showOnSheet": false
       },
       {
         "name": "Divine Domain",
         "level": 1,
-        "description": "Choose one domain related to your deity. Your choice grants you domain spells and other features when you choose it at 1st level. It also grants you additional ways to use Channel Divinity when you gain that feature at 2nd level, and additional benefits at 6th, 8th, and 17th levels."
+        "description": "Choose one domain related to your deity. Your choice grants you domain spells and other features when you choose it at 1st level. It also grants you additional ways to use Channel Divinity when you gain that feature at 2nd level, and additional benefits at 6th, 8th, and 17th levels.",
+        "showOnSheet": false
       },
       {
         "name": "Channel Divinity",
@@ -396,7 +404,8 @@
       {
         "name": "Ability Score Improvement",
         "level": 4,
-        "description": "When you reach 4th level, and again at 8th, 12th, 16th, and 19th level, you can increase one ability score of your choice by 2, or you can increase two ability scores of your choice by 1. As normal, you can't increase an ability score above 20 using this feature."
+        "description": "When you reach 4th level, and again at 8th, 12th, 16th, and 19th level, you can increase one ability score of your choice by 2, or you can increase two ability scores of your choice by 1. As normal, you can't increase an ability score above 20 using this feature.",
+        "showOnSheet": false
       },
       {
         "name": "Destroy Undead",
@@ -421,7 +430,7 @@
       "choose": 2,
       "from": ["Athletics", "Insight", "Intimidation", "Medicine", "Persuasion", "Religion"]
     },
-    "startingEquipment": ["Chain mail", "Holy symbol"],
+    "startingEquipment": ["Chain Mail", "Holy symbol"],
     "equipmentChoices": [
       {
         "description": "Choose weapon and shield",
@@ -507,7 +516,8 @@
       {
         "name": "Spellcasting",
         "level": 2,
-        "description": "By 2nd level, you have learned to draw on divine magic through meditation and prayer to cast spells as a cleric does. You prepare the list of paladin spells that are available for you to cast, choosing from the paladin spell list. When you do so, choose a number of paladin spells equal to your Charisma modifier + half your paladin level, rounded down (minimum of one spell). The spells must be of a level for which you have spell slots."
+        "description": "By 2nd level, you have learned to draw on divine magic through meditation and prayer to cast spells as a cleric does. You prepare the list of paladin spells that are available for you to cast, choosing from the paladin spell list. When you do so, choose a number of paladin spells equal to your Charisma modifier + half your paladin level, rounded down (minimum of one spell). The spells must be of a level for which you have spell slots.",
+        "showOnSheet": false
       },
       {
         "name": "Divine Smite",
@@ -522,17 +532,133 @@
       {
         "name": "Sacred Oath",
         "level": 3,
-        "description": "When you reach 3rd level, you swear the oath that binds you as a paladin forever. Up to this time you have been in a preparatory stage, committed to the path but not yet sworn to it. Your choice grants you features at 3rd level and again at 7th, 15th, and 20th level. Those features include oath spells and the Channel Divinity feature."
+        "description": "When you reach 3rd level, you swear the oath that binds you as a paladin forever. Up to this time you have been in a preparatory stage, committed to the path but not yet sworn to it. Your choice grants you features at 3rd level and again at 7th, 15th, and 20th level. Those features include oath spells and the Channel Divinity feature.",
+        "showOnSheet": false
       },
       {
         "name": "Ability Score Improvement",
         "level": 4,
-        "description": "When you reach 4th level, and again at 8th, 12th, 16th, and 19th level, you can increase one ability score of your choice by 2, or you can increase two ability scores of your choice by 1. As normal, you can't increase an ability score above 20 using this feature."
+        "description": "When you reach 4th level, and again at 8th, 12th, 16th, and 19th level, you can increase one ability score of your choice by 2, or you can increase two ability scores of your choice by 1. As normal, you can't increase an ability score above 20 using this feature.",
+        "showOnSheet": false
       },
       {
         "name": "Extra Attack",
         "level": 5,
         "description": "Beginning at 5th level, you can attack twice, instead of once, whenever you take the Attack action on your turn."
+      }
+    ]
+  },
+  {
+    "id": "class_barbarian_srd",
+    "name": "Barbarian",
+    "hitDie": 12,
+    "primaryAbility": ["Strength"],
+    "savingThrows": ["Strength", "Constitution"],
+    "proficiencies": {
+      "armor": ["Light armor", "Medium armor", "Shields"],
+      "weapons": ["Simple weapons", "Martial weapons"],
+      "tools": [],
+      "savingThrows": ["Strength", "Constitution"]
+    },
+    "skillChoices": {
+      "choose": 2,
+      "from": ["Animal Handling", "Athletics", "Intimidation", "Nature", "Perception", "Survival"]
+    },
+    "startingEquipment": ["Javelin", "Javelin", "Javelin", "Javelin"],
+    "equipmentChoices": [
+      {
+        "description": "Choose primary weapon",
+        "options": [
+          ["Greataxe"],
+          ["Martial melee weapon"]
+        ]
+      },
+      {
+        "description": "Choose secondary weapons",
+        "options": [
+          ["Handaxe", "Handaxe"],
+          ["Simple weapon"]
+        ]
+      },
+      {
+        "description": "Choose pack",
+        "options": [
+          ["Explorer's pack"]
+        ]
+      }
+    ],
+    "subclasses": [],
+    "multiclassing": {
+      "prerequisites": [
+        {
+          "ability": "Strength",
+          "minimumScore": 13
+        }
+      ],
+      "proficienciesGained": ["Shields", "Simple weapons", "Martial weapons"]
+    },
+    "features": [
+      {
+        "name": "Rage",
+        "level": 1,
+        "description": "In battle, you fight with primal ferocity. On your turn, you can enter a rage as a bonus action. While raging, you gain the following benefits if you aren't wearing heavy armor: You have advantage on Strength checks and Strength saving throws. When you make a melee weapon attack using Strength, you gain a +2 bonus to the damage roll. You have resistance to bludgeoning, piercing, and slashing damage. If you are able to cast spells, you can't cast them or concentrate on them while raging. Your rage lasts for 1 minute. It ends early if you are knocked unconscious or if your turn ends and you haven't attacked a hostile creature since your last turn or taken damage since then. You can also end your rage on your turn as a bonus action. Once you have raged the maximum number of times for your barbarian level, you must finish a long rest before you can rage again. You may rage 2 times at 1st level, 3 at 3rd, 4 at 6th, 5 at 12th, and 6 at 17th.",
+        "uses": {
+          "max": "level < 3 ? 2 : level < 6 ? 3 : level < 12 ? 4 : level < 17 ? 5 : 6",
+          "period": "long rest"
+        },
+        "condition": {
+          "type": "no_heavy_armor",
+          "description": "You cannot benefit from Rage while wearing heavy armor."
+        }
+      },
+      {
+        "name": "Unarmored Defense",
+        "level": 1,
+        "description": "While you are not wearing any armor, your Armor Class equals 10 + your Dexterity modifier + your Constitution modifier. You can use a shield and still gain this benefit.",
+        "isPassive": true,
+        "condition": {
+          "type": "no_armor",
+          "description": "You must not be wearing any armor to benefit from this feature."
+        }
+      },
+      {
+        "name": "Reckless Attack",
+        "level": 2,
+        "description": "Starting at 2nd level, you can throw aside all concern for defense to attack with fierce desperation. When you make your first attack on your turn, you can decide to attack recklessly. Doing so gives you advantage on melee weapon attack rolls using Strength during this turn, but attack rolls against you have advantage until your next turn."
+      },
+      {
+        "name": "Danger Sense",
+        "level": 2,
+        "description": "At 2nd level, you gain an uncanny sense of when things nearby aren't as they should be, giving you an edge when you dodge away from danger. You have advantage on Dexterity saving throws against effects that you can see, such as traps and spells. To gain this benefit, you can't be blinded, deafened, or incapacitated.",
+        "isPassive": true
+      },
+      {
+        "name": "Primal Path",
+        "level": 3,
+        "description": "At 3rd level, you choose a path that shapes the nature of your rage. Your choice grants you features at 3rd level and again at 6th, 10th, and 14th levels.",
+        "showOnSheet": false
+      },
+      {
+        "name": "Ability Score Improvement",
+        "level": 4,
+        "description": "When you reach 4th level, and again at 8th, 12th, 16th, and 19th level, you can increase one ability score of your choice by 2, or you can increase two ability scores of your choice by 1. As normal, you can't increase an ability score above 20 using this feature.",
+        "showOnSheet": false
+      },
+      {
+        "name": "Extra Attack",
+        "level": 5,
+        "description": "Beginning at 5th level, you can attack twice, instead of once, whenever you take the Attack action on your turn."
+      },
+      {
+        "name": "Fast Movement",
+        "level": 5,
+        "description": "Starting at 5th level, your speed increases by 10 feet while you aren't wearing heavy armor.",
+        "isPassive": true,
+        "speedBonus": 10,
+        "condition": {
+          "type": "no_heavy_armor",
+          "description": "You must not be wearing heavy armor to gain this speed increase."
+        }
       }
     ]
   }

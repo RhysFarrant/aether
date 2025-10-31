@@ -40,4 +40,13 @@ export interface SubspeciesTrait {
   name: string;
   description: string;
   isPassive?: boolean; // Default false - passive features don't show in Actions
+  showOnSheet?: boolean; // Default true - set to false to hide redundant traits (e.g., proficiency grants, languages)
+  /** HP bonus granted by this trait */
+  hpBonus?: number | string; // Number or formula like "level" for per-level bonuses
+  /** Damage resistances granted by this trait */
+  resistances?: string[]; // e.g., ["poison"]
+  /** Damage immunities granted by this trait */
+  immunities?: string[]; // e.g., ["poison"]
+  /** Condition immunities granted by this trait */
+  conditionImmunities?: string[]; // e.g., ["charmed", "frightened"]
 }
