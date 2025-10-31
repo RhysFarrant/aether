@@ -239,6 +239,15 @@ function getItemsByCategory(category: string): string[] {
 }
 
 /**
+ * Get all available containers from items database
+ */
+function getAvailableContainers(): string[] {
+	return Object.keys(ITEMS_DATA)
+		.filter(itemName => ITEMS_DATA[itemName].isContainer)
+		.sort();
+}
+
+/**
  * Look up item data from weapons or armor databases
  */
 function lookupItemData(itemName: string): InventoryItem | null {
@@ -660,6 +669,9 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 	const [showAddContainer, setShowAddContainer] = useState(false);
 	const [newContainerName, setNewContainerName] = useState("");
 	const [newContainerCapacity, setNewContainerCapacity] = useState("");
+	const [selectedContainer, setSelectedContainer] = useState<string | null>(null);
+	const [isCustomContainer, setIsCustomContainer] = useState(false);
+	const [showContainerSuggestions, setShowContainerSuggestions] = useState(false);
 	const [assigningToContainer, setAssigningToContainer] = useState<number | null>(null); // Index of item being assigned to container
 	const [isCustomItem, setIsCustomItem] = useState(false);
 	const [customItemType, setCustomItemType] = useState<
@@ -1708,6 +1720,12 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 		setShowSuggestions(false);
 	};
 
+	const selectContainerFromSuggestion = (containerName: string) => {
+		setSelectedContainer(containerName);
+		setNewContainerName(containerName);
+		setShowContainerSuggestions(false);
+	};
+
 	const removeItem = (index: number) => {
 		const itemToRemove = inventoryItems[index];
 		// If removing equipped armor, unequip it
@@ -1724,23 +1742,47 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 
 	// Add a new container
 	const addContainer = () => {
-		if (!newContainerName.trim()) return;
+		if (isCustomContainer) {
+			// Add custom container
+			if (!newContainerName.trim()) return;
 
-		const capacity = newContainerCapacity ? parseFloat(newContainerCapacity) : undefined;
+			const capacity = newContainerCapacity ? parseFloat(newContainerCapacity) : undefined;
 
-		const newContainer: InventoryItem = {
-			name: "Container",
-			customName: newContainerName.trim(),
-			weight: 0, // Containers from user have 0 weight unless they specify
-			isCustom: true,
-			isContainer: true,
-			containerCapacity: capacity,
-			onPerson: true,
-		};
+			const newContainer: InventoryItem = {
+				name: "Container",
+				customName: newContainerName.trim(),
+				weight: 0, // Custom containers default to 0 weight
+				isCustom: true,
+				isContainer: true,
+				containerCapacity: capacity,
+				onPerson: true,
+			};
 
-		setInventoryItems([...inventoryItems, newContainer]);
+			setInventoryItems([...inventoryItems, newContainer]);
+		} else {
+			// Add SRD container
+			if (!selectedContainer) return;
+
+			const containerItem = lookupItemData(selectedContainer);
+			if (containerItem) {
+				// Generate a unique custom name (e.g., "Backpack", "Backpack 2", etc.)
+				let customName = selectedContainer;
+				let counter = 2;
+				while (inventoryItems.some(item => item.customName === customName)) {
+					customName = `${selectedContainer} ${counter}`;
+					counter++;
+				}
+				containerItem.customName = customName;
+				setInventoryItems([...inventoryItems, containerItem]);
+			}
+		}
+
+		// Reset state
 		setNewContainerName("");
 		setNewContainerCapacity("");
+		setSelectedContainer(null);
+		setIsCustomContainer(false);
+		setShowContainerSuggestions(false);
 		setShowAddContainer(false);
 	};
 
@@ -4972,48 +5014,133 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 									{showAddContainer && (
 										<div className="bg-background-secondary/50 border border-accent-400/20 rounded-lg p-4">
 											<div className="text-sm text-accent-400 uppercase tracking-wider mb-3 font-semibold">
-												Add New Container
+												Add Container
 											</div>
 											<div className="space-y-3">
-												<div>
-													<label className="text-xs text-parchment-400 uppercase tracking-wider block mb-1">
-														Container Name
-													</label>
-													<input
-														type="text"
-														value={newContainerName}
-														onChange={(e) => setNewContainerName(e.target.value)}
-														onKeyDown={(e) => {
-															if (e.key === "Enter") addContainer();
-														}}
-														className="w-full bg-background-tertiary border border-accent-400/30 rounded px-3 py-2 text-sm text-parchment-100 focus:outline-none focus:border-accent-400"
-														placeholder="e.g., Backpack, Bag of Holding..."
-													/>
-												</div>
-												<div>
-													<label className="text-xs text-parchment-400 uppercase tracking-wider block mb-1">
-														Capacity (lbs) - Optional
-													</label>
-													<input
-														type="number"
-														value={newContainerCapacity}
-														onChange={(e) => setNewContainerCapacity(e.target.value)}
-														onKeyDown={(e) => {
-															if (e.key === "Enter") addContainer();
-														}}
-														className="w-full bg-background-tertiary border border-accent-400/30 rounded px-3 py-2 text-sm text-parchment-100 focus:outline-none focus:border-accent-400"
-														placeholder="Leave empty for unlimited capacity"
-													/>
-													<p className="text-xs text-parchment-400 mt-1">
-														Set a capacity limit in pounds, or leave empty for unlimited storage
-													</p>
-												</div>
+												{!isCustomContainer && (
+													<div className="relative">
+														<label className="text-xs text-parchment-400 uppercase tracking-wider block mb-1">
+															Search Containers
+														</label>
+														<input
+															type="text"
+															value={newContainerName}
+															onChange={(e) => {
+																setNewContainerName(e.target.value);
+																setSelectedContainer(null);
+																setShowContainerSuggestions(true);
+															}}
+															onFocus={() => setShowContainerSuggestions(true)}
+															className="w-full bg-background-tertiary border border-accent-400/30 rounded px-3 py-2 text-sm text-parchment-100 focus:outline-none focus:border-accent-400"
+															placeholder="Type to search containers..."
+														/>
+
+														{/* Autocomplete Dropdown */}
+														{showContainerSuggestions && getAvailableContainers().filter(c => c.toLowerCase().includes(newContainerName.toLowerCase())).length > 0 && (
+															<div className="absolute z-10 w-full mt-1 bg-background-secondary border border-accent-400/40 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+																{getAvailableContainers()
+																	.filter(c => c.toLowerCase().includes(newContainerName.toLowerCase()))
+																	.map(containerName => (
+																		<button
+																			key={containerName}
+																			onClick={() => selectContainerFromSuggestion(containerName)}
+																			className="w-full text-left px-3 py-2 text-sm text-parchment-200 hover:bg-accent-400/20 transition-colors"
+																		>
+																			{containerName}
+																		</button>
+																	))}
+															</div>
+														)}
+
+														{/* No matches - show "Add Custom" button */}
+														{showContainerSuggestions && newContainerName.trim() && getAvailableContainers().filter(c => c.toLowerCase().includes(newContainerName.toLowerCase())).length === 0 && (
+															<div className="absolute z-10 w-full mt-1 bg-background-secondary border border-accent-400/40 rounded-lg shadow-lg p-3">
+																<p className="text-xs text-parchment-400 mb-2">
+																	No containers found matching "{newContainerName}"
+																</p>
+																<button
+																	onClick={() => {
+																		setIsCustomContainer(true);
+																		setShowContainerSuggestions(false);
+																	}}
+																	className="w-full px-3 py-2 rounded bg-accent-400/20 hover:bg-accent-400/30 border border-accent-400/40 text-accent-400 text-xs font-semibold transition-colors"
+																>
+																	+ Add as Custom Container
+																</button>
+															</div>
+														)}
+
+														{selectedContainer && (
+															<div className="text-xs text-accent-400 mt-1">
+																✓ Selected: {selectedContainer}
+															</div>
+														)}
+													</div>
+												)}
+
+												{/* Show custom container toggle if already in custom mode */}
+												{isCustomContainer && (
+													<div className="flex items-center justify-between">
+														<div className="text-xs text-accent-400 uppercase tracking-wider font-semibold">
+															Custom Container
+														</div>
+														<button
+															onClick={() => {
+																setIsCustomContainer(false);
+																setNewContainerName("");
+															}}
+															className="text-xs text-parchment-400 hover:text-accent-400 transition-colors"
+														>
+															← Back to Search
+														</button>
+													</div>
+												)}
+
+												{/* Custom Container Fields */}
+												{isCustomContainer && (
+													<>
+														<div>
+															<label className="text-xs text-parchment-400 uppercase tracking-wider block mb-1">
+																Container Name
+															</label>
+															<input
+																type="text"
+																value={newContainerName}
+																onChange={(e) => setNewContainerName(e.target.value)}
+																onKeyDown={(e) => {
+																	if (e.key === "Enter") addContainer();
+																}}
+																className="w-full bg-background-tertiary border border-accent-400/30 rounded px-3 py-2 text-sm text-parchment-100 focus:outline-none focus:border-accent-400"
+																placeholder="Enter custom container name..."
+															/>
+														</div>
+														<div>
+															<label className="text-xs text-parchment-400 uppercase tracking-wider block mb-1">
+																Capacity (lbs) - Optional
+															</label>
+															<input
+																type="number"
+																value={newContainerCapacity}
+																onChange={(e) => setNewContainerCapacity(e.target.value)}
+																onKeyDown={(e) => {
+																	if (e.key === "Enter") addContainer();
+																}}
+																className="w-full bg-background-tertiary border border-accent-400/30 rounded px-3 py-2 text-sm text-parchment-100 focus:outline-none focus:border-accent-400"
+																placeholder="Leave empty for unlimited capacity"
+															/>
+															<p className="text-xs text-parchment-400 mt-1">
+																Set a capacity limit in pounds, or leave empty for unlimited storage
+															</p>
+														</div>
+													</>
+												)}
+
 												<div className="flex gap-2">
 													<button
 														onClick={addContainer}
-														disabled={!newContainerName.trim()}
+														disabled={isCustomContainer ? !newContainerName.trim() : !selectedContainer}
 														className={`flex-1 py-2 px-3 rounded text-xs font-semibold transition-colors ${
-															newContainerName.trim()
+															(isCustomContainer ? newContainerName.trim() : selectedContainer)
 																? "bg-accent-400/20 hover:bg-accent-400/30 border border-accent-400/40 text-accent-400"
 																: "bg-background-tertiary border border-accent-400/10 text-parchment-500 cursor-not-allowed"
 														}`}
@@ -5025,6 +5152,9 @@ export default function CharacterSheet({ character }: CharacterSheetProps) {
 															setShowAddContainer(false);
 															setNewContainerName("");
 															setNewContainerCapacity("");
+															setSelectedContainer(null);
+															setIsCustomContainer(false);
+															setShowContainerSuggestions(false);
 														}}
 														className="flex-1 py-2 px-3 rounded bg-background-tertiary border border-accent-400/20 text-parchment-300 text-xs font-semibold transition-colors hover:bg-background-tertiary/70"
 													>
